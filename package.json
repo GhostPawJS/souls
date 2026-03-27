@@ -1,6 +1,6 @@
 {
 	"name": "@ghostpaw/souls",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Prompt evolution engine — evidence-backed cognitive identity for AI agents with traits, crystallization-gated refinement, level-up consolidation, and full rollback. Node 24+, built-in node:sqlite, zero runtime dependencies.",
 	"type": "module",
 	"exports": {
