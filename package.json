@@ -1,7 +1,7 @@
 {
 	"name": "@ghostpaw/souls",
 	"version": "0.1.0",
-	"description": "Structured personality and behavioral framework for Node.js agents — SQLite, zero dependencies, with a built-in LLM tool facade",
+	"description": "Prompt evolution engine — evidence-backed cognitive identity for AI agents with traits, crystallization-gated refinement, level-up consolidation, and full rollback. Node 24+, built-in node:sqlite, zero runtime dependencies.",
 	"type": "module",
 	"exports": {
 		".": {
@@ -27,6 +27,7 @@
 		"dev": "tsup --watch",
 		"demo:build": "node scripts/build_demo.mjs",
 		"demo:watch": "node scripts/build_demo.mjs --watch",
+		"demo:ether": "node scripts/prepare_ether_dump.mjs",
 		"demo:serve": "npm run demo:build && node scripts/serve_demo.mjs",
 		"test": "node --experimental-strip-types --test --test-reporter=dot 'src/**/*.test.ts'",
 		"lint": "biome check",
@@ -48,19 +49,26 @@
 		"access": "public"
 	},
 	"keywords": [
-		"soul",
+		"prompt-evolution",
+		"system-prompt",
+		"prompt-engineering",
+		"prompt-management",
+		"ai-agent",
+		"agent-memory",
+		"cognitive-identity",
+		"persona",
 		"personality",
-		"agent",
-		"behavior",
 		"character",
-		"framework",
-		"sqlite",
-		"local-first",
 		"llm",
-		"ai",
-		"tools",
+		"llm-tools",
+		"multi-agent",
+		"sqlite",
+		"node-sqlite",
+		"local-first",
+		"zero-dependencies",
 		"typescript",
-		"zero-dependencies"
+		"ghostpaw",
+		"ai"
 	],
 	"license": "MIT",
 	"repository": {

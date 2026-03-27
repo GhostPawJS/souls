@@ -9,17 +9,16 @@ describe('public surface', () => {
 
 	it('exports the read namespace', () => {
 		ok(souls.read);
-		strictEqual(typeof souls.read.getSchemaVersion, 'function');
+		strictEqual(typeof souls.read.getSoul, 'function');
+		strictEqual(typeof souls.read.listSouls, 'function');
+		strictEqual(typeof souls.read.formatEvidence, 'function');
 	});
 
 	it('exports the write namespace', () => {
 		ok(souls.write);
-		strictEqual(typeof souls.write.setMeta, 'function');
-	});
-
-	it('exports the soul namespace', () => {
-		ok(souls.soul);
-		strictEqual(typeof souls.soul.renderSoulsSoulPromptFoundation, 'function');
+		strictEqual(typeof souls.write.createSoul, 'function');
+		strictEqual(typeof souls.write.addTrait, 'function');
+		strictEqual(typeof souls.write.dropShard, 'function');
 	});
 
 	it('exports the errors namespace', () => {

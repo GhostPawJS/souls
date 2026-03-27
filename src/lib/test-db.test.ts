@@ -6,9 +6,9 @@ describe('createInitializedSoulsDb', () => {
 	it('returns a database with schema tables', async () => {
 		const db = await createInitializedSoulsDb();
 		const row = db
-			.prepare("SELECT value FROM souls_meta WHERE key = 'schema_version'")
-			.get<{ value: string }>();
-		strictEqual(row?.value, '1');
+			.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='souls'")
+			.get<{ name: string }>();
+		strictEqual(row?.name, 'souls');
 		db.close();
 	});
 });

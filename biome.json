@@ -24,6 +24,26 @@
 		}
 	},
 	"files": {
-		"includes": ["**", "!**/dist", "!**/node_modules", "!**/*.d.ts", "!**/*.d.cts", "!**/*.d.mts"]
-	}
+		"includes": [
+			"**",
+			"!**/dist",
+			"!**/node_modules",
+			"!**/*.d.ts",
+			"!**/*.d.cts",
+			"!**/*.d.mts",
+			"!**/ether_dump.json"
+		]
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.test.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noNonNullAssertion": "off"
+					}
+				}
+			}
+		}
+	]
 }

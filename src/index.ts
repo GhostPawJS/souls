@@ -1,8 +1,15 @@
 export type { SoulsDb } from './database.ts';
+export * from './errors.ts';
 export * as errors from './errors.ts';
+export * as ether from './ether/index.ts';
 export { initSoulsTables } from './init_souls_tables.ts';
 export * as read from './read.ts';
-export type { SoulsSoul, SoulsSoulTrait } from './soul.ts';
+export type * from './skills/index.ts';
+export * as skills from './skills/index.ts';
+export type * from './soul.ts';
 export * as soul from './soul.ts';
+export type * from './tools/index.ts';
+export * as tools from './tools/index.ts';
 export type * from './types.ts';
+export * as types from './types.ts';
 export * as write from './write.ts';

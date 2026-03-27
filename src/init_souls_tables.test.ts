@@ -3,12 +3,14 @@ import { describe, it } from 'node:test';
 import { createInitializedSoulsDb } from './lib/test-db.ts';
 
 describe('initSoulsTables', () => {
-	it('creates the souls_meta table with a schema version', async () => {
+	it('creates all entity tables', async () => {
 		const db = await createInitializedSoulsDb();
-		const row = db
-			.prepare("SELECT value FROM souls_meta WHERE key = 'schema_version'")
-			.get<{ value: string }>();
-		strictEqual(row?.value, '1');
+		for (const tableName of ['souls', 'soul_traits', 'soul_levels', 'soul_shards']) {
+			const row = db
+				.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`)
+				.get<{ name: string }>(tableName);
+			strictEqual(row?.name, tableName);
+		}
 	});
 
 	it('is idempotent', async () => {
@@ -16,8 +18,8 @@ describe('initSoulsTables', () => {
 		const { initSoulsTables } = await import('./init_souls_tables.ts');
 		initSoulsTables(db);
 		const row = db
-			.prepare("SELECT value FROM souls_meta WHERE key = 'schema_version'")
-			.get<{ value: string }>();
-		strictEqual(row?.value, '1');
+			.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='souls'`)
+			.get<{ name: string }>();
+		strictEqual(row?.name, 'souls');
 	});
 });

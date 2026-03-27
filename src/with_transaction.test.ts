@@ -2,6 +2,7 @@ import { strictEqual, throws } from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import type { SoulsDb } from './database.ts';
 import { createInitializedSoulsDb } from './lib/test-db.ts';
+import { createSoul } from './souls/create_soul.ts';
 import { withTransaction } from './with_transaction.ts';
 
 let db: SoulsDb;
@@ -13,36 +14,32 @@ beforeEach(async () => {
 describe('withTransaction', () => {
 	it('commits on success', () => {
 		withTransaction(db, () => {
-			db.prepare("INSERT INTO souls_meta (key, value) VALUES ('tx_test', 'committed')").run();
+			createSoul(db, { name: 'TxTest', essence: 'E', description: 'D' });
 		});
 
-		const row = db.prepare("SELECT value FROM souls_meta WHERE key = 'tx_test'").get<{
-			value: string;
-		}>();
-		strictEqual(row?.value, 'committed');
+		const row = db.prepare("SELECT name FROM souls WHERE name = 'TxTest'").get<{ name: string }>();
+		strictEqual(row?.name, 'TxTest');
 	});
 
 	it('rolls back on error', () => {
 		throws(() => {
 			withTransaction(db, () => {
-				db.prepare("INSERT INTO souls_meta (key, value) VALUES ('tx_fail', 'nope')").run();
+				createSoul(db, { name: 'TxFail', essence: 'E', description: 'D' });
 				throw new Error('intentional');
 			});
 		}, /intentional/);
 
-		const row = db.prepare("SELECT value FROM souls_meta WHERE key = 'tx_fail'").get<{
-			value: string;
-		}>();
+		const row = db.prepare("SELECT name FROM souls WHERE name = 'TxFail'").get<{ name: string }>();
 		strictEqual(row, undefined);
 	});
 
 	it('supports nested transactions via savepoints', () => {
 		withTransaction(db, () => {
-			db.prepare("INSERT INTO souls_meta (key, value) VALUES ('outer', 'yes')").run();
+			createSoul(db, { name: 'Outer', essence: 'E', description: 'D' });
 
 			try {
 				withTransaction(db, () => {
-					db.prepare("INSERT INTO souls_meta (key, value) VALUES ('inner', 'no')").run();
+					createSoul(db, { name: 'Inner', essence: 'E', description: 'D' });
 					throw new Error('inner fail');
 				});
 			} catch {
@@ -50,13 +47,9 @@ describe('withTransaction', () => {
 			}
 		});
 
-		const outer = db.prepare("SELECT value FROM souls_meta WHERE key = 'outer'").get<{
-			value: string;
-		}>();
-		const inner = db.prepare("SELECT value FROM souls_meta WHERE key = 'inner'").get<{
-			value: string;
-		}>();
-		strictEqual(outer?.value, 'yes');
+		const outer = db.prepare("SELECT name FROM souls WHERE name = 'Outer'").get<{ name: string }>();
+		const inner = db.prepare("SELECT name FROM souls WHERE name = 'Inner'").get<{ name: string }>();
+		strictEqual(outer?.name, 'Outer');
 		strictEqual(inner, undefined);
 	});
 });
