@@ -4,6 +4,7 @@ dist/
 *.tsbuildinfo
 .DS_Store
 coverage/
+test-results/
 *.log
 .env
 .env.*
