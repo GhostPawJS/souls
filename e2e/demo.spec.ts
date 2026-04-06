@@ -29,12 +29,8 @@ test.describe('Souls demo', () => {
 		await expect(page.locator('h1.page-title')).toContainText('Create Soul');
 
 		await page.locator('input.input').first().fill('Test Mage');
-		await page.locator('textarea.textarea').fill(
-			'A soul built for automated testing purposes.',
-		);
-		await page.locator('input.input').nth(1).fill(
-			'Validates all the things.',
-		);
+		await page.locator('textarea.textarea').fill('A soul built for automated testing purposes.');
+		await page.locator('input.input').nth(1).fill('Validates all the things.');
 
 		// The submit button text is "Create Soul" — be specific about context
 		await page.locator('.btn-primary', { hasText: 'Create Soul' }).click();
