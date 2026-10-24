@@ -4,7 +4,7 @@ An interactive browser-based SPA that lets you explore Souls without
 installing anything. The entire library runs client-side against an in-memory
 SQLite database via sql.js-fts5 (WebAssembly).
 
-**Live:** <https://ghostpawjs.github.io/souls>
+**Live:** <https://souls.ghostpaw.dev/docs/>
 
 ## What It Covers
 

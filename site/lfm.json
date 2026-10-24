@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "url": "https://souls.ghostpaw.dev/",
+  "language": "en",
+  "title": "souls: agent identity that changes only on evidence, and can be reverted",
+  "description": "@ghostpaw/souls stores an agent's identity as an essence plus traits with provenance. Observations from two independent sources over a day gate refinement, level-ups are validated and every one can be reverted. Node.js 24, zero dependencies, MIT.",
+  "socialImage": {
+    "src": "assets/images/share.png",
+    "alt": "A ghost-wolf head drawn in cyan light with shards gathering into a violet crystal, beside the line: Change your agent's prompt when the evidence agrees."
+  },
+  "urls": {
+    "home": "https://ghostpaw.dev/",
+    "github": "https://github.com/GhostPawJS/souls",
+    "readme": "https://github.com/GhostPawJS/souls#readme",
+    "npm": "https://www.npmjs.com/package/@ghostpaw/souls",
+    "demo": "https://souls.ghostpaw.dev/docs/",
+    "impressum": "https://lab.anonyfox.com/impressum/",
+    "privacy": "https://lab.anonyfox.com/datenschutz/",
+    "mit": "https://opensource.org/license/mit",
+    "orgId": "https://ghostpaw.dev/#org",
+    "agentMemory": "https://codex.ghostpaw.dev/",
+    "agentTasks": "https://questlog.ghostpaw.dev/",
+    "agentContacts": "https://affinity.ghostpaw.dev/",
+    "agentSkills": "https://grimoire.ghostpaw.dev/",
+    "agentEmail": "https://email.ghostpaw.dev/",
+    "agentTelegram": "https://telegram.ghostpaw.dev/"
+  },
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareSourceCode",
+        "name": "@ghostpaw/souls",
+        "description": "{{.description}}",
+        "codeRepository": "{{.urls.github}}",
+        "programmingLanguage": "TypeScript",
+        "runtimePlatform": "Node.js 24",
+        "version": "0.3.0",
+        "license": "{{.urls.mit}}",
+        "author": {
+          "@type": "Organization",
+          "@id": "{{.urls.orgId}}",
+          "name": "GhostPaw"
+        }
+      }
+    ]
+  }
+}

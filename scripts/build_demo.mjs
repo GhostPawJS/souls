@@ -778,10 +778,33 @@ function writeHtmlShell() {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Soul Workshop — @ghostpaw/souls</title>
+<meta name="description" content="Interactive demo of @ghostpaw/souls: collect observations about an agent identity, refine its traits and level it up, with rollback. The library runs in your browser on an in-memory SQLite database (sql.js); nothing is sent anywhere." />
+<link rel="canonical" href="https://souls.ghostpaw.dev/docs/" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Soul Workshop · @ghostpaw/souls interactive demo" />
+<meta property="og:description" content="Interactive demo of @ghostpaw/souls: collect observations about an agent identity, refine its traits and level it up, with rollback. The library runs in your browser on an in-memory SQLite database (sql.js); nothing is sent anywhere." />
+<meta property="og:url" content="https://souls.ghostpaw.dev/docs/" />
+<meta property="og:image" content="https://souls.ghostpaw.dev/docs/share.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A ghost-wolf head drawn in cyan light with shards gathering into a violet crystal, beside the line: Change your agent&#x27;s prompt when the evidence agrees." />
+<meta name="twitter:card" content="summary_large_image" />
+<!-- ghostpaw-docs-shell -->
+<style>.pre{max-width:42rem;margin:4rem auto;padding:0 1.25rem;font:400 1rem/1.6 system-ui,sans-serif;color:#dce7f3}.pre h1{font-size:1.6rem;line-height:1.25;margin:0 0 .75rem}.pre a{color:#62e6f2}.pre li{margin:.25rem 0}#app:not(:empty)~.pre{display:none}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}</style>
 <style>${CSS}</style>
 </head>
 <body>
 <div id="app"></div>
+<main class="pre">
+<h1>Soul Workshop: the @ghostpaw/souls interactive demo</h1>
+<p>Collect observations about an agent identity, refine its traits and level it up, with rollback. This page loads the library into your browser with an in-memory SQLite database. It needs JavaScript; the demo appears here once it has loaded.</p>
+<ul>
+<li><a href="https://souls.ghostpaw.dev/">What @ghostpaw/souls is, with a worked example</a></li>
+<li><a href="https://github.com/GhostPawJS/souls#readme">README on GitHub</a></li>
+<li><a href="https://www.npmjs.com/package/@ghostpaw/souls">@ghostpaw/souls on npm</a></li>
+<li><a href="https://ghostpaw.dev/">All GhostPaw libraries</a></li>
+</ul>
+</main>
 <script src="app.js"></script>
 </body>
 </html>`;

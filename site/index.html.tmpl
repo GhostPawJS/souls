@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="{{.language}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.title}}</title>
+<meta name="description" content="{{.description}}">
+<link rel="canonical" href="{{.url}}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{.url}}">
+<meta property="og:title" content="{{.title}}">
+<meta property="og:description" content="{{.description}}">
+<meta property="og:image" content="{{.socialImage.src}}">
+<meta property="og:image:alt" content="{{.socialImage.alt}}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="assets/fonts/tektur-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/martian-mono-var.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="theme-color" content="#04070b">
+<script>document.documentElement.classList.add("js")</script>
+{{style "assets/styles/main.css"}}
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="{{.urls.home}}">GhostPaw</a>
+  <nav aria-label="souls elsewhere">
+    <a href="{{.urls.github}}">GitHub</a>
+    <a href="{{.urls.npm}}">npm</a>
+    <a href="{{.urls.demo}}">Live demo</a>
+  </nav>
+</header>
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="kicker"><code>@ghostpaw/souls</code> 0.3.0</p>
+      <h1 id="hero-title">Change your agent's prompt when the evidence agrees.</h1>
+      <p class="lede">souls keeps an agent's identity as a short essence plus traits, and every trait carries the evidence that earned it. Observations pile up as shards, the soul is ready for a change only when they come from two independent sources over at least a day, and every level-up can be reverted.</p>
+      <div class="install">
+        <p class="cmd-label" id="lib-label">As a library</p>
+        <div class="cmd"><input id="cmd-lib" readonly value="npm install @ghostpaw/souls" aria-labelledby="lib-label" spellcheck="false"><button type="button" class="copy" data-copy="cmd-lib">Copy</button></div>
+        <p class="cmd-label" id="mcp-label">As a local MCP server</p>
+        <div class="cmd"><input id="cmd-mcp" readonly value="npx -y @ghostpaw/souls mcp" aria-labelledby="mcp-label" spellcheck="false"><button type="button" class="copy" data-copy="cmd-mcp">Copy</button></div>
+      </div>
+      <p class="actions"><a class="button" href="#run">Replay the run</a> <a href="{{.urls.github}}">Read the source on GitHub</a></p>
+      <p class="terms">Free and MIT licensed for Node.js 24 or newer, with zero runtime dependencies. The MCP server keeps identity and evidence in <code>~/.ghostpaw/souls.db</code> on your machine.</p>
+    </div>
+    <figure class="hero-art frame">
+      <div class="scope"><picture><source media="(min-width: 52rem)" srcset="assets/images/hero-720.webp" width="720" height="540"><img src="assets/images/hero-480.webp" width="480" height="360" alt="A ghost-wolf head drawn in cyan light filaments, small glass shards floating toward it and a violet crystal forming beside its muzzle." fetchpriority="high"></picture><span class="scan" aria-hidden="true"></span></div>
+      <p class="readout" aria-label="Zero runtime dependencies"><span class="big">0</span><span>runtime dependencies</span></p>
+    </figure>
+  </section>
+
+  <section id="run" class="sec run-sec" aria-labelledby="run-title">
+    <h2 id="run-title">One reviewer soul, six calls</h2>
+    <p class="intro">Three observations from the same place are not enough. A fourth from somewhere else is.</p>
+    <p class="intro">This is the Reviewer soul from the README quick start, replayed from a real run: we made these calls against souls 0.3.0 on 2026-10-24 with a fixed clock, starting from two traits and two session shards, one of them two days old. Every result below is what came back. Run the steps in order.</p>
+    <div class="run">
+      <div class="state" role="region" aria-labelledby="state-title" aria-live="polite">
+        <p class="state-label" id="state-title">Reviewer soul</p>
+        <ul id="state-list">
+          <li><span class="k">Level</span><span class="v">1</span></li>
+          <li><span class="k">Trait 1</span><span class="v">Read the PR description before the diff.</span></li>
+          <li><span class="k">Trait 2</span><span class="v">Say what breaks before naming style nits.</span></li>
+          <li><span class="k">Pending shards</span><span class="v">2</span></li>
+          <li class="t-violet"><span class="k">Sources</span><span class="v">1 of 2</span></li>
+          <li><span class="k">Ready</span><span class="v">no</span></li>
+        </ul>
+        <p class="state-foot" id="state-foot">read.crystallizationReadiness(db)</p>
+      </div>
+      <ol class="steps">
+        <li class="step" id="step-1">
+          <h3><span class="n">01</span> A shard from a review session</h3>
+          <p>A shard is one observation, tagged with where it came from.</p>
+          <pre class="call"><code>write.dropShard(db, {
+  content: 'Flagged a missing migration after reading the linked issue.',
+  source: 'session',
+  soulIds: [reviewer.id],
+});</code></pre>
+          <div class="result"><pre><code>// { shard: { id: 3, status: 'pending', ... }, crystallizationTriggers: [] }
+
+read.crystallizationReadiness(db)
+// []</code></pre><p class="say">Three pending shards, all from sessions. The soul is not ready.</p></div>
+          <button type="button" class="act run-btn">Run step 1</button>
+        </li>
+        <li class="step" id="step-2">
+          <h3><span class="n">02</span> A shard from CI</h3>
+          <p>Same soul, a second and independent source.</p>
+          <pre class="call"><code>write.dropShard(db, {
+  content: 'CI check: the reviewer approved a PR whose description said tests were pending.',
+  source: 'ci',
+  soulIds: [reviewer.id],
+});</code></pre>
+          <div class="result"><pre><code>// { shard: { id: 4, ... }, crystallizationTriggers: [1] }
+
+read.crystallizationReadiness(db)
+// [{ soulId: 1, pendingCount: 4, sourceDiversity: 2, ageSpreadDays: 2, clusterCount: 4, ... }]</code></pre><p class="say">Two sources over two days. The soul is ready for refinement.</p></div>
+          <button type="button" class="act run-btn">Run step 2</button>
+        </li>
+        <li class="step" id="step-3">
+          <h3><span class="n">03</span> Revise trait 1</h3>
+          <p>The new wording and the reason for it are stored together.</p>
+          <pre class="call"><code>write.reviseTrait(db, trait1.id, {
+  principle: 'Read the PR description and its linked issue before the diff.',
+  provenance: 'Four shards across session and CI over two days: '
+    + 'the linked issue held the missing context twice.',
+});</code></pre>
+          <div class="result"><pre><code>// { id: 1, principle: 'Read the PR description and its linked issue before the diff.',
+//   provenance: 'Four shards across session and CI over two days: ...', status: 'active' }</code></pre><p class="say">The trait changes and its provenance travels with it.</p></div>
+          <button type="button" class="act run-btn">Run step 3</button>
+        </li>
+        <li class="step refused" id="step-4">
+          <h3><span class="n">04</span> Level up and forget trait 1</h3>
+          <p>Every active trait has to be merged, promoted or carried.</p>
+          <pre class="call"><code>const plan = {
+  newEssence: '...',
+  consolidations: [],
+  promotedTraitIds: [trait2.id],
+  carriedTraitIds: [],
+};
+read.validateLevelUpPlan(db, reviewer.id, plan);
+write.levelUp(db, reviewer.id, plan);</code></pre>
+          <div class="result"><pre><code>// { valid: false, error: { missingTraitIds: [1], duplicateTraitIds: [], invalidTraitIds: [] } }
+
+// SoulsValidationError
+// Level-up plan is invalid. Missing: [1]. Duplicates: []. Invalid: [].</code></pre><p class="say">Refused. The plan dropped trait 1, so nothing changed.</p></div>
+          <button type="button" class="act run-btn">Run step 4</button>
+        </li>
+        <li class="step" id="step-5">
+          <h3><span class="n">05</span> Level up properly</h3>
+          <p>Trait 2 moves into the essence; trait 1 is carried forward.</p>
+          <pre class="call"><code>write.levelUp(db, reviewer.id, {
+  newEssence: 'I review code by reading for intent before scanning for bugs, '
+    + 'and I say what breaks before I mention style.',
+  consolidations: [],
+  promotedTraitIds: [trait2.id],
+  carriedTraitIds: [trait1.id],
+});
+read.renderSoul(db, reviewer.id);</code></pre>
+          <div class="result"><pre><code># Reviewer
+*Code review specialist*
+
+I review code by reading for intent before scanning for bugs, and I say what breaks before I mention style.
+
+## Traits
+- Read the PR description and its linked issue before the diff.</code></pre><p class="say">Level 2. This block is what goes into the system prompt, and it stays the same until the next change.</p></div>
+          <button type="button" class="act run-btn">Run step 5</button>
+        </li>
+        <li class="step" id="step-6">
+          <h3><span class="n">06</span> Revert the level-up</h3>
+          <p>Say the new essence reads worse in practice.</p>
+          <pre class="call"><code>write.revertLevelUp(db, reviewer.id);
+read.renderSoul(db, reviewer.id);</code></pre>
+          <div class="result"><pre><code># Reviewer
+*Code review specialist*
+
+I review code by reading for intent before scanning for bugs.
+
+## Traits
+- Read the PR description and its linked issue before the diff.
+- Say what breaks before naming style nits.</code></pre><p class="say">Back to level 1 with both traits. Trait 1 keeps its revised text, because that revision came before the level-up.</p></div>
+          <button type="button" class="act run-btn">Run step 6</button>
+        </li>
+      </ol>
+    </div>
+    <div class="run-tools"><button type="button" class="button ghost" id="reset">Start over</button><p id="run-status" role="status"></p></div>
+    <p class="note">The gate rules come from the library: at least two independent sources and at least a day between the oldest and newest pending shard.</p>
+    <p class="note">All four shards are still pending after the level-up. Using them up is a separate decision your code makes.</p>
+  </section>
+
+  <section class="sec explain" aria-labelledby="explain-title">
+    <div class="sec-head">
+    <h2 id="explain-title">What a soul is made of</h2>
+    <img class="graph" src="assets/images/art-640.webp" width="640" height="360" alt="Stacked plates of glass drawn in cyan light, a violet beam rising through them and small shards drifting upward." loading="lazy">
+    </div>
+    <p class="intro">A soul is one identity, and it is not a prompt template.</p>
+    <dl class="form">
+      <div><dt>Essence</dt><dd>A few sentences in the first person about how the agent thinks and judges.</dd></div>
+      <div><dt>Trait</dt><dd>One principle with its provenance, the evidence that it was earned.</dd></div>
+      <div><dt>Shard</dt><dd>One observation from any source, attributed to one or more souls. Shards pile up quietly until the gate opens.</dd></div>
+      <div><dt>Level-up</dt><dd>Merge overlapping traits, promote absorbed ones into the essence, carry the rest. The level goes up by one, and <code>revertLevelUp</code> goes back.</dd></div>
+      <div><dt>Rendered block</dt><dd><code>renderSoul</code> prints essence and active traits as markdown for your system prompt. It only changes when the soul does.</dd></div>
+      <div><dt>Mentor</dt><dd>One built-in soul, tuned to guide the refinement steps. <code>soul.renderSoulsSoulPromptFoundation()</code> returns it.</dd></div>
+    </dl>
+    <p class="note">Seven tools for agents: <code>search_souls</code>, <code>review_souls</code>, <code>inspect_souls_item</code>, <code>observe_soul</code>, <code>refine_soul</code>, <code>level_up_soul</code> and <code>manage_soul</code>.</p>
+  </section>
+
+  <section class="sec worry" aria-labelledby="worry-title">
+    <h2 id="worry-title">If a prompt that edits itself worries you</h2>
+    <div class="worry-grid">
+      <p>People have watched agents that rewrite their own instructions do strange things, and deleting <code>SOUL.md</code> just sends an agent back to its default. Both are reasonable things to worry about.</p>
+      <ul>
+        <li>souls does not call a model. Your code or your agent proposes a change, and souls checks it and keeps the history.</li>
+        <li>A level-up that drops an active trait is refused before anything is written.</li>
+        <li>Every level-up can be reverted, and every trait keeps its provenance.</li>
+        <li>The identity and its full history sit in SQLite next to your other data, so going back means a call, not a restore from backup.</li>
+        <li>Node.js 24 or newer, because it uses the built-in <code>node:sqlite</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec numbers" aria-labelledby="numbers-title">
+    <h2 id="numbers-title">What it costs to add</h2>
+    <dl class="ledger">
+      <div><dt>Runtime dependencies</dt><dd>0</dd></div>
+      <div><dt>Node.js</dt><dd>24 or newer (node:sqlite)</dd></div>
+      <div><dt>Size of dist/index.js, gzip</dt><dd>31.4 KB</dd></div>
+      <div><dt>Import time</dt><dd>about 3.8 ms</dd></div>
+      <div><dt>Tests</dt><dd>532 passing</dd></div>
+      <div><dt>Line coverage</dt><dd>93.4%</dd></div>
+      <div><dt>Agent tools</dt><dd>7</dd></div>
+    </dl>
+    <p class="note">Measured 2026-10-24 on the maintainer's machine with Node.js 24.14.0 against souls 0.3.0: size of the published dist/index.js at gzip -9, median of 11 cold imports, tests and coverage from the v0.3.0 tag.</p>
+  </section>
+
+  <section class="sec start" aria-labelledby="start-title">
+    <h2 id="start-title">Start from the README</h2>
+    <pre><code>import { DatabaseSync } from 'node:sqlite';
+import { initSoulsTables, read, write } from '@ghostpaw/souls';
+
+const db = new DatabaseSync(':memory:');
+initSoulsTables(db);
+
+const soul = write.createSoul(db, {
+  name: 'Reviewer',
+  essence: 'I review code by reading for intent before scanning for bugs.',
+  description: 'Code review specialist',
+});
+
+write.addTrait(db, soul.id, {
+  principle: 'Read the PR description before the diff.',
+  provenance: 'Reviews that started with code missed architectural intent 3 of 4 times.',
+});
+
+write.dropShard(db, {
+  content: 'Reviewer caught a naming inconsistency by reading the RFC first.',
+  source: 'session',
+  soulIds: [soul.id],
+});
+
+const rendered = read.renderSoul(db, soul.id);</code></pre>
+    <p>To run it as an MCP server, add <code>npx -y @ghostpaw/souls mcp</code> to your client. <code>npx -y @ghostpaw/souls skill</code> prints the Agent Skill that ships in the package.</p>
+    <p class="links"><a class="more" href="{{.urls.readme}}">Read the README</a><a href="{{.urls.demo}}">Open the live demo</a><a href="{{.urls.npm}}">souls on npm</a></p>
+    <p class="links"><a href="{{.urls.home}}">All seven GhostPaw libraries</a><a href="{{.urls.agentMemory}}">codex, for memory</a><a href="{{.urls.agentTasks}}">questlog, for tasks</a><a href="{{.urls.agentContacts}}">affinity, for contacts</a><a href="{{.urls.agentSkills}}">grimoire, for skills</a><a href="{{.urls.agentEmail}}">email, for mail</a><a href="{{.urls.agentTelegram}}">telegram, for chats</a></p>
+  </section>
+</main>
+<footer class="foot">
+  <p>souls is maintained in the open by GhostPaw under the MIT licence.</p>
+  <p class="foot-links"><a href="{{.urls.github}}">Source</a><a href="{{.urls.impressum}}">Impressum</a><a href="{{.urls.privacy}}">Datenschutz</a></p>
+</footer>
+{{script "assets/scripts/main.js"}}
+</body>
+</html>

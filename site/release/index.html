@@ -1,0 +1,253 @@
+<!DOCTYPE html><html lang=en><head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width, initial-scale=1">
+<title>souls: agent identity that changes only on evidence, and can be reverted</title>
+<meta name=description content="@ghostpaw/souls stores an agent's identity as an essence plus traits with provenance. Observations from two independent sources over a day gate refinement, level-ups are validated and every one can be reverted. Node.js 24, zero dependencies, MIT.">
+<link rel=canonical href=https://souls.ghostpaw.dev/>
+<meta property=og:type content=website>
+<meta property=og:url content=https://souls.ghostpaw.dev/>
+<meta property=og:title content="souls: agent identity that changes only on evidence, and can be reverted">
+<meta property=og:description content="@ghostpaw/souls stores an agent's identity as an essence plus traits with provenance. Observations from two independent sources over a day gate refinement, level-ups are validated and every one can be reverted. Node.js 24, zero dependencies, MIT.">
+<meta property=og:image content=https://souls.ghostpaw.dev/share-bbc3c1c1d5ce.png><meta property=og:image:width content=1200><meta property=og:image:height content=630>
+<meta property=og:image:alt content="A ghost-wolf head drawn in cyan light with shards gathering into a violet crystal, beside the line: Change your agent's prompt when the evidence agrees.">
+<meta name=twitter:card content=summary_large_image>
+<link rel=preload href=./tektur-var-4c711ade6b7f.woff2 as=font type=font/woff2 crossorigin>
+<link rel=preload href=./martian-mono-var-3048bdad51b1.woff2 as=font type=font/woff2 crossorigin>
+<meta name=theme-color content=#04070b>
+
+
+<style>@font-face{font-family:Tektur;src:url("./tektur-var-4c711ade6b7f.woff2") format("woff2");font-weight:500 900;font-stretch:75% 100%;font-style:normal;font-display:swap}@font-face{font-family:Martian Mono;src:url("./martian-mono-var-3048bdad51b1.woff2") format("woff2");font-weight:400 700;font-style:normal;font-display:swap}:root{--void: #04070b;--panel: #0a1119;--rule: #1d2c3c;--ghost: #e3edf5;--haze: #93a5b9;--spectral: #62e6f2;--wraith: #b39dff;--alarm: #ff7aa6;--ward: #7af0b4;--glow: rgba(98, 230, 242, .28);--display: "Tektur", Bahnschrift, "Arial Narrow", sans-serif;--body: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;--mono: "Martian Mono", "Cascadia Mono", Consolas, monospace;--edge: 1px solid var(--rule);--cut: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);--wrap: 72rem;color-scheme:dark}*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;background:var(--void)}body{margin:0;color:var(--ghost);font:400 1.0625rem/1.6 var(--body);font-synthesis:none;background-color:var(--void);background-image:linear-gradient(rgba(98,230,242,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(98,230,242,.035) 1px,transparent 1px);background-size:48px 48px}img{display:block;max-width:100%;height:auto}code,input,kbd,samp{font-family:var(--mono);font-synthesis:none}code{font-size:.86em;letter-spacing:-.01em}a{color:var(--ghost);text-decoration-color:var(--spectral);text-decoration-thickness:1px;text-underline-offset:.22em}a:hover{color:var(--spectral)}:focus-visible{outline:2px solid var(--spectral);outline-offset:3px}h1,h2,h3,h4{font-family:var(--display);line-height:1.06;margin:0 0 .5em;text-wrap:balance;font-weight:700}h1{font-size:clamp(2.35rem,6.4vw,4.7rem);font-stretch:88%;letter-spacing:-.01em;text-shadow:0 0 34px rgba(98,230,242,.18)}h2{font-size:clamp(1.75rem,3.7vw,2.7rem);font-stretch:90%;font-weight:650}h3{font-size:1.3rem;font-weight:600;font-stretch:95%}h4{font-size:1rem;font-weight:600;font-stretch:95%}p{margin:0 0 1em}::selection{background:var(--spectral);color:var(--void)}.top,main>section,.foot{max-width:var(--wrap);margin:0 auto;padding-left:1.25rem;padding-right:1.25rem}.top{display:flex;justify-content:space-between;align-items:center;padding-top:1.1rem;padding-bottom:1.1rem;border-bottom:var(--edge)}.brand{font:700 1.2rem/1 var(--display);font-stretch:85%;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem}.brand:after{content:"";width:.5rem;height:1.05rem;background:var(--spectral);box-shadow:0 0 12px var(--glow)}.top nav{display:flex;gap:1.25rem}.top nav a{text-decoration:none;color:var(--haze)}.top nav a:hover{color:var(--spectral)}.cmd{display:flex;align-items:stretch;border:var(--edge);background:var(--panel);max-width:30rem}.cmd:before{content:"$";font:400 .9rem/1 var(--mono);color:var(--haze);padding:0 0 0 .75rem;align-self:center}.cmd input{flex:1;min-width:0;border:0;background:transparent;color:var(--ghost);font-size:.8rem;padding:.75rem .6rem}.copy{border:0;background:var(--spectral);color:var(--void);font:650 .95rem var(--display);padding:0 .9rem;cursor:pointer;min-width:4.75rem}.copy:hover{background:var(--ghost)}.button{display:inline-block;background:var(--spectral);color:var(--void);text-decoration:none;font:650 1rem var(--display);padding:.8rem 1.4rem .8rem 1.2rem;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%)}.button:hover{background:var(--ghost);color:var(--void)}.note{color:var(--haze);font-size:.9rem;margin-top:1rem;max-width:46rem}.scope{position:relative;overflow:hidden}.scope img{mix-blend-mode:screen;width:100%}.scope:before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,transparent 0 3px,rgba(4,7,11,.38) 3px 4px);z-index:1}.scan{position:absolute;inset:0;z-index:2;pointer-events:none;transform:translateY(101%);background:linear-gradient(to bottom,var(--spectral) 0 2px,rgba(4,7,11,.92) 2px);box-shadow:0 -6px 24px var(--glow)}.js .scan{animation:sweep .9s cubic-bezier(.45,.05,.35,1) .15s both}@keyframes sweep{0%{transform:translateY(0);opacity:1}92%{opacity:1}to{transform:translateY(101%);opacity:0}}.scan{opacity:0}.frame{position:relative;margin:0}.frame:after{content:"";position:absolute;inset:-.5rem;pointer-events:none;background:linear-gradient(var(--spectral),var(--spectral)) top left / 18px 1px no-repeat,linear-gradient(var(--spectral),var(--spectral)) top left / 1px 18px no-repeat,linear-gradient(var(--spectral),var(--spectral)) top right / 18px 1px no-repeat,linear-gradient(var(--spectral),var(--spectral)) top right / 1px 18px no-repeat,linear-gradient(var(--spectral),var(--spectral)) bottom left / 18px 1px no-repeat,linear-gradient(var(--spectral),var(--spectral)) bottom left / 1px 18px no-repeat,linear-gradient(var(--spectral),var(--spectral)) bottom right / 18px 1px no-repeat,linear-gradient(var(--spectral),var(--spectral)) bottom right / 1px 18px no-repeat;opacity:.7}.foot{padding-top:2rem;padding-bottom:3rem;border-top:var(--edge);color:var(--haze)}.foot-links{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}.foot a{color:var(--haze)}.foot a:hover{color:var(--spectral)}@media(min-width:52rem){.cmd input{font-size:.9rem}}@media(prefers-reduced-motion:reduce){.js .scan{animation:none}*{transition:none!important}}.hero{display:grid;gap:2.5rem;padding-top:2.5rem;padding-bottom:3.5rem;align-items:center}.hero-copy{min-width:0}.lede{font-size:1.22rem;color:var(--ghost)}.lede code{white-space:nowrap;color:var(--spectral)}.hero-copy>p:not(.lede):not(.actions):not(.terms){color:var(--haze)}.install label{display:block;font:600 .95rem var(--display);color:var(--haze);margin-bottom:.4rem}.actions{display:flex;flex-wrap:wrap;gap:1rem 1.5rem;align-items:center;margin-top:1.5rem}.terms{color:var(--haze);font-size:.95rem}.hero-art{min-width:0}.readout{position:absolute;left:.75rem;bottom:.75rem;z-index:3;margin:0;display:grid;grid-template-columns:auto 1fr;column-gap:.7rem;align-items:center;padding:.55rem 1rem .55rem .8rem;background:#04070bd1;border:1px solid rgba(98,230,242,.45);clip-path:var(--cut)}.readout .big{grid-row:span 2;font:700 2.6rem/1 var(--display);color:var(--spectral);text-shadow:0 0 18px var(--glow)}.readout span:not(.big){font:600 1rem/1.15 var(--display)}.readout small{color:var(--haze);font-size:.8rem}.readout{display:flex;gap:.7rem}.kicker{margin:0 0 .85rem;color:var(--haze)}.kicker code{color:var(--spectral)}.cmd-label{font:600 .95rem var(--display);color:var(--haze);margin:0 0 .4rem}.intro{max-width:46rem;color:var(--haze)}.board-sec .intro:first-of-type,.todo>.intro:first-of-type{color:var(--ghost);font:600 1.25rem var(--display)}.links{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;margin:1.2rem 0 0}.links .more{font-weight:700;color:var(--spectral)}.board-sec,.todo,.time,.worry,.numbers,.start{padding-top:3.5rem;padding-bottom:2.5rem;border-top:var(--edge)}pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:1rem 0 0;background:var(--void);color:var(--ghost);border:var(--edge);border-left:2px solid var(--wraith);padding:1rem 1.1rem;overflow-x:auto;font-size:.8rem;line-height:1.65}pre code{font-size:inherit;color:var(--ghost)}.button.ghost{background:transparent;color:var(--spectral);border:1px solid var(--spectral);cursor:pointer;padding:.55rem 1.1rem .55rem 1rem}.button.ghost:hover,.button.ghost[aria-pressed=true]{background:var(--spectral);color:var(--void)}.sec{padding-top:3.5rem;padding-bottom:2.5rem;border-top:var(--edge)}.sec>.intro:first-of-type{color:var(--ghost);font:600 1.25rem var(--display)}.note code,.form code,.worry code,.start code,.step code,.state code,h2 code,.intro code{color:var(--spectral)}pre code{color:var(--ghost)}h2 code{font-size:.8em}.run{display:grid;gap:1.25rem;margin-top:1.5rem}.run>*{min-width:0}.state{background:var(--panel);border:var(--edge);padding:1rem 1.15rem 1.1rem;clip-path:var(--cut);box-shadow:inset 0 3px 0 var(--spectral);align-self:start}.state-label{font:600 .95rem var(--display);color:var(--haze);margin:0 0 .6rem;letter-spacing:.04em;text-transform:uppercase}.state ul{list-style:none;margin:0;padding:0}.state li{display:grid;grid-template-columns:auto 1fr;gap:.1rem .75rem;padding:.5rem 0;border-bottom:1px solid rgba(29,44,60,.9)}.state li:last-child{border-bottom:0}.state .k{font:600 1.05rem var(--display);color:var(--ghost)}.state .v{font:400 .8rem/1.5 var(--body);color:var(--haze);text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.state .bar{grid-column:1 / -1;height:3px;background:var(--rule);position:relative;display:none}.js .state .bar{display:block}.state .bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--spectral);box-shadow:0 0 10px var(--glow);transition:width .3s ease}.state .t-violet .k,.state .t-violet .v{color:var(--wraith)}.state .t-violet .bar i{background:var(--wraith);box-shadow:none}.state .t-alarm .k,.state .t-alarm .v{color:var(--alarm)}.state .t-alarm .bar i{background:var(--alarm);box-shadow:none}.state .t-ward .k,.state .t-ward .v{color:var(--ward)}.state .t-ward .bar i{background:var(--ward)}.state .t-cyan .v{color:var(--spectral)}.state-foot{margin:.75rem 0 0;color:var(--haze);font-size:.85rem}.steps{list-style:none;margin:0;padding:0;display:grid;gap:1rem;counter-reset:step}.step{background:var(--panel);border:var(--edge);padding:1rem 1.15rem 1.15rem;clip-path:var(--cut);box-shadow:inset 0 3px 0 var(--rule);transition:box-shadow .3s ease}.step h3{display:flex;gap:.6rem;align-items:baseline;font-size:1.2rem;margin-bottom:.35rem}.step h3 .n{font:600 .85rem var(--body);color:var(--spectral);font-variant-numeric:tabular-nums}.step>p{color:var(--haze);margin-bottom:.25rem}.step pre{margin-top:.7rem;font-size:.78rem}.step .result pre{border-left-color:var(--ward)}.step.refused .result pre{border-left-color:var(--alarm)}.result .say{margin:.6rem 0 0;color:var(--ghost)}.step.refused .say{color:var(--alarm)}.run-btn,.run-tools{display:none}.js .step.next .run-btn{display:inline-block;margin-top:.85rem}.js .step:not(.done) .result{display:none}.js .step.next{box-shadow:inset 0 3px 0 var(--spectral)}.js .step.done{box-shadow:inset 0 3px 0 var(--ward)}.js .step.done.refused{box-shadow:inset 0 3px 0 var(--alarm)}.js .step.flash{animation:flash .42s ease-out}@keyframes flash{0%{border-color:var(--alarm)}to{border-color:var(--rule)}}.js .run-tools{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem;align-items:center}.run-tools p{margin:0;color:var(--haze);font-size:.9rem}.act{font:650 .95rem var(--display);background:var(--spectral);color:var(--void);border:0;padding:.5rem 1rem;cursor:pointer}.act:hover{background:var(--ghost)}.sec-head{display:grid;gap:.5rem;align-items:end}.graph{mix-blend-mode:screen;width:100%;max-width:22rem;justify-self:end;margin:-.5rem 0}.form{margin:1.5rem 0 0;border:var(--edge);background:var(--panel)}.form div{display:grid;grid-template-columns:minmax(0,1fr);gap:.15rem 1.5rem;padding:.8rem 1.1rem;border-bottom:var(--edge)}.form dt,.form dd{min-width:0;overflow-wrap:anywhere}.form div:last-child{border-bottom:0}.form dt{font:600 1rem var(--display);color:var(--ghost)}.form dd{margin:0;color:var(--haze)}.worry ul{padding:0;margin:0;list-style:none;max-width:46rem}.worry li{margin-bottom:.7rem;padding-left:1.4rem;position:relative}.worry li:before{content:"";position:absolute;left:0;top:.62em;width:.5rem;height:.5rem;border:1px solid var(--spectral)}.worry-grid>p{color:var(--haze);font-size:1.1rem}.ledger{margin:0;border-top:var(--edge);max-width:40rem}.ledger div{display:flex;justify-content:space-between;gap:1rem;border-bottom:var(--edge);padding:.55rem 0}.ledger dt{color:var(--haze)}.ledger dd{margin:0;color:var(--spectral);font:500 .9rem/1.6 var(--body);text-align:right;font-variant-numeric:tabular-nums}.start pre{max-width:46rem}.start>p{max-width:46rem;margin-top:1.25rem}.cmd input{padding:.75rem .5rem}.copy{min-width:4rem;padding:0 .7rem}@media(min-width:52rem){.hero{grid-template-columns:1.08fr 1fr;padding-top:4rem;padding-bottom:4.5rem}.run{grid-template-columns:minmax(17rem,.8fr) 1.6fr;gap:1.75rem;align-items:start}.state{position:sticky;top:1rem}.sec-head{grid-template-columns:1fr 22rem}.form div{grid-template-columns:11rem minmax(0,1fr)}.worry-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:3rem;align-items:start}pre{font-size:.84rem}.step pre{font-size:.8rem}}@media(prefers-reduced-motion:reduce){.js .step.flash{animation:none}}
+</style><link rel=icon type=image/png sizes=96x96 href=./favicon.png></head>
+<body>
+<header class=top>
+  <a class=brand href=https://ghostpaw.dev/>GhostPaw</a>
+  <nav aria-label="souls elsewhere">
+    <a href=https://github.com/GhostPawJS/souls>GitHub</a>
+    <a href=https://www.npmjs.com/package/@ghostpaw/souls>npm</a>
+    <a href=https://souls.ghostpaw.dev/docs/>Live demo</a>
+  </nav>
+</header>
+<main>
+  <section class=hero aria-labelledby=hero-title>
+    <div class=hero-copy>
+      <p class=kicker><code>@ghostpaw/souls</code> 0.3.0</p>
+      <h1 id=hero-title>Change your agent&#39;s prompt when the evidence agrees.</h1>
+      <p class=lede>souls keeps an agent&#39;s identity as a short essence plus traits, and every trait carries the evidence that earned it. Observations pile up as shards, the soul is ready for a change only when they come from two independent sources over at least a day, and every level-up can be reverted.</p>
+      <div class=install>
+        <p class=cmd-label id=lib-label>As a library</p>
+        <div class=cmd><input id=cmd-lib readonly value="npm install @ghostpaw/souls" aria-labelledby=lib-label spellcheck=false><button type=button class=copy data-copy=cmd-lib>Copy</button></div>
+        <p class=cmd-label id=mcp-label>As a local MCP server</p>
+        <div class=cmd><input id=cmd-mcp readonly value="npx -y @ghostpaw/souls mcp" aria-labelledby=mcp-label spellcheck=false><button type=button class=copy data-copy=cmd-mcp>Copy</button></div>
+      </div>
+      <p class=actions><a class=button href=#run>Replay the run</a> <a href=https://github.com/GhostPawJS/souls>Read the source on GitHub</a></p>
+      <p class=terms>Free and MIT licensed for Node.js 24 or newer, with zero runtime dependencies. The MCP server keeps identity and evidence in <code>~/.ghostpaw/souls.db</code> on your machine.</p>
+    </div>
+    <figure class="hero-art frame">
+      <div class=scope><picture><source media="(min-width: 52rem)" srcset=./hero-720-109d34e99815.webp width=720 height=540><img src=./hero-480-111166ba3dde.webp width=480 height=360 alt="A ghost-wolf head drawn in cyan light filaments, small glass shards floating toward it and a violet crystal forming beside its muzzle." fetchpriority=high></picture><span class=scan aria-hidden=true></span></div>
+      <p class=readout aria-label="Zero runtime dependencies"><span class=big>0</span><span>runtime dependencies</span></p>
+    </figure>
+  </section>
+
+  <section id=run class="sec run-sec" aria-labelledby=run-title>
+    <h2 id=run-title>One reviewer soul, six calls</h2>
+    <p class=intro>Three observations from the same place are not enough. A fourth from somewhere else is.</p>
+    <p class=intro>This is the Reviewer soul from the README quick start, replayed from a real run: we made these calls against souls 0.3.0 on 2026-10-24 with a fixed clock, starting from two traits and two session shards, one of them two days old. Every result below is what came back. Run the steps in order.</p>
+    <div class=run>
+      <div class=state role=region aria-labelledby=state-title aria-live=polite>
+        <p class=state-label id=state-title>Reviewer soul</p>
+        <ul id=state-list>
+          <li><span class=k>Level</span><span class=v>1</span></li>
+          <li><span class=k>Trait 1</span><span class=v>Read the PR description before the diff.</span></li>
+          <li><span class=k>Trait 2</span><span class=v>Say what breaks before naming style nits.</span></li>
+          <li><span class=k>Pending shards</span><span class=v>2</span></li>
+          <li class=t-violet><span class=k>Sources</span><span class=v>1 of 2</span></li>
+          <li><span class=k>Ready</span><span class=v>no</span></li>
+        </ul>
+        <p class=state-foot id=state-foot>read.crystallizationReadiness(db)</p>
+      </div>
+      <ol class=steps>
+        <li class=step id=step-1>
+          <h3><span class=n>01</span> A shard from a review session</h3>
+          <p>A shard is one observation, tagged with where it came from.</p>
+          <pre class=call><code>write.dropShard(db, {
+  content: &#39;Flagged a missing migration after reading the linked issue.&#39;,
+  source: &#39;session&#39;,
+  soulIds: [reviewer.id],
+});</code></pre>
+          <div class=result><pre><code>// { shard: { id: 3, status: &#39;pending&#39;, ... }, crystallizationTriggers: [] }
+
+read.crystallizationReadiness(db)
+// []</code></pre><p class=say>Three pending shards, all from sessions. The soul is not ready.</p></div>
+          <button type=button class="act run-btn">Run step 1</button>
+        </li>
+        <li class=step id=step-2>
+          <h3><span class=n>02</span> A shard from CI</h3>
+          <p>Same soul, a second and independent source.</p>
+          <pre class=call><code>write.dropShard(db, {
+  content: &#39;CI check: the reviewer approved a PR whose description said tests were pending.&#39;,
+  source: &#39;ci&#39;,
+  soulIds: [reviewer.id],
+});</code></pre>
+          <div class=result><pre><code>// { shard: { id: 4, ... }, crystallizationTriggers: [1] }
+
+read.crystallizationReadiness(db)
+// [{ soulId: 1, pendingCount: 4, sourceDiversity: 2, ageSpreadDays: 2, clusterCount: 4, ... }]</code></pre><p class=say>Two sources over two days. The soul is ready for refinement.</p></div>
+          <button type=button class="act run-btn">Run step 2</button>
+        </li>
+        <li class=step id=step-3>
+          <h3><span class=n>03</span> Revise trait 1</h3>
+          <p>The new wording and the reason for it are stored together.</p>
+          <pre class=call><code>write.reviseTrait(db, trait1.id, {
+  principle: &#39;Read the PR description and its linked issue before the diff.&#39;,
+  provenance: &#39;Four shards across session and CI over two days: &#39;
+    + &#39;the linked issue held the missing context twice.&#39;,
+});</code></pre>
+          <div class=result><pre><code>// { id: 1, principle: &#39;Read the PR description and its linked issue before the diff.&#39;,
+//   provenance: &#39;Four shards across session and CI over two days: ...&#39;, status: &#39;active&#39; }</code></pre><p class=say>The trait changes and its provenance travels with it.</p></div>
+          <button type=button class="act run-btn">Run step 3</button>
+        </li>
+        <li class="step refused" id=step-4>
+          <h3><span class=n>04</span> Level up and forget trait 1</h3>
+          <p>Every active trait has to be merged, promoted or carried.</p>
+          <pre class=call><code>const plan = {
+  newEssence: &#39;...&#39;,
+  consolidations: [],
+  promotedTraitIds: [trait2.id],
+  carriedTraitIds: [],
+};
+read.validateLevelUpPlan(db, reviewer.id, plan);
+write.levelUp(db, reviewer.id, plan);</code></pre>
+          <div class=result><pre><code>// { valid: false, error: { missingTraitIds: [1], duplicateTraitIds: [], invalidTraitIds: [] } }
+
+// SoulsValidationError
+// Level-up plan is invalid. Missing: [1]. Duplicates: []. Invalid: [].</code></pre><p class=say>Refused. The plan dropped trait 1, so nothing changed.</p></div>
+          <button type=button class="act run-btn">Run step 4</button>
+        </li>
+        <li class=step id=step-5>
+          <h3><span class=n>05</span> Level up properly</h3>
+          <p>Trait 2 moves into the essence; trait 1 is carried forward.</p>
+          <pre class=call><code>write.levelUp(db, reviewer.id, {
+  newEssence: &#39;I review code by reading for intent before scanning for bugs, &#39;
+    + &#39;and I say what breaks before I mention style.&#39;,
+  consolidations: [],
+  promotedTraitIds: [trait2.id],
+  carriedTraitIds: [trait1.id],
+});
+read.renderSoul(db, reviewer.id);</code></pre>
+          <div class=result><pre><code># Reviewer
+*Code review specialist*
+
+I review code by reading for intent before scanning for bugs, and I say what breaks before I mention style.
+
+## Traits
+- Read the PR description and its linked issue before the diff.</code></pre><p class=say>Level 2. This block is what goes into the system prompt, and it stays the same until the next change.</p></div>
+          <button type=button class="act run-btn">Run step 5</button>
+        </li>
+        <li class=step id=step-6>
+          <h3><span class=n>06</span> Revert the level-up</h3>
+          <p>Say the new essence reads worse in practice.</p>
+          <pre class=call><code>write.revertLevelUp(db, reviewer.id);
+read.renderSoul(db, reviewer.id);</code></pre>
+          <div class=result><pre><code># Reviewer
+*Code review specialist*
+
+I review code by reading for intent before scanning for bugs.
+
+## Traits
+- Read the PR description and its linked issue before the diff.
+- Say what breaks before naming style nits.</code></pre><p class=say>Back to level 1 with both traits. Trait 1 keeps its revised text, because that revision came before the level-up.</p></div>
+          <button type=button class="act run-btn">Run step 6</button>
+        </li>
+      </ol>
+    </div>
+    <div class=run-tools><button type=button class="button ghost" id=reset>Start over</button><p id=run-status role=status></p></div>
+    <p class=note>The gate rules come from the library: at least two independent sources and at least a day between the oldest and newest pending shard.</p>
+    <p class=note>All four shards are still pending after the level-up. Using them up is a separate decision your code makes.</p>
+  </section>
+
+  <section class="sec explain" aria-labelledby=explain-title>
+    <div class=sec-head>
+    <h2 id=explain-title>What a soul is made of</h2>
+    <img class=graph src=./art-640-5cc09414d04b.webp width=640 height=360 alt="Stacked plates of glass drawn in cyan light, a violet beam rising through them and small shards drifting upward." loading=lazy>
+    </div>
+    <p class=intro>A soul is one identity, and it is not a prompt template.</p>
+    <dl class=form>
+      <div><dt>Essence</dt><dd>A few sentences in the first person about how the agent thinks and judges.</dd></div>
+      <div><dt>Trait</dt><dd>One principle with its provenance, the evidence that it was earned.</dd></div>
+      <div><dt>Shard</dt><dd>One observation from any source, attributed to one or more souls. Shards pile up quietly until the gate opens.</dd></div>
+      <div><dt>Level-up</dt><dd>Merge overlapping traits, promote absorbed ones into the essence, carry the rest. The level goes up by one, and <code>revertLevelUp</code> goes back.</dd></div>
+      <div><dt>Rendered block</dt><dd><code>renderSoul</code> prints essence and active traits as markdown for your system prompt. It only changes when the soul does.</dd></div>
+      <div><dt>Mentor</dt><dd>One built-in soul, tuned to guide the refinement steps. <code>soul.renderSoulsSoulPromptFoundation()</code> returns it.</dd></div>
+    </dl>
+    <p class=note>Seven tools for agents: <code>search_souls</code>, <code>review_souls</code>, <code>inspect_souls_item</code>, <code>observe_soul</code>, <code>refine_soul</code>, <code>level_up_soul</code> and <code>manage_soul</code>.</p>
+  </section>
+
+  <section class="sec worry" aria-labelledby=worry-title>
+    <h2 id=worry-title>If a prompt that edits itself worries you</h2>
+    <div class=worry-grid>
+      <p>People have watched agents that rewrite their own instructions do strange things, and deleting <code>SOUL.md</code> just sends an agent back to its default. Both are reasonable things to worry about.</p>
+      <ul>
+        <li>souls does not call a model. Your code or your agent proposes a change, and souls checks it and keeps the history.</li>
+        <li>A level-up that drops an active trait is refused before anything is written.</li>
+        <li>Every level-up can be reverted, and every trait keeps its provenance.</li>
+        <li>The identity and its full history sit in SQLite next to your other data, so going back means a call, not a restore from backup.</li>
+        <li>Node.js 24 or newer, because it uses the built-in <code>node:sqlite</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec numbers" aria-labelledby=numbers-title>
+    <h2 id=numbers-title>What it costs to add</h2>
+    <dl class=ledger>
+      <div><dt>Runtime dependencies</dt><dd>0</dd></div>
+      <div><dt>Node.js</dt><dd>24 or newer (node:sqlite)</dd></div>
+      <div><dt>Size of dist/index.js, gzip</dt><dd>31.4 KB</dd></div>
+      <div><dt>Import time</dt><dd>about 3.8 ms</dd></div>
+      <div><dt>Tests</dt><dd>532 passing</dd></div>
+      <div><dt>Line coverage</dt><dd>93.4%</dd></div>
+      <div><dt>Agent tools</dt><dd>7</dd></div>
+    </dl>
+    <p class=note>Measured 2026-10-24 on the maintainer&#39;s machine with Node.js 24.14.0 against souls 0.3.0: size of the published dist/index.js at gzip -9, median of 11 cold imports, tests and coverage from the v0.3.0 tag.</p>
+  </section>
+
+  <section class="sec start" aria-labelledby=start-title>
+    <h2 id=start-title>Start from the README</h2>
+    <pre><code>import { DatabaseSync } from &#39;node:sqlite&#39;;
+import { initSoulsTables, read, write } from &#39;@ghostpaw/souls&#39;;
+
+const db = new DatabaseSync(&#39;:memory:&#39;);
+initSoulsTables(db);
+
+const soul = write.createSoul(db, {
+  name: &#39;Reviewer&#39;,
+  essence: &#39;I review code by reading for intent before scanning for bugs.&#39;,
+  description: &#39;Code review specialist&#39;,
+});
+
+write.addTrait(db, soul.id, {
+  principle: &#39;Read the PR description before the diff.&#39;,
+  provenance: &#39;Reviews that started with code missed architectural intent 3 of 4 times.&#39;,
+});
+
+write.dropShard(db, {
+  content: &#39;Reviewer caught a naming inconsistency by reading the RFC first.&#39;,
+  source: &#39;session&#39;,
+  soulIds: [soul.id],
+});
+
+const rendered = read.renderSoul(db, soul.id);</code></pre>
+    <p>To run it as an MCP server, add <code>npx -y @ghostpaw/souls mcp</code> to your client. <code>npx -y @ghostpaw/souls skill</code> prints the Agent Skill that ships in the package.</p>
+    <p class=links><a class=more href=https://github.com/GhostPawJS/souls#readme>Read the README</a><a href=https://souls.ghostpaw.dev/docs/>Open the live demo</a><a href=https://www.npmjs.com/package/@ghostpaw/souls>souls on npm</a></p>
+    <p class=links><a href=https://ghostpaw.dev/>All seven GhostPaw libraries</a><a href=https://codex.ghostpaw.dev/>codex, for memory</a><a href=https://questlog.ghostpaw.dev/>questlog, for tasks</a><a href=https://affinity.ghostpaw.dev/>affinity, for contacts</a><a href=https://grimoire.ghostpaw.dev/>grimoire, for skills</a><a href=https://email.ghostpaw.dev/>email, for mail</a><a href=https://telegram.ghostpaw.dev/>telegram, for chats</a></p>
+  </section>
+</main>
+<footer class=foot>
+  <p>souls is maintained in the open by GhostPaw under the MIT licence.</p>
+  <p class=foot-links><a href=https://github.com/GhostPawJS/souls>Source</a><a href=https://lab.anonyfox.com/impressum/>Impressum</a><a href=https://lab.anonyfox.com/datenschutz/>Datenschutz</a></p>
+</footer>
+
+
+
+<script type=application/ld+json>{"@context":"https://schema.org","@graph":[{"@type":"SoftwareSourceCode","author":{"@id":"https://ghostpaw.dev/#org","@type":"Organization","name":"GhostPaw"},"codeRepository":"https://github.com/GhostPawJS/souls","description":"@ghostpaw/souls stores an agent's identity as an essence plus traits with provenance. Observations from two independent sources over a day gate refinement, level-ups are validated and every one can be reverted. Node.js 24, zero dependencies, MIT.","license":"https://opensource.org/license/mit","name":"@ghostpaw/souls","programmingLanguage":"TypeScript","runtimePlatform":"Node.js 24","version":"0.3.0"}]}</script><script>document.documentElement.classList.add("js");
+</script><script type=module>var g=[{rows:[{k:"Level",v:"1"},{k:"Trait 1",v:"Read the PR description before the diff."},{k:"Trait 2",v:"Say what breaks before naming style nits."},{k:"Pending shards",v:"2"},{k:"Sources",v:"1 of 2",w:.5,t:"violet"},{k:"Ready",v:"no"}],foot:"read.crystallizationReadiness(db)"},{rows:[{k:"Level",v:"1"},{k:"Trait 1",v:"Read the PR description before the diff."},{k:"Trait 2",v:"Say what breaks before naming style nits."},{k:"Pending shards",v:"3"},{k:"Sources",v:"1 of 2",w:.5,t:"violet"},{k:"Ready",v:"no · one source"}],foot:"Still only session shards."},{rows:[{k:"Level",v:"1"},{k:"Trait 1",v:"Read the PR description before the diff."},{k:"Trait 2",v:"Say what breaks before naming style nits."},{k:"Pending shards",v:"4"},{k:"Sources",v:"2 of 2",w:1,t:"ward"},{k:"Ready",v:"yes · 2 sources, 2 days",t:"ward"}],foot:"pendingCount 4, sourceDiversity 2, ageSpreadDays 2"},{rows:[{k:"Level",v:"1"},{k:"Trait 1",v:"Read the PR description and its linked issue before the diff.",t:"cyan"},{k:"Trait 2",v:"Say what breaks before naming style nits."},{k:"Pending shards",v:"4"},{k:"Sources",v:"2 of 2",w:1,t:"ward"},{k:"Ready",v:"yes",t:"ward"}],foot:"Trait 1 revised, with its provenance."},{rows:[{k:"Level",v:"1 · plan refused",t:"alarm"},{k:"Trait 1",v:"Read the PR description and its linked issue before the diff."},{k:"Trait 2",v:"Say what breaks before naming style nits."},{k:"Pending shards",v:"4"},{k:"Sources",v:"2 of 2",w:1,t:"ward"},{k:"Ready",v:"yes",t:"ward"}],foot:"Nothing changed. The plan forgot trait 1."},{rows:[{k:"Level",v:"2",t:"cyan"},{k:"Trait 1",v:"Read the PR description and its linked issue before the diff. (carried)"},{k:"Trait 2",v:"in the essence now",t:"violet"},{k:"Pending shards",v:"4"},{k:"Sources",v:"2 of 2",w:1,t:"ward"},{k:"Ready",v:"yes",t:"ward"}],foot:"Shards are not used up by a level-up."},{rows:[{k:"Level",v:"1 · reverted",t:"ward"},{k:"Trait 1",v:"Read the PR description and its linked issue before the diff."},{k:"Trait 2",v:"Say what breaks before naming style nits."},{k:"Pending shards",v:"4"},{k:"Sources",v:"2 of 2",w:1,t:"ward"},{k:"Ready",v:"yes",t:"ward"}],foot:"Both traits are back."}];(()=>{let o=document.getElementById("state-list"),y=document.getElementById("state-foot"),a=Array.from(document.querySelectorAll(".step")),h=document.getElementById("reset"),p=document.getElementById("run-status");if(!o||!a.length)return;let d=!matchMedia("(prefers-reduced-motion: reduce)").matches,s=0;function c(e){let n=g[e];o.textContent="";for(let t of n.rows){let r=document.createElement("li");t.t&&(r.className="t-"+t.t);let f=document.createElement("span");f.className="k",f.textContent=t.k;let v=document.createElement("span");if(v.className="v",v.textContent=t.v,r.append(f,v),t.w!=null){let u=document.createElement("span");u.className="bar";let k=document.createElement("i");u.append(k),r.append(u);let w=Math.max(0,Math.min(1,t.w))*100+"%",m=o.dataset.prev&&JSON.parse(o.dataset.prev)[t.k];k.style.width=d&&m!=null?m:w,d&&m!=null&&requestAnimationFrame(()=>requestAnimationFrame(()=>{k.style.width=w}))}o.append(r)}let i={};for(let t of n.rows)t.w!=null&&(i[t.k]=Math.max(0,Math.min(1,t.w))*100+"%");o.dataset.prev=JSON.stringify(i),y&&(y.textContent=n.foot||"")}function l(){a.forEach((e,n)=>{e.classList.toggle("done",n<s),e.classList.toggle("next",n===s)}),p&&(p.textContent=s<a.length?"Step "+(s+1)+" of "+a.length+" is next.":"All "+a.length+" steps replayed.")}a.forEach((e,n)=>{e.querySelector(".run-btn").addEventListener("click",()=>{if(n!==s)return;s=n+1,c(s),l(),e.classList.contains("refused")&&d&&(e.classList.add("flash"),e.addEventListener("animationend",()=>e.classList.remove("flash"),{once:!0}));let t=a[s]&&a[s].querySelector(".run-btn"),r=e.querySelector(".result");r&&(r.setAttribute("tabindex","-1"),r.focus({preventScroll:!0})),t&&t.setAttribute("aria-describedby","run-status")})}),h&&h.addEventListener("click",()=>{s=0,o.dataset.prev="",c(0),l(),a[0].querySelector(".run-btn").focus()}),c(0),l(),document.querySelectorAll(".copy").forEach(e=>{e.addEventListener("click",async()=>{let n=document.getElementById(e.dataset.copy);try{await navigator.clipboard.writeText(n.value)}catch{n.select(),document.execCommand("copy")}let i=e.textContent;e.textContent="Copied",setTimeout(()=>{e.textContent=i},1400)})})})();
+</script></body></html>
