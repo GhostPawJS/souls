@@ -1,5 +1,3 @@
-import http from 'node:http';
-import https from 'node:https';
 import { EtherFetchError } from './errors.ts';
 import type { FetchTextResult } from './types.ts';
 
@@ -14,7 +12,7 @@ export function fetchText(
 	return doFetch(url, options?.etag ?? null, options?.timeoutMs ?? DEFAULT_TIMEOUT_MS, 0);
 }
 
-function doFetch(
+async function doFetch(
 	url: string,
 	etag: string | null,
 	timeoutMs: number,
@@ -24,8 +22,8 @@ function doFetch(
 		return Promise.reject(new EtherFetchError(`Too many redirects (>${MAX_REDIRECTS}).`));
 	}
 
+	const mod = url.startsWith('https') ? await import('node:https') : await import('node:http');
 	return new Promise<FetchTextResult>((resolve, reject) => {
-		const mod = url.startsWith('https') ? https : http;
 		const headers: Record<string, string> = { 'User-Agent': USER_AGENT };
 		if (etag) headers['If-None-Match'] = etag;
 

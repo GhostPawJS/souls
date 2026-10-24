@@ -1,8 +1,45 @@
 import { ok, strictEqual } from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { openEther } from './open_ether.ts';
 
 describe('openEther', () => {
+	it('sets a five-second busy timeout for memory and temporary databases', () => {
+		for (const path of [':memory:', '']) {
+			const db = openEther(path);
+			try {
+				strictEqual(db.prepare('PRAGMA busy_timeout').get<{ timeout: number }>()?.timeout, 5000);
+				strictEqual(
+					db.prepare('PRAGMA journal_mode').get<{ journal_mode: string }>()?.journal_mode,
+					path === ':memory:' ? 'memory' : 'delete',
+				);
+			} finally {
+				db.close();
+			}
+		}
+	});
+
+	it('enables WAL and a busy timeout for file databases, including reopening', () => {
+		const directory = mkdtempSync(join(process.cwd(), '.ether-test-'));
+		try {
+			for (let i = 0; i < 2; i++) {
+				const db = openEther(join(directory, 'ether.db'));
+				try {
+					strictEqual(
+						db.prepare('PRAGMA journal_mode').get<{ journal_mode: string }>()?.journal_mode,
+						'wal',
+					);
+					strictEqual(db.prepare('PRAGMA busy_timeout').get<{ timeout: number }>()?.timeout, 5000);
+				} finally {
+					db.close();
+				}
+			}
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
 	it('returns a SoulsDb with exec and prepare', () => {
 		const db = openEther(':memory:');
 		ok(typeof db.exec === 'function');
