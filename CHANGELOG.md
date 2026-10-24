@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-24
+
 ### Added
 
 - Document architecture, package usage, and contribution and release conventions.
@@ -54,7 +56,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/GhostPawJS/souls/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/GhostPawJS/souls/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/GhostPawJS/souls/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/GhostPawJS/souls/releases/tag/v0.2.0
