@@ -1,7 +1,5 @@
 import type { SoulsDb } from '../database.ts';
 import { BrowserSoulsDb } from './browser_db.ts';
-// @ts-expect-error -- JSON import resolved by esbuild bundler
-import etherDump from './ether_dump.json';
 import { loadSqlJs } from './load_sqljs.ts';
 
 interface DumpEntry {
@@ -66,7 +64,9 @@ export async function getEtherDb(): Promise<SoulsDb> {
 		`INSERT INTO ether_sources (id, kind, url, label) VALUES ('rosehill-system-prompts', 'github-json', 'https://raw.githubusercontent.com/danielrosehill/System-Prompt-Library/main/index/index.json', 'System Prompt Library (Rosehill)')`,
 	);
 
-	const entries = etherDump as DumpEntry[];
+	// Loaded on first use so the 6 MB dump stays out of the initial bundle.
+	// @ts-expect-error -- JSON import resolved by esbuild bundler
+	const entries = (await import('./ether_dump.json')).default as DumpEntry[];
 	const stmt = db.prepare(
 		`INSERT INTO ether_entries (source_id, external_id, name, description, content, category, tags, metadata, fetched_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,

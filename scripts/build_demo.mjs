@@ -2,6 +2,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import * as esbuild from 'esbuild';
+import { addDocsChrome, minifyCss } from './docs_chrome.mjs';
 
 const OUT_DIR = 'demo';
 const ENTRY = 'src/demo/main.tsx';
@@ -17,6 +18,9 @@ const buildOptions = {
 	platform: 'browser',
 	target: ['es2022'],
 	sourcemap: true,
+	minify: !WATCH,
+	splitting: true,
+	chunkNames: 'chunks/[name]-[hash]',
 	jsx: 'automatic',
 	jsxImportSource: 'preact',
 	loader: { '.wasm': 'file' },
@@ -771,6 +775,18 @@ h3 { font-family: var(--font-body); font-weight: 600; font-size: 0.9rem; line-he
 }
 `;
 
+// The top bar and footer sit in the page flow; the sidebar shares a grid row with the main column.
+const LAYOUT_CSS = `
+@media (min-width: 901px) {
+	#app:not(:empty) { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); }
+	.sidebar { position: sticky; top: 0; }
+	.main-content { margin-left: 0; }
+}
+@media (max-width: 900px) {
+	.hamburger { position: sticky; top: 14px; margin: 14px 0 -58px 14px; }
+}
+`;
+
 function writeHtmlShell() {
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -791,7 +807,7 @@ function writeHtmlShell() {
 <meta name="twitter:card" content="summary_large_image" />
 <!-- ghostpaw-docs-shell -->
 <style>.pre{max-width:42rem;margin:4rem auto;padding:0 1.25rem;font:400 1rem/1.6 system-ui,sans-serif;color:#dce7f3}.pre h1{font-size:1.6rem;line-height:1.25;margin:0 0 .75rem}.pre a{color:#62e6f2}.pre li{margin:.25rem 0}#app:not(:empty)~.pre{display:none}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}</style>
-<style>${CSS}</style>
+<style>${minifyCss(CSS)}</style>
 </head>
 <body>
 <div id="app"></div>
@@ -805,7 +821,7 @@ function writeHtmlShell() {
 <li><a href="https://ghostpaw.dev/">All GhostPaw libraries</a></li>
 </ul>
 </main>
-<script src="app.js"></script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>`;
 }
@@ -822,7 +838,10 @@ async function main() {
 		console.log('[demo] build complete');
 	}
 
-	await writeFile(join(OUT_DIR, 'index.html'), writeHtmlShell());
+	await writeFile(
+		join(OUT_DIR, 'index.html'),
+		addDocsChrome(writeHtmlShell(), { lib: 'souls', layoutCss: LAYOUT_CSS }),
+	);
 	console.log('[demo] wrote index.html');
 }
 
