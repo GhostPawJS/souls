@@ -1,5 +1,8 @@
 # Concept: GhostPaw Souls
 
+## Diagnosis
+Depth pass on 2026-10-24 for the subdomain move. What stays strong: the replayed run, re-run against souls 0.3.0 with identical output. What was thin: the page did not say which kind of drift souls handles. Builders describe two: the model sliding off a persona in long sessions, and silent edits to the system prompt. Added: a section that separates them and says souls covers the second and does not watch replies.
+
 ## Voices
 - People keep editing CLAUDE.md and AGENTS.md by hand, and the agent still ignores the rules in them. V002 V008 V006 V024 V012
 - Personality drifts or flattens across model updates and long sessions. V009 V025 V014 V018 V028
@@ -10,6 +13,10 @@
 - Self-modifying agents already do strange things. V022 V034
 - Consistent output in production is hard even when editing the prompt is easy. V044 V046
 - Developers want instruction files to carry evidence and be checked, not just grow. V047 V048 V002
+- Persona prompts are called brittle: over long sessions models drift into a generic tone. V064 V061 V066
+- A system-prompt edit changes every session silently and nobody can tell which edit caused worse answers. V068 V067
+- Builders turn personas into configuration (YAML compilers, hosted persona APIs) to make them reproducible. V064 V070 V063
+- Some models resist any persona file at all. V065
 
 ## Buyer
 A Node.js developer running an agent with a SOUL.md, AGENTS.md or CLAUDE.md that they edit by hand after every bad session (V002 V029). They come from a thread about agents ignoring rules or about SOUL.md (V008 V016), compare against Letta, LangMem and DSPy prompt optimisers and against plain markdown files (P001 P002 P003 P005), and need to see that changes to the identity are earned, checked and reversible (V043 V036). The hesitation most likely to stop them: an agent that rewrites its own prompt sounds like the strange self-modification they have already seen (V022).
@@ -44,7 +51,7 @@ Delivery: `npm install @ghostpaw/souls` into a Node.js 24+ project, or `npx -y @
 - In the recorded run, a plan that did not carry trait 1 failed validateLevelUpPlan with missingTraitIds [1], and levelUp threw "Level-up plan is invalid. Missing: [1]. Duplicates: []. Invalid: []." https://github.com/GhostPawJS/souls
 - In the recorded run, revertLevelUp returned the soul to level 1 with both traits, and the four shards stayed pending after the level-up. https://github.com/GhostPawJS/souls
 - 532 tests with 93.39% line, 89.06% branch and 95.85% function coverage, measured 2026-10-24. https://github.com/GhostPawJS/souls
-- dist is 31.4 KB gzip and imports in about 3.8 ms on the maintainer box, measured 2026-10-24. https://github.com/GhostPawJS/souls
+- dist is 31.4 KB gzip and imports in about 2.8 ms on the maintainer box, measured 2026-10-24. https://github.com/GhostPawJS/souls
 - SOUL.md is the file people edit to set an agent's personality. V029 V016
 
 ## Axes
@@ -89,7 +96,7 @@ A prompt that changes only when the evidence agrees, and changes back when asked
 2. The run: the Reviewer soul, six replayed steps. V026 V036
 3. Explainer: soul, trait, shard, level-up, the rendered block. V016 V029
 4. Worry: self-modification, what souls does and does not do. V022 V034
-5. Numbers: 0 deps, Node 24+, 532 tests, 93.4% lines, 31.4 KB gzip, about 3.8 ms import, 7 tools.
+5. Numbers: 0 deps, Node 24+, 532 tests, 93.4% lines, 31.4 KB gzip, about 2.8 ms import, 7 tools.
 6. Start: install, quick start, GitHub, README, live demo, home and sibling pages.
 7. Footer: Impressum, Datenschutz.
 
@@ -138,3 +145,4 @@ Reduced motion: no sweep or flash; changes in place.
 
 ## Changelog
 - 2026-10-24: first concept from the 2026-10-24 research batch (60 voices, 12 peers); evidence gate chosen; replay of a real souls 0.3.0 run.
+- 2026-10-24: depth pass (10 more voices, now 70); replay re-run against the current release; import time re-measured; comparison section added; page moved to https://souls.ghostpaw.dev/.

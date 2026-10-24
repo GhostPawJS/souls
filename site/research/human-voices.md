@@ -417,3 +417,124 @@ Observer note: score 303 at fetch
 ### V060 · DEV (comment on "10 Prompting Techniques My Deep Learning Exam Taught Me [That I Actual") · buyer · posted 2026-10-23 · fetched 2026-10-24 · via fetch
 > I'd add one constraint to the interviewer role: wait for my attempt before giving feedback. For a https://shorturl.at/ccsTn, I'd ask for one follow-up at a time and keep the solution hidden until I've explained my approach. Otherwise I can read a beautifully structured answer and mistake recognition for being able to solve it myself.
 <https://dev.to/emilywoodsnyc/comment/3ilmc>
+
+## Batch 2026-10-24 · ongoing: depth pass for the subdomain move · queries: "agent personality drift", "system prompt evolves over time", "agent persona consistency", "SOUL.md", "agent personality drift", "SOUL.md agent", "persona drift system prompt agent" · unreachable: YouTube (429), Reddit (challenge page)
+
+### V061 · Hacker News ([dead]) · creator · posted 2025-08-19 · fetched 2026-10-24 · via fetch
+> TL;DR
+>
+> LLMs are amazing at following prompts… until they aren’t. Tone drifts, personas collapse, and the whole thing feels fragile.
+>
+> Echo Mode is my attempt at fixing that — by adding a protocol layer on top of the model. Think of it like middleware: anchors + state machines + verification keys that keep tone stable, reproducible, and even track drift.
+>
+> It’s not “just more prompt engineering.” It’s a semantic protocol that treats conversation as a system — with checks, states, and defenses. …
+<https://news.ycombinator.com/item?id=44949331>
+
+### V062 · Hacker News (AI-Character.chat – Create and chat with AI characters) · creator · posted 2025-10-10 · fetched 2026-10-24 · via fetch
+> I’ve been copy/pasting “character prompts” between notes and chat apps for months, and finally
+> got tired of it. So I built a small site where you make a character (name, short backstory, a few       
+> guardrails) and chat with it in a clean, fast UI. Nothing fancy, just enough structure to keep a        
+> persona consistent and easy to tweak.
+>
+> This is for people who like character-driven chats—role-play, teaching, worldbuilding, or just having   
+> a consistent “voice” for brainstorming—without wading through agent frameworks or dashboard bloat.
+>
+> What it does today: create a character, tweak tone/constraints, chat with streaming replies, and share  
+> the character. …
+<https://news.ycombinator.com/item?id=45534666>
+
+### V063 · GitHub (ARPAHLS/rooms issue #69) · buyer · posted 2026-10-05 · fetched 2026-10-24 · via fetch
+> ### Problem Statement
+>
+> Rooms personas today are YAML `system_prompt` strings plus keyword `expertise`. Session memory is RAM-only for one run (`Session.history`). There is no shared identity/memory layer across agents or sessions.
+>
+> [MnemoLink](https://github.com/ARPAHLS/mnemolink) is the ARPA mnemonic layer: curated personas, artificial memories, and lineages (`mnemolink.compose(...)` → prompt adapters). Rooms currently cannot consume that without copy-pasting text into YAML.
+>
+> ### Proposed Solution
+>
+> Optional, lazy MnemoLink integration (same pattern as Skillware):
+>
+> 1. Add optional `mnemolink` persona fields on `AgentConfig` / YAML (e.g. `mnemonic_persona`, `memories[]`, `build_lineage`).
+> 2. …
+<https://github.com/ARPAHLS/rooms/issues/69>
+Observer note: issue title: Optional MnemoLink compose into Rooms agent system prompts
+
+### V064 · Hacker News (PersonaNexus – A YAML compiler for deterministic AI agent personalities) · creator · posted 2026-03-08 · fetched 2026-10-24 · via fetch
+> Hi HN,
+>
+> I’ve been building autonomous agents and hit a persistent architectural flaw: system prompts that dictate persona are brittle. Over long context windows or multi-turn orchestrations, LLMs inevitably drift from their assigned character into a generic, sycophantic tone.
+>
+> Hardcoding adjectives ("be helpful but sarcastic") scales poorly and yields non-deterministic variance across different base models.
+>
+> I built PersonaNexus to address this. It treats agent identity as configuration rather than prose.
+>
+> How it works:
+>
+> 1. You define the agent in a strict YAML schema.
+> 2. …
+<https://news.ycombinator.com/item?id=47297800>
+
+### V065 · Hacker News (Failing to give Meta Muse a soul) · buyer · posted 2026-10-13 · fetched 2026-10-24 · via fetch
+> Hi, I’ve found it kind of funny to watch Meta push soul.md files into the spotlight and see people's reactions to them.
+>
+> I tried making some interesting "souls" for Muse.
+>
+> Even though Meta is pushing Muse as this unique ever-evolving personal assistant, it still seems to have an iron grip on its personality.
+>
+> I have never had such difficulty getting a model to use a given persona or even follow basic preferences like writing style.
+>
+> Muse does have a long system prompt defining its disposition, but this is also true of other assistants like Claude. (Claude is quite good at following soul.mds IME). …
+<https://news.ycombinator.com/item?id=50074513>
+
+### V066 · Hacker News ([Open Source]Echo Mode – a middleware to stabilize LLM tone and persona drift) · creator · posted 2025-10-07 · fetched 2026-10-24 · via fetch
+> We open-sourced Echo Mode, a lightweight middleware for reducing tone/persona drift in long-running LLM interactions.
+>
+> It works as a finite-state protocol (Sync / Resonance / Insight / Calm), maintaining consistent conversational “state” across turns.
+> Under the hood it tracks a Sync Score (think BLEU for tone) and uses EWMA drift detection + repair loops to restore consistency.
+>
+> Written in TypeScript, works with OpenAI, Anthropic, Gemini, and other APIs.
+> The OSS version is free under Apache-2.0, and part of a larger system we’re developing at EchoMode.io to provide enterprise-grade tone stability. …
+<https://news.ycombinator.com/item?id=45508004>
+
+### V067 · GitHub (FriendlyInternet/nuxt-crouton issue #2431) · buyer · posted 2026-10-24 · fetched 2026-10-24 · via fetch
+> Parent: #2108 (WS9). Observed 2026-10-24: the worker's and decomposer's personas are ~300 lines of `printf`-assembled prompt inside `.github/workflows/work-issue-pidev.yml` and `decompose-on-issue-pidev.yml`.
+>
+> ## Hypothesis
+> **We think that** the pipeline agents' instructions live in the wrong place — inline shell `printf` lines in YAML — which is why they cannot be reviewed as prose, drift between the two workflows (the gate rules are duplicated), can't be unit-tested, and tripped the #1727 shell trap. …
+<https://github.com/FriendlyInternet/nuxt-crouton/issues/2431>
+Observer note: issue title: WS9: pi worker/decomposer personas as versioned agent files, not printf in YAML
+
+### V068 · GitHub (mrveiss/AutoBot-AI issue #17277) · buyer · posted 2026-09-22 · fetched 2026-10-24 · via fetch
+> Child of #17271. **Sequence this before the prefix-ordering change (#17278).**
+>
+> ## Problem
+>
+> Nothing in AutoBot notices when the system prompt changes. A prompt edit silently alters behaviour
+> for every session, and the only signal is downstream: answers get worse, and the cause is a diff
+> nobody correlated. There is no hash of the assembled prefix, no comparison against what a previous
+> run actually sent.
+>
+> ## Evidence
+>
+> - Searched repo-wide for `prompt_version|prefix_hash|system_prompt_hash|prompt.*drift`:
+>   **zero** hits. …
+<https://github.com/mrveiss/AutoBot-AI/issues/17277>
+Observer note: issue title: observability(llm): nothing detects prompt drift — a system-prompt edit changes every session silently
+
+### V069 · Bluesky (post) · adjacent · posted 2026-03-12 · fetched 2026-10-24 · via fetch
+> When the Fallback Model Killed the Personality — A DeepSeek Personality Drift Incident
+> via Dev.to DevOps
+>
+> https://flarestart.com/article/when-the-fallback-model-killed-the-personality-a-deepseek-personality-drift-incident-20260312
+> #DevNews #DevOps
+<https://bsky.app/profile/flarestart.bsky.social/post/3mgueutgmsu26>
+
+### V070 · Hacker News (Show HN: Ego – A PaaS API for stateful AI personas) · creator · posted 2025-07-09 · fetched 2026-10-24 · via fetch
+> Hey HN,
+>
+> Founder here. I'm excited (and a bit nervous) to share what started as a personal project to solve my own frustration.
+>
+> Like many of you, I've been building with LLMs and kept hitting the same wall: creating AI agents with any kind of deep, consistent personality is incredibly difficult. Managing massive system prompts, trying to enforce behavioral rules, and handling state just felt like a huge distraction from building the actual application. I just wanted a clean API for this.
+>
+> So, I built it. Ego is a Persona-as-a-Service platform. The idea is to abstract away the complexity of advanced prompt engineering. …
+<https://news.ycombinator.com/item?id=44509846>

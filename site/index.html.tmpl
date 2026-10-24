@@ -197,18 +197,28 @@ I review code by reading for intent before scanning for bugs.
     </div>
   </section>
 
+  <section class="sec field" aria-labelledby="field-title">
+    <h2 id="field-title">Where persona drift comes from</h2>
+    <p class="intro">People describe two kinds of drift: the model sliding away from a persona over a long session, and a system prompt that changes without anyone noticing. souls deals with the second.</p>
+    <div class="field-rows">
+      <article class="field-row"><h3>A long system prompt edited by hand</h3><p class="gap">One edit changes every session at once, and nothing records why it was made.</p><p class="here">Each refinement is a recorded change to a trait, backed by evidence, with level history and rollback.</p></article>
+      <article class="field-row"><h3>A persona compiled from YAML, or a hosted persona API</h3><p class="gap">The wording stays fixed, but there is no place for what the agent learned since it was written.</p><p class="here">Observations collect as evidence. A trait changes only when evidence from more than one source agrees.</p></article>
+      <article class="field-row"><h3>Middleware that scores tone turn by turn</h3><p class="gap">It measures drift in replies, after the reply is sent.</p><p class="here">souls does not watch replies. It keeps the prompt itself under change control, so it pairs with output checks rather than replacing them.</p></article>
+    </div>
+  </section>
+
   <section class="sec numbers" aria-labelledby="numbers-title">
     <h2 id="numbers-title">What it costs to add</h2>
     <dl class="ledger">
       <div><dt>Runtime dependencies</dt><dd>0</dd></div>
       <div><dt>Node.js</dt><dd>24 or newer (node:sqlite)</dd></div>
       <div><dt>Size of dist/index.js, gzip</dt><dd>31.4 KB</dd></div>
-      <div><dt>Import time</dt><dd>about 3.8 ms</dd></div>
+      <div><dt>Import time</dt><dd>about 2.8 ms</dd></div>
       <div><dt>Tests</dt><dd>532 passing</dd></div>
       <div><dt>Line coverage</dt><dd>93.4%</dd></div>
       <div><dt>Agent tools</dt><dd>7</dd></div>
     </dl>
-    <p class="note">Measured 2026-10-24 on the maintainer's machine with Node.js 24.14.0 against souls 0.3.0: size of the published dist/index.js at gzip -9, median of 11 cold imports, tests and coverage from the v0.3.0 tag.</p>
+    <p class="note">Measured 2026-10-24 on the maintainer's machine with Node.js 24.14.0 against souls 0.3.0: size of the published dist/index.js at gzip -9, median of 11 cold imports, tests and coverage from the v0.3.0 tag. The replay above was re-run against the same release on that day and gave the same output.</p>
   </section>
 
   <section class="sec start" aria-labelledby="start-title">
