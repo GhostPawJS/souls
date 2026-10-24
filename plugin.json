@@ -36,6 +36,8 @@
     "mcp-server",
     "model-context-protocol",
     "agent-skills",
-    "cli"
+    "cli",
+    "ai-agents",
+    "agent"
   ]
 }
