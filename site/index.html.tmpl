@@ -21,17 +21,17 @@
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="{{.urls.home}}">GhostPaw</a>
+  <a class="brand" href="{{.urls.home}}">GhostPaw<span class="crumb">/souls</span></a>
   <nav aria-label="souls elsewhere">
+    <a href="{{.urls.demo}}">Live demo</a>
     <a href="{{.urls.github}}">GitHub</a>
     <a href="{{.urls.npm}}">npm</a>
-    <a href="{{.urls.demo}}">Live demo</a>
   </nav>
 </header>
 <main>
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-copy">
-      <p class="kicker"><code>@ghostpaw/souls</code> 0.3.0</p>
+      <p class="kicker"><code>@ghostpaw/souls</code> <span class="ver">0.3.0</span></p>
       <h1 id="hero-title">Change your agent's prompt when the evidence agrees.</h1>
       <p class="lede">souls keeps an agent's identity as a short essence plus traits, and every trait carries the evidence that earned it. Observations pile up as shards, the soul is ready for a change only when they come from two independent sources over at least a day, and every level-up can be reverted.</p>
       <div class="install">
@@ -249,12 +249,12 @@ write.dropShard(db, {
 const rendered = read.renderSoul(db, soul.id);</code></pre>
     <p>To run it as an MCP server, add <code>npx -y @ghostpaw/souls mcp</code> to your client. <code>npx -y @ghostpaw/souls skill</code> prints the Agent Skill that ships in the package.</p>
     <p class="links"><a class="more" href="{{.urls.readme}}">Read the README</a><a href="{{.urls.demo}}">Open the live demo</a><a href="{{.urls.npm}}">souls on npm</a></p>
-    <p class="links"><a href="{{.urls.home}}">All seven GhostPaw libraries</a><a href="{{.urls.agentMemory}}">codex, for memory</a><a href="{{.urls.agentTasks}}">questlog, for tasks</a><a href="{{.urls.agentContacts}}">affinity, for contacts</a><a href="{{.urls.agentSkills}}">grimoire, for skills</a><a href="{{.urls.agentEmail}}">email, for mail</a><a href="{{.urls.agentTelegram}}">telegram, for chats</a></p>
   </section>
 </main>
 <footer class="foot">
-  <p>souls is maintained in the open by GhostPaw under the MIT licence.</p>
-  <p class="foot-links"><a href="{{.urls.github}}">Source</a><a href="{{.urls.impressum}}">Impressum</a><a href="{{.urls.privacy}}">Datenschutz</a></p>
+  <nav class="foot-libs" aria-label="GhostPaw libraries"><a href="{{.urls.agentMemory}}">codex</a><a href="{{.urls.agentTasks}}">questlog</a><a href="{{.urls.agentContacts}}">affinity</a><a href="{{.url}}" aria-current="page">souls</a><a href="{{.urls.agentSkills}}">grimoire</a><a href="{{.urls.agentEmail}}">email</a><a href="{{.urls.agentTelegram}}">telegram</a></nav>
+  <p>souls is one of seven GhostPaw libraries, maintained in the open under the MIT licence.</p>
+  <p class="foot-links"><a href="{{.urls.home}}">GhostPaw home</a><a href="{{.urls.github}}">Source on GitHub</a><a href="{{.urls.npm}}">souls on npm</a><a href="{{.urls.impressum}}">Impressum</a><a href="{{.urls.privacy}}">Datenschutz</a></p>
 </footer>
 {{script "assets/scripts/main.js"}}
 </body>

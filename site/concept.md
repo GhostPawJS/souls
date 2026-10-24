@@ -121,7 +121,7 @@ A prompt that changes only when the evidence agrees, and changes back when asked
 | code | Martian Mono, Cascadia Mono, Consolas, monospace | calls, rendered identity blocks and file names like SOUL.md |
 
 ## Form
-Shared panes: panel ground, 1px rule border, 14px chamfer, 3px top bar lit by state. The soul pane lists level, traits, pending shards and the source gate as a bar. Steps are an ordered list with call and result. One column on phones; desktop keeps the soul pane beside the steps. Shared faint 48px grid.
+Shared panes: panel ground, 1px rule border, 14px chamfer, 3px top bar lit by state. The soul pane lists level, traits, pending shards and the source gate as a bar. Steps are an ordered list with call and result. One column on phones; desktop keeps the soul pane beside the steps. Plain void ground with one faint cyan glow.
 
 ## Imagery
 | Image | Job | Art direction | Source |
@@ -146,3 +146,4 @@ Reduced motion: no sweep or flash; changes in place.
 ## Changelog
 - 2026-10-24: first concept from the 2026-10-24 research batch (60 voices, 12 peers); evidence gate chosen; replay of a real souls 0.3.0 run.
 - 2026-10-24: depth pass (10 more voices, now 70); replay re-run against the current release; import time re-measured; comparison section added; page moved to https://souls.ghostpaw.dev/.
+- 2026-10-24: portal chrome pass. Shared top bar (GhostPaw/<lib>, Live demo or Docs, GitHub, npm), version badge, footer row of all seven libraries; sibling links row dropped from the start section; the ruled grid on the page ground was replaced by one radial glow (lfm 0.1.9 rejects ruled ground textures); share card relabelled GhostPaw/<lib> with the install line.
