@@ -1,0 +1,13 @@
+{
+  "name": "ghostpaw-souls",
+  "owner": {
+    "name": "Anonyfox"
+  },
+  "plugins": [
+    {
+      "name": "ghostpaw-souls",
+      "source": "./",
+      "description": "Local cognitive identity engine with traits, behavioral evidence, and revision history."
+    }
+  ]
+}

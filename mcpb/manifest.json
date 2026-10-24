@@ -1,0 +1,110 @@
+{
+  "manifest_version": "0.3",
+  "name": "ghostpaw-souls",
+  "display_name": "GhostPaw Souls",
+  "version": "0.2.3",
+  "description": "Local cognitive identity engine with traits, behavioral evidence, and revision history.",
+  "long_description": "Local cognitive identity engine with traits and behavioral evidence. Stores data in a local SQLite database.",
+  "author": {
+    "name": "Anonyfox",
+    "email": "max@anonyfox.com",
+    "url": "https://anonyfox.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GhostPawJS/souls.git"
+  },
+  "homepage": "https://github.com/GhostPawJS/souls",
+  "documentation": "https://github.com/GhostPawJS/souls/blob/main/README.md",
+  "support": "https://github.com/GhostPawJS/souls/issues",
+  "license": "MIT",
+  "keywords": [
+    "prompt-evolution",
+    "system-prompt",
+    "prompt-engineering",
+    "prompt-management",
+    "ai-agent",
+    "agent-memory",
+    "cognitive-identity",
+    "persona",
+    "personality",
+    "character",
+    "llm",
+    "llm-tools",
+    "multi-agent",
+    "sqlite",
+    "node-sqlite",
+    "local-first",
+    "zero-dependencies",
+    "typescript",
+    "ghostpaw",
+    "ai",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "agent-skills",
+    "cli"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/mcp-server.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/mcp-server.js"
+      ],
+      "env": {
+        "GHOSTPAW_SOULS_DB": "${user_config.db_path}"
+      }
+    }
+  },
+  "user_config": {
+    "db_path": {
+      "type": "string",
+      "title": "Database path",
+      "description": "Path to the local SQLite database.",
+      "required": false,
+      "default": "${HOME}/.ghostpaw/souls.db"
+    }
+  },
+  "tools": [
+    {
+      "name": "search_souls",
+      "description": "Search shards by content using full-text search, or list pending shards with optional filters."
+    },
+    {
+      "name": "review_souls",
+      "description": "List all active souls, run the maintenance cycle, or check crystallization readiness."
+    },
+    {
+      "name": "inspect_souls_item",
+      "description": "Get the full profile, rendered identity block, and optionally the evidence report for a single soul."
+    },
+    {
+      "name": "observe_soul",
+      "description": "Deposit behavioral observations (shards) for one or more souls, or reveal previously sealed shards."
+    },
+    {
+      "name": "refine_soul",
+      "description": "Add, revise, revert, or reactivate traits; cite shards to traits; stamp attunement."
+    },
+    {
+      "name": "level_up_soul",
+      "description": "Validate, execute, or revert a level-up plan for a soul — consolidating traits, promoting knowledge into essence, and incrementing the generation."
+    },
+    {
+      "name": "manage_soul",
+      "description": "Create, update, retire, or awaken a soul."
+    }
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=24.0.0"
+    }
+  }
+}

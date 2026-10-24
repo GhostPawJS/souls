@@ -5,6 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- MCP stdio server and public MCP subpath, with protocol negotiation and tool annotations.
+- CLI for tool discovery, calls, and skill output.
+- Generated Agent Skills, client and directory manifests, and MCP Bundle metadata.
+- Dockerfile for persistent container hosting.
+- Package, size, API, startup, and guardrail checks, plus offline benchmarks.
+
+
 ## [0.2.3] - 2026-10-24
 
 ### Added

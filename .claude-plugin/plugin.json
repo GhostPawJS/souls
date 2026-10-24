@@ -1,0 +1,50 @@
+{
+  "name": "ghostpaw-souls",
+  "version": "0.2.3",
+  "description": "Local cognitive identity engine with traits, behavioral evidence, and revision history.",
+  "author": {
+    "name": "Anonyfox",
+    "email": "max@anonyfox.com",
+    "url": "https://anonyfox.com"
+  },
+  "homepage": "https://github.com/GhostPawJS/souls",
+  "repository": "https://github.com/GhostPawJS/souls.git",
+  "license": "MIT",
+  "keywords": [
+    "prompt-evolution",
+    "system-prompt",
+    "prompt-engineering",
+    "prompt-management",
+    "ai-agent",
+    "agent-memory",
+    "cognitive-identity",
+    "persona",
+    "personality",
+    "character",
+    "llm",
+    "llm-tools",
+    "multi-agent",
+    "sqlite",
+    "node-sqlite",
+    "local-first",
+    "zero-dependencies",
+    "typescript",
+    "ghostpaw",
+    "ai",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "agent-skills",
+    "cli"
+  ],
+  "mcpServers": {
+    "ghostpaw-souls": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@ghostpaw/souls@0.2.3",
+        "mcp"
+      ]
+    }
+  }
+}

@@ -1,5 +1,7 @@
 # @ghostpaw/souls
 
+[![MCP Registry](https://img.shields.io/badge/MCP_Registry-io.github.GhostPawJS%2Fsouls-06d6a0)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.GhostPawJS%2Fsouls/versions/latest)
+
 Prompt evolution engine for cognitive identity. Stores identity as narrative
 essence plus evidence-backed traits, with structured level-up,
 crystallization-gated refinement, and full rollback. Not a prompt template
@@ -7,6 +9,76 @@ library. Not a configuration manager. An evolutionary algorithm for how agents
 think.
 
 Node 24+, built-in `node:sqlite`, zero runtime dependencies.
+
+## MCP server
+
+Every client below starts the same stdio server: `npx -y @ghostpaw/souls mcp`.
+Identity and evidence live in `~/.ghostpaw/souls.db` unless the `GHOSTPAW_SOULS_DB`
+environment variable (absolute path) or `--db <path>` says otherwise.
+
+**Claude Code**
+
+```bash
+claude mcp add ghostpaw-souls -- npx -y @ghostpaw/souls mcp
+```
+
+or as a plugin, which also installs the skill:
+
+```bash
+/plugin marketplace add GhostPawJS/souls
+/plugin install ghostpaw-souls@ghostpaw-souls
+```
+
+**Codex CLI** (`~/.souls/config.toml`)
+
+```toml
+[mcp_servers.ghostpaw-souls]
+command = "npx"
+args = ["-y", "@ghostpaw/souls", "mcp"]
+```
+
+**Cursor** (`.cursor/mcp.json`), **Claude Desktop** (`claude_desktop_config.json`)
+or a project `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "ghostpaw-souls": {
+      "command": "npx",
+      "args": ["-y", "@ghostpaw/souls", "mcp"]
+    }
+  }
+}
+```
+
+Claude Desktop users can also install `server.mcpb` from the
+[latest GitHub release](https://github.com/GhostPawJS/souls/releases/latest).
+A Dockerfile is included for container hosts:
+`docker build -t ghostpaw-souls . && docker run -i --rm -v souls:/data ghostpaw-souls`.
+
+The server speaks MCP 2026-07-28 (stateless, `server/discover`) and the
+initialize-based revisions 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05.
+
+## CLI
+
+```bash
+npx -y @ghostpaw/souls tools
+npx -y @ghostpaw/souls call search_souls '{"query":"review"}'
+npx -y @ghostpaw/souls describe manage_soul
+```
+
+Install globally for the `ghostpaw-souls` binary: `npm i -g @ghostpaw/souls`.
+`ghostpaw-souls mcp` starts the stdio server.
+
+## Agent Skill
+
+`SKILL.md` (repo root) and `skills/souls/SKILL.md` follow the
+[Agent Skills](https://agentskills.io) format and ship in the npm package.
+Copy `skills/souls/` into your agent's skills folder, or print it:
+
+```bash
+npx -y @ghostpaw/souls skill > SKILL.md
+```
 
 ## Install
 

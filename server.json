@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.GhostPawJS/souls",
+  "description": "Local cognitive identity engine with traits, behavioral evidence, and revision history.",
+  "title": "GhostPaw Souls",
+  "version": "0.2.3",
+  "repository": {
+    "url": "https://github.com/GhostPawJS/souls.git",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/GhostPawJS/souls",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@ghostpaw/souls",
+      "version": "0.2.3",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "GHOSTPAW_SOULS_DB",
+          "description": "SQLite database path (default: ~/.ghostpaw/souls.db)",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

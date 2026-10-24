@@ -1,0 +1,155 @@
+---
+name: souls
+description: "Store and refine cognitive identities, traits, and behavioral evidence. Use when recording observations, reviewing soul health, or consolidating traits."
+license: "MIT"
+compatibility: "Node.js 24 or newer. MCP stdio or ghostpaw-souls CLI."
+---
+
+# souls
+
+Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous.
+
+## Calling tools
+
+MCP: connect to ghostpaw-souls, then call a tool by name with its JSON arguments.
+
+CLI: `ghostpaw-souls call <tool> '<JSON object>'` or `ghostpaw-souls <tool> --parameter value` (without a global install: `npx -y @ghostpaw/souls <tool> ...`).
+
+Inspect schemas with `ghostpaw-souls describe <tool>`. Use `--db <path>` to select a database.
+
+## search_souls
+
+Search shards by content using full-text search, or list pending shards with optional filters.
+
+Use when: Use this to find specific observations by content (with query) or to browse pending shards (without query). Filter by soul, tags, or limit as needed.
+
+Not for: Do not use this to view the structured evidence report — use inspect_souls_item with includeEvidence. Do not use this to deposit observations — use observe_soul.
+
+Read-only.
+
+| Parameter | Type | Required | Values / description |
+| --- | --- | --- | --- |
+| query | string | no | FTS5 search query. Omit to list pending shards. |
+| soulId | integer | no | Filter by soul ID. |
+| tags | array | no | Filter by topic tags (list mode). |
+| limit | integer | no | Maximum results. |
+
+## review_souls
+
+List all active souls, run the maintenance cycle, or check crystallization readiness.
+
+Use when: Use list to discover active souls. Use maintenance to run the standard maintenance pass (fades exhausted shards + checks readiness) as part of a regular cycle. Use readiness to check which souls are ready for refinement without running maintenance.
+
+Not for: Do not use this to inspect a specific soul in detail — use inspect_souls_item. Do not use this to search shards — use search_souls.
+
+Writes: writes_state.
+
+| Parameter | Type | Required | Values / description |
+| --- | --- | --- | --- |
+| view | string | yes | list, maintenance, readiness. The operation to perform. |
+
+## inspect_souls_item
+
+Get the full profile, rendered identity block, and optionally the evidence report for a single soul.
+
+Use when: Use this when you need the complete current state of a soul — traits, capacity, health, rendered identity — before deciding on a refinement action. Add includeEvidence when you need the clustered evidence report with signals and suggested actions.
+
+Not for: Do not use this to search across shards — use search_souls. Do not use this to make changes — use refine_soul, level_up_soul, or manage_soul.
+
+Read-only.
+
+| Parameter | Type | Required | Values / description |
+| --- | --- | --- | --- |
+| soulId | integer | yes | The soul ID to inspect. |
+| includeEvidence | boolean | no | Include evidence report with clusters and signals. Default false. |
+| includeProvenance | boolean | no | Include provenance in rendered identity. Default false. |
+
+## observe_soul
+
+Deposit behavioral observations (shards) for one or more souls, or reveal previously sealed shards.
+
+Use when: Use this whenever you have a behavioral observation to record — delegation outcome, session note, reflection, feedback. Use drop_batch for importing multiple observations at once. Use reveal to unlock deferred shards at the appropriate moment (task completion, session close).
+
+Not for: Do not use this to read evidence — use search_souls or inspect_souls_item. Do not use this to add traits — use refine_soul.
+
+Writes: writes_state.
+
+| Parameter | Type | Required | Values / description |
+| --- | --- | --- | --- |
+| action | string | yes | drop, drop_batch, reveal.  |
+| content | string | no | Behavioral observation text. |
+| source | string | no | Evidence channel origin label. |
+| soulIds | array | no | Soul IDs to attribute this observation to. |
+| tags | array | no | Optional topic tags. |
+| sealed | boolean | no | If true, shard is deferred until revealed. |
+| shards | array | no | Array of shards for batch deposit. |
+| shardIds | array | no | Shard IDs to reveal. |
+
+## refine_soul
+
+Add, revise, revert, or reactivate traits; cite shards to traits; stamp attunement.
+
+Use when: Use after inspecting the evidence report (inspect_souls_item with includeEvidence) to make targeted identity mutations: add a new trait from a novel cluster, revise a stale trait, revert a trait that is causing regression, cite shards to earn provenance, stamp attuned after completing a refinement pass.
+
+Not for: Do not use this for consolidation and essence rewriting — use level_up_soul. Do not use this to deposit observations — use observe_soul.
+
+Writes: writes_state.
+
+| Parameter | Type | Required | Values / description |
+| --- | --- | --- | --- |
+| action | string | yes | add_trait, revise_trait, revert_trait, reactivate_trait, cite_shard, stamp_attuned. The refinement action to perform. |
+| soulId | integer | no | Soul ID (required for add_trait, stamp_attuned). |
+| traitId | integer | no | Trait ID (required for revise_trait, revert_trait, reactivate_trait, cite_shard). |
+| principle | string | no | The cognitive rule text. |
+| provenance | string | no | Evidence chain justifying the trait. |
+| shardId | integer | no | Shard ID to link (for cite_shard). |
+
+## level_up_soul
+
+Validate, execute, or revert a level-up plan for a soul — consolidating traits, promoting knowledge into essence, and incrementing the generation.
+
+Use when: Use validate to check a plan before executing it. Use execute when the plan is validated and the soul is ready for restructuring. Use revert to undo the last level-up if the outcome was wrong.
+
+Not for: Do not use this for targeted trait mutations — use refine_soul. Do not use this unless the soul is at or near trait capacity and crystallization is ready.
+
+Writes: writes_state.
+
+| Parameter | Type | Required | Values / description |
+| --- | --- | --- | --- |
+| action | string | yes | validate, execute, revert. The operation to perform. |
+| soulId | integer | yes | The soul ID. |
+| plan | object | no | The level-up plan. |
+
+## manage_soul
+
+Create, update, retire, or awaken a soul.
+
+Use when: Use create to bootstrap a new soul with an initial essence. Use update to change the name, essence, or description without incrementing the level. Use retire to mark a soul as dormant. Use awaken to restore a dormant soul.
+
+Not for: Do not use update to restructure identity — use level_up_soul. Do not use this to make trait changes — use refine_soul.
+
+Writes: writes_state.
+
+| Parameter | Type | Required | Values / description |
+| --- | --- | --- | --- |
+| action | string | yes | create, update, retire, awaken. The operation to perform. |
+| name | string | no | Soul name. |
+| essence | string | no | Soul essence narrative. |
+| description | string | no | Soul description. |
+| soulId | integer | no | Soul ID. |
+
+## Workflow guides
+
+- [observe-behavior-well](references/observe-behavior-well.md): Deposit high-quality behavioral observations with correct source labels and tags.
+- [run-maintenance-pass](references/run-maintenance-pass.md): Run the standard maintenance cycle, interpret results, and triage souls ready for refinement.
+- [produce-trait-proposals-from-evidence](references/produce-trait-proposals-from-evidence.md): Read an evidence report, interpret signals, and propose add/revise/revert trait mutations.
+- [judge-consolidation-versus-promotion](references/judge-consolidation-versus-promotion.md): Decide whether to consolidate, promote, or carry each trait during a level-up plan.
+- [execute-level-up-plan](references/execute-level-up-plan.md): Validate, execute, and verify a level-up plan for a soul.
+- [bootstrap-new-soul](references/bootstrap-new-soul.md): Create a new soul with an initial essence and begin the observation cycle.
+- [detect-and-fix-regression](references/detect-and-fix-regression.md): Spot regression signals in evidence, use revert-trait or revert-level-up to restore identity integrity.
+- [review-soul-health](references/review-soul-health.md): Interpret the health metric, staleness signals, and capacity state to assess the overall condition of a soul.
+
+## Principles
+
+- One proposal per cycle.
+- A revert is as valuable as an addition.
