@@ -1,6 +1,7 @@
 # @ghostpaw/souls
 
 [![MCP Registry](https://img.shields.io/badge/MCP_Registry-io.github.GhostPawJS%2Fsouls-06d6a0)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.GhostPawJS%2Fsouls/versions/latest)
+[![Site](https://img.shields.io/badge/site-souls.ghostpaw.dev-62e6f2)](https://souls.ghostpaw.dev/)
 
 Prompt evolution engine for cognitive identity. Stores identity as narrative
 essence plus evidence-backed traits, with structured level-up,
