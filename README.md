@@ -106,14 +106,17 @@ Browse and search a catalog of open-source system prompts, then manifest them
 as fully-formed souls:
 
 ```ts
+import { DatabaseSync } from 'node:sqlite';
 import { ether } from '@ghostpaw/souls';
 
-const etherDb = ether.open('ether.db');
+const etherDb = new DatabaseSync('ether.db');
+ether.initEtherTables(etherDb);
 ether.registerDefaults(etherDb);
 await ether.refreshAll(etherDb);
 
-const results = ether.search(etherDb, 'security architect');
-const newSoul = ether.manifest(soulsDb, results[0]);
+const [hit] = ether.search(etherDb, 'security architect');
+const entry = hit ? ether.getEntry(etherDb, hit.id) : undefined;
+const newSoul = entry ? ether.manifest(soulsDb, entry) : undefined;
 ```
 
 Sources are fetched lazily with ETag caching. Refresh is atomic — failed
@@ -126,8 +129,9 @@ Wire into any agent framework via JSON Schema tool definitions:
 ```ts
 import { tools } from '@ghostpaw/souls';
 
-const allTools = tools.allToolDefinitions();
-const result = tools.executeTool(db, toolName, args);
+const allTools = tools.listSoulsToolDefinitions();
+const tool = tools.getSoulsToolByName('search_souls');
+const result = tool?.handler(db, { query: 'architect' });
 ```
 
 ## Ecosystem
