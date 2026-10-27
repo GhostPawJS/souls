@@ -5,11 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-27
+
 ### Changed
 
 - Embed workflow guides in the CLI with listing and help, and include nested parameter rows and schema-checked call examples in generated skills.
 - Validate facade inputs before invoking tool handlers and include recovery shapes for invalid input.
-
 - Release binaries are the default installation path in the README and generated skill, with explicit installer targets and variant labels in human version output.
 
 ## [0.4.1] - 2026-10-27
@@ -95,7 +96,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/GhostPawJS/souls/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/GhostPawJS/souls/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/GhostPawJS/souls/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/GhostPawJS/souls/compare/v0.2.3...v0.3.0
