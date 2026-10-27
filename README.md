@@ -137,6 +137,8 @@ ghostpaw-souls skill > SKILL.md
 
 Each line downloads the latest release asset, checks it against the release's SHA256SUMS and installs it on the PATH (~/.local/bin on Linux/macOS; the Windows script adds its folder to the user PATH).
 
+These lines never edit ~/.profile or other shell startup files: `export PATH` applies to the current shell only. To keep it, add `export PATH="$HOME/.local/bin:$PATH"` to your shell profile yourself.
+
 linux-x64:
 
 ```sh
@@ -161,16 +163,30 @@ darwin-x64:
 curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target darwin-x64 && export PATH="$HOME/.local/bin:$PATH"
 ```
 
-windows-x64 (PowerShell):
+windows-x64 (PowerShell; persistently adds the install folder to the user PATH):
 
 ```powershell
 irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
 ```
 
+Pinned to a release:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target linux-x64 --version 0.4.3 && export PATH="$HOME/.local/bin:$PATH"
+```
+
+To skip the persistent user PATH edit (the installer prints the folder to add):
+
+```powershell
+$env:GHOSTPAW_NO_MODIFY_PATH=1; irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
+```
+
 ```text
 $ ghostpaw-souls --version
-souls 0.4.2 (binary, linux-x64)
+souls 0.4.3 (binary, linux-x64)
 ```
+
+Scripts that compare versions should use `--version --short` or `--version --json`.
 
 A session with the 0.4.0 linux-x64 binary against a fresh database (output piped through `jq` to keep it short):
 

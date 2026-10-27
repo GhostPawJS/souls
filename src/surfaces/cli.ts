@@ -26,13 +26,18 @@ export async function runToolCli<TCtx>(
 	options: ToolCliOptions<TCtx>,
 ): Promise<number> {
 	const end = argv.indexOf('--');
-	if (
-		argv
-			.slice(0, end < 0 ? argv.length : end)
-			.some((arg) => ['--version', '-V', '-v'].includes(arg))
-	) {
+	const versionArgs = argv.slice(0, end < 0 ? argv.length : end);
+	if (versionArgs.some((arg) => ['--version', '-V', '-v'].includes(arg))) {
 		if (!argv.includes('--quiet'))
-			(options.stdout ?? process.stdout).write(`${cliVersion(options.version)}\n`);
+			(options.stdout ?? process.stdout).write(
+				`${cliVersion(options.version, {
+					format: versionArgs.includes('--json')
+						? 'json'
+						: versionArgs.includes('--short')
+							? 'short'
+							: undefined,
+				})}\n`,
+			);
 		return 0;
 	}
 	const modern = await runCliCommand(argv, options);
@@ -79,7 +84,7 @@ export async function runToolCli<TCtx>(
 	const normalize = (name: string) => name.replace(/[-_]/g, '').toLowerCase();
 	if (['help', '--help', '-h'].includes(command)) {
 		stdout.write(
-			`${options.bin} ${options.version}\n${options.description}\n\nUsage: ${options.bin} [--db path] <command>\nCommands: tools [--json], describe <tool>, call <tool> [JSON|-], <tool> --parameter value, mcp, skill\nOptions: --help, --version, --compact\n\n${options.tools.map((tool) => `${tool.name}  ${tool.description}`).join('\n')}\n`,
+			`${options.bin} ${options.version}\n${options.description}\n\nUsage: ${options.bin} [--db path] <command>\nCommands: tools [--json], describe <tool>, call <tool> [JSON|-], <tool> --parameter value, mcp, skill\nOptions: --help, --version, --compact\nVersion formats: --version --short, --version --json\n\n${options.tools.map((tool) => `${tool.name}  ${tool.description}`).join('\n')}\n`,
 		);
 		return 0;
 	}

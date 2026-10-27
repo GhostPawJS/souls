@@ -25,6 +25,11 @@ const run = (args) => {
 };
 
 const version = run(['--version']).trim();
+if (run(['--version', '--short']) !== `${pkg.version}\n`)
+	fail('--version --short did not print the package version');
+const versionJson = JSON.parse(run(['--version', '--json']));
+if (versionJson.version !== pkg.version || versionJson.variant !== 'binary')
+	fail('--version --json did not identify the binary and package version');
 const expectedVersion = `souls ${pkg.version} (binary, ${process.platform === 'win32' ? 'windows' : process.platform}-${process.arch})`;
 if (version !== expectedVersion) fail(`--version printed ${version}, expected ${expectedVersion}`);
 run(['--help']);

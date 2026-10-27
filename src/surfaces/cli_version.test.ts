@@ -32,3 +32,20 @@ test('version identifies library and package entry, including detection errors',
 	markPackageCli();
 	assert.equal(cliVersion('1.2.3', { sea: () => false }), 'souls 1.2.3 (npm)');
 });
+
+test('machine versions identify each variant and normalize Windows targets', () => {
+	for (const [sea, npm, variant] of [
+		[true, true, 'binary'],
+		[false, true, 'npm'],
+		[false, false, 'library'],
+	] as const) {
+		const options = { sea: () => sea, npm, platform: 'win32', arch: 'x64' };
+		assert.equal(cliVersion('1.2.3', { ...options, format: 'short' }), '1.2.3');
+		assert.deepEqual(JSON.parse(cliVersion('1.2.3', { ...options, format: 'json' })), {
+			name: 'souls',
+			version: '1.2.3',
+			variant,
+			target: 'windows-x64',
+		});
+	}
+});

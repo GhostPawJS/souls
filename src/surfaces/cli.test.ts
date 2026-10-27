@@ -269,3 +269,30 @@ test('human version aliases identify a library invocation', async () => {
 		assert.equal(result.opens, 0);
 	}
 });
+
+test('version formats accept every flag order and JSON takes precedence', async () => {
+	const permutations = (args: string[]): string[][] =>
+		args.length === 0
+			? [[]]
+			: args.flatMap((arg, i) =>
+					permutations(args.filter((_, j) => i !== j)).map((rest) => [arg, ...rest]),
+				);
+	for (const alias of ['--version', '-v', '-V']) {
+		for (const flags of [['--short'], ['--json'], ['--short', '--json']]) {
+			for (const args of permutations([alias, ...flags])) {
+				const result = await invoke(args);
+				assert.equal(result.code, 0);
+				assert.equal(result.err, '');
+				assert.equal(result.opens, 0);
+				assert.equal(
+					result.out,
+					flags.includes('--json')
+						? `${JSON.stringify({ name: 'souls', version: '1.0', variant: 'library', target: `${process.platform === 'win32' ? 'windows' : process.platform}-${process.arch}` })}\n`
+						: '1.0\n',
+				);
+			}
+		}
+	}
+	const help = await invoke(['--help']);
+	assert.match(help.out, /Version formats: --version --short, --version --json/);
+});

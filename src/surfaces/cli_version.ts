@@ -13,11 +13,13 @@ export function cliVersion(
 		npm = packageEntry,
 		platform = process.platform,
 		arch = process.arch,
+		format,
 	}: {
 		sea?: () => boolean;
 		npm?: boolean;
 		platform?: string;
 		arch?: string;
+		format?: 'short' | 'json' | undefined;
 	} = {},
 ): string {
 	let binary = false;
@@ -27,5 +29,8 @@ export function cliVersion(
 		binary = false;
 	}
 	const target = `${platform === 'win32' ? 'windows' : platform}-${arch}`;
+	const variant = binary ? 'binary' : npm ? 'npm' : 'library';
+	if (format === 'json') return JSON.stringify({ name: 'souls', version, variant, target });
+	if (format === 'short') return version;
 	return `souls ${version} (${binary ? `binary, ${target}` : npm ? 'npm' : 'library'})`;
 }

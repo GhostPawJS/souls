@@ -141,7 +141,7 @@ export async function runCliCommand<T>(
 				stdout.write(
 					entry
 						? renderCliHelp(specFor(entry))
-						: `${options.bin} ${options.version}\n${options.description}\n\nCommands:\n${matches.map((command) => `  ${command.path}`).join('\n')}\n  mcp, skill, tools [--json], describe <tool>, call <tool> [JSON|-], completions <bash|zsh|fish>, version\nGlobal flags: --db <path>, --json, --quiet, --compact, --help/-h, --version/-V/-v, --no-color\n`,
+						: `${options.bin} ${options.version}\n${options.description}\n\nCommands:\n${matches.map((command) => `  ${command.path}`).join('\n')}\n  mcp, skill, tools [--json], describe <tool>, call <tool> [JSON|-], completions <bash|zsh|fish>, version\nGlobal flags: --db <path>, --json, --quiet, --compact, --help/-h, --version/-V/-v, --no-color\nVersion formats: --version --short, --version --json\n`,
 				);
 			return 0;
 		}

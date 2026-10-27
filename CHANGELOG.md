@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Machine-friendly `--version --short` and `--version --json` CLI output.
+- `GHOSTPAW_NO_MODIFY_PATH=1` skips the Windows installer’s persistent user PATH edit.
+
 ## [0.4.2] - 2026-10-27
 
 ### Changed
