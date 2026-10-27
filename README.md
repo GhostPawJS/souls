@@ -150,6 +150,12 @@ curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | 
 irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
 ```
 
+A session with the 0.4.0 linux-x64 binary against a fresh database (output piped through `jq` to keep it short):
+
+![ghostpaw-souls 0.4.0: version, soul create, two shard drops, refinement add and cite, search, review readiness and soul show with the rendered identity](https://raw.githubusercontent.com/GhostPawJS/souls/main/docs/assets/cli.png)
+
+The same session as an [animated GIF](https://raw.githubusercontent.com/GhostPawJS/souls/main/docs/assets/cli.gif).
+
 Other release installers:
 
 ```sh
