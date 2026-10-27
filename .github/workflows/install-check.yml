@@ -36,7 +36,7 @@ jobs:
           export PATH="$GHOSTPAW_INSTALL_DIR:$PATH"
           if [ "$RUNNER_OS" = Linux ]; then export GHOSTPAW_VERIFY=attestation; fi
           curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --version "$version"
-          test "$(ghostpaw-souls --version)" = "$version"
+          if [ "$RUNNER_OS" = Linux ]; then test "$(ghostpaw-souls --version)" = "souls $version (binary, linux-x64)"; else test "$(ghostpaw-souls --version)" = "souls $version (binary, darwin-arm64)"; fi
           echo "Version: $version verified on $RUNNER_OS" >> "$GITHUB_STEP_SUMMARY"
           ghostpaw-souls soul create "Install check marker" --essence "Read carefully." --description "Install identity" --db "$RUNNER_TEMP/souls.db" --json | jq -e '.ok == true'
           echo 'Soul create: passed' >> "$GITHUB_STEP_SUMMARY"
@@ -64,7 +64,7 @@ jobs:
           $env:GHOSTPAW_VERSION = $version
           $env:GHOSTPAW_INSTALL_DIR = Join-Path $env:RUNNER_TEMP 'souls-bin'
           irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
-          if ((ghostpaw-souls --version) -ne $version) { throw 'Version mismatch' }
+          if ((ghostpaw-souls --version) -ne "souls $version (binary, windows-x64)") { throw 'Version mismatch' }
           "Version: $version verified on Windows" >> $env:GITHUB_STEP_SUMMARY
           $db = Join-Path $env:RUNNER_TEMP 'souls.db'
           $added = ghostpaw-souls soul create 'Install check marker' --essence 'Read carefully.' --description 'Install identity' --db $db --json | ConvertFrom-Json

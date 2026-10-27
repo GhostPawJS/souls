@@ -25,7 +25,8 @@ const run = (args) => {
 };
 
 const version = run(['--version']).trim();
-if (version !== pkg.version) fail(`--version printed ${version}, expected ${pkg.version}`);
+const expectedVersion = `souls ${pkg.version} (binary, ${process.platform === 'win32' ? 'windows' : process.platform}-${process.arch})`;
+if (version !== expectedVersion) fail(`--version printed ${version}, expected ${expectedVersion}`);
 run(['--help']);
 const added = JSON.parse(
 	run([

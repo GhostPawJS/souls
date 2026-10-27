@@ -8,7 +8,8 @@ export const soulsSkillSpec = {
 	description:
 		'Store and refine cognitive identities, traits, and behavioral evidence. Use when recording observations, reviewing soul health, or consolidating traits.',
 	license: 'MIT',
-	compatibility: 'Node.js 24 or newer. MCP stdio or ghostpaw-souls CLI.',
+	compatibility:
+		'Release binary ghostpaw-souls (no runtime needed); MCP stdio via ghostpaw-souls mcp.',
 	bin: 'ghostpaw-souls',
 	packageName: '@ghostpaw/souls',
 	server: 'ghostpaw-souls',

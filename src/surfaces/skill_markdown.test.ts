@@ -59,3 +59,16 @@ test('reference base changes only workflow link targets', () => {
 		),
 	);
 });
+
+test('release install opens the skill and npm fallback closes it', () => {
+	const result = renderSkillMarkdown({ ...spec, packageName: '@example/example' });
+	assert.ok(result.includes('# example\n\n## Install\n'));
+	const [body, fallback] = result.split('## Without the binary');
+	assert.ok(body?.includes('install.sh | sh'));
+	assert.ok(body?.includes('install.ps1 | iex'));
+	assert.ok(body?.includes('~/.local/bin/example'));
+	assert.doesNotMatch(body ?? '', /npx|npm|Node/);
+	assert.ok(fallback?.includes('npx -y @example/example ...'));
+	assert.ok(fallback?.includes('Node 24+'));
+	assert.ok(fallback?.includes('as a library'));
+});

@@ -16,18 +16,19 @@ crystallization-gated refinement, and full rollback. Not a prompt template
 library. Not a configuration manager. An evolutionary algorithm for how agents
 think.
 
-Node 24+, built-in `node:sqlite`, zero runtime dependencies.
+Release binary with no runtime needed; library and npm usage require Node 24+. Zero runtime dependencies.
 
 ## MCP server
 
-Every client below starts the same stdio server: `npx -y @ghostpaw/souls mcp`.
+Every client below starts the same stdio server: `ghostpaw-souls mcp`.
+For npm-based environments, use `npx -y @ghostpaw/souls mcp`.
 Identity and evidence live in `~/.ghostpaw/souls.db` unless the `GHOSTPAW_SOULS_DB`
 environment variable (absolute path) or `--db <path>` says otherwise.
 
 **Claude Code**
 
 ```bash
-claude mcp add ghostpaw-souls -- npx -y @ghostpaw/souls mcp
+claude mcp add ghostpaw-souls -- ghostpaw-souls mcp
 ```
 
 or as a plugin, which also installs the skill:
@@ -41,8 +42,8 @@ or as a plugin, which also installs the skill:
 
 ```toml
 [mcp_servers.ghostpaw-souls]
-command = "npx"
-args = ["-y", "@ghostpaw/souls", "mcp"]
+command = "ghostpaw-souls"
+args = ["mcp"]
 ```
 
 **Cursor** (`.cursor/mcp.json`), **Claude Desktop** (`claude_desktop_config.json`)
@@ -52,8 +53,8 @@ or a project `.mcp.json`:
 {
   "mcpServers": {
     "ghostpaw-souls": {
-      "command": "npx",
-      "args": ["-y", "@ghostpaw/souls", "mcp"]
+      "command": "ghostpaw-souls",
+      "args": ["mcp"]
     }
   }
 }
@@ -127,27 +128,48 @@ use `shard drop` to deposit observations. Core commands work offline.
 Copy `skills/souls/` into your agent's skills folder, or print it:
 
 ```bash
-npx -y @ghostpaw/souls skill > SKILL.md
+ghostpaw-souls skill > SKILL.md
 ```
 
 ## Install
 
-The [npm package](https://www.npmjs.com/package/@ghostpaw/souls) requires Node 24+:
+### Release binary (default)
+
+Each line downloads the latest release asset, checks it against the release's SHA256SUMS and installs it on the PATH (~/.local/bin on Linux/macOS; the Windows script adds its folder to the user PATH).
+
+linux-x64:
 
 ```sh
-npm install -g @ghostpaw/souls
-npx -y @ghostpaw/souls --help
+curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target linux-x64 && export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Standalone binaries are available from [GitHub Releases](https://github.com/GhostPawJS/souls/releases)
-for linux-x64, linux-arm64, darwin-arm64, darwin-x64 and windows-x64.
+linux-arm64:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target linux-arm64 && export PATH="$HOME/.local/bin:$PATH"
 ```
+
+darwin-arm64:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target darwin-arm64 && export PATH="$HOME/.local/bin:$PATH"
+```
+
+darwin-x64:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target darwin-x64 && export PATH="$HOME/.local/bin:$PATH"
+```
+
+windows-x64 (PowerShell):
 
 ```powershell
 irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
+```
+
+```text
+$ ghostpaw-souls --version
+souls 0.4.2 (binary, linux-x64)
 ```
 
 A session with the 0.4.0 linux-x64 binary against a fresh database (output piped through `jq` to keep it short):
@@ -224,6 +246,27 @@ installed and run on ubuntu-24.04, macos-15 and windows-2025 by the
 [install check](.github/workflows/install-check.yml).
 
 Release install checks run on ubuntu-24.04, macos-15 and windows-2025.
+### npx / npm (for npm-based environments)
+
+The [npm package](https://www.npmjs.com/package/@ghostpaw/souls) requires Node 24+:
+
+```sh
+npm install -g @ghostpaw/souls
+npx -y @ghostpaw/souls --help
+```
+
+### Library (for harnesses embedding it in code)
+
+```sh
+npm install @ghostpaw/souls
+```
+
+```ts
+import { initSoulsTables, read, write } from '@ghostpaw/souls';
+```
+
+See [Quick Start](#quick-start) for library usage.
+
 ## Quick Start
 
 ```ts

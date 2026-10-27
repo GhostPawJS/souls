@@ -473,6 +473,9 @@ ghostpaw-souls mcp|skill|tools|describe|call|completions|version|help
 
 Global flags can appear anywhere: `--db <path>`, `--json`, `--quiet`,
 `--compact`, `--help`/`-h`, `--version`/`-V`/`-v`, `--no-color`.
+Human version output includes the installation variant, for example
+`souls 0.4.1 (binary, linux-x64)`, `souls 0.4.1 (npm)` or
+`souls 0.4.1 (library)`. MCP version fields remain plain semver.
 `NO_COLOR` is accepted; output uses no terminal colors.
 Noun-verb commands print the full tool result as JSON with `--json` or when
 stdout is piped. Terminal output shows the summary and payload.

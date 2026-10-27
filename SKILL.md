@@ -2,10 +2,26 @@
 name: souls
 description: "Store and refine cognitive identities, traits, and behavioral evidence. Use when recording observations, reviewing soul health, or consolidating traits."
 license: "MIT"
-compatibility: "Node.js 24 or newer. MCP stdio or ghostpaw-souls CLI."
+compatibility: "Release binary ghostpaw-souls (no runtime needed); MCP stdio via ghostpaw-souls mcp."
 ---
 
 # souls
+
+## Install
+
+Linux/macOS (checks SHA256SUMS and installs ~/.local/bin/ghostpaw-souls):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh
+```
+
+Windows x64:
+
+```powershell
+irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
+```
+
+Run tools as `ghostpaw-souls ...`; use `~/.local/bin/ghostpaw-souls` if it is not on PATH.
 
 Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous.
 
@@ -13,7 +29,7 @@ Souls stores cognitive identities, traits, and behavioral evidence locally. Sear
 
 MCP: connect to ghostpaw-souls, then call a tool by name with its JSON arguments.
 
-CLI: `ghostpaw-souls call <tool> '<JSON object>'` or `ghostpaw-souls <tool> --parameter value` (without a global install: `npx -y @ghostpaw/souls <tool> ...`).
+CLI: `ghostpaw-souls call <tool> '<JSON object>'` or `ghostpaw-souls <tool> --parameter value`.
 
 Inspect schemas with `ghostpaw-souls describe <tool>`. Use `--db <path>` to select a database.
 
@@ -153,3 +169,9 @@ Writes: writes_state.
 
 - One proposal per cycle.
 - A revert is as valuable as an addition.
+
+## Without the binary
+
+For npm-based environments (Node 24+): `npx -y @ghostpaw/souls ...`.
+
+Harnesses embedding it in code can import `@ghostpaw/souls` as a library.
