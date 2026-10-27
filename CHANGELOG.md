@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-28
+
 ### Added
 
 - Machine-friendly `--version --short` and `--version --json` CLI output.
@@ -101,7 +103,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/GhostPawJS/souls/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/GhostPawJS/souls/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/GhostPawJS/souls/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/GhostPawJS/souls/compare/v0.3.0...v0.4.0
