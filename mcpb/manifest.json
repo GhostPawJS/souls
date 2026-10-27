@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "ghostpaw-souls",
   "display_name": "GhostPaw Souls",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Local cognitive identity engine with traits, behavioral evidence, and revision history.",
   "long_description": "Local cognitive identity engine with traits and behavioral evidence. Stores data in a local SQLite database.",
   "author": {
