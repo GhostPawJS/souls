@@ -3,7 +3,7 @@
   "name": "io.github.GhostPawJS/souls",
   "description": "Local cognitive identity engine with traits, behavioral evidence, and revision history.",
   "title": "GhostPaw Souls",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "repository": {
     "url": "https://github.com/GhostPawJS/souls.git",
     "source": "github"
@@ -14,7 +14,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@ghostpaw/souls",
-      "version": "0.4.2",
+      "version": "0.4.3",
       "transport": {
         "type": "stdio"
       },
