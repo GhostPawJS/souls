@@ -123,6 +123,25 @@ write.dropShard(db, {
 const rendered = read.renderSoul(db, soul.id);
 ```
 
+## Docs
+
+The live demo runs the library in your browser against an in-memory SQLite database. Each view below opens a different part of it:
+
+- [Roster](https://souls.ghostpaw.dev/docs/): every soul and its current traits
+- [Create Soul](https://souls.ghostpaw.dev/docs/#/create): start a new identity
+- [Observe](https://souls.ghostpaw.dev/docs/#/observe): log evidence about a soul's behaviour
+- [Maintenance](https://souls.ghostpaw.dev/docs/#/maintenance): consolidate and refine traits
+- [Search](https://souls.ghostpaw.dev/docs/#/search): full-text search across souls
+- [The Ether](https://souls.ghostpaw.dev/docs/#/ether): the prompt catalog
+
+| Document | Audience |
+|----------|----------|
+| [CONCEPT.md](CONCEPT.md) | Full design rationale, research citations, invariants |
+| [docs/LLM.md](docs/LLM.md) | LLM harness builders — tool surface, rendering, soul layer |
+| [docs/HUMAN.md](docs/HUMAN.md) | Human developers — direct read/write/ether API |
+| [docs/PAGES.md](docs/PAGES.md) | Demo app pages, architecture, development |
+| [docs/entities/](docs/entities/) | Entity deep-dives: souls, traits, shards, levels, ether |
+
 ## What It Does
 
 A **soul** is one cognitive identity — not a prompt template, not a config
@@ -260,16 +279,6 @@ An interactive local-first demo app with RPG character sheet aesthetics:
 npm run demo:ether   # fetch template catalog
 npm run demo:serve   # build and serve at localhost:7777
 ```
-
-## Docs
-
-| Document | Audience |
-|----------|----------|
-| [CONCEPT.md](CONCEPT.md) | Full design rationale, research citations, invariants |
-| [docs/LLM.md](docs/LLM.md) | LLM harness builders — tool surface, rendering, soul layer |
-| [docs/HUMAN.md](docs/HUMAN.md) | Human developers — direct read/write/ether API |
-| [docs/PAGES.md](docs/PAGES.md) | Demo app pages, architecture, development |
-| [docs/entities/](docs/entities/) | Entity deep-dives: souls, traits, shards, levels, ether |
 
 ## License
 

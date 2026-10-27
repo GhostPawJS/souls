@@ -1,0 +1,35 @@
+{
+  "heading": "Explore the demo",
+  "pages": [
+    {
+      "key": "demo",
+      "label": "Roster",
+      "note": "every soul and its current traits"
+    },
+    {
+      "key": "docsCreate",
+      "label": "Create Soul",
+      "note": "start a new identity"
+    },
+    {
+      "key": "docsObserve",
+      "label": "Observe",
+      "note": "log evidence about a soul's behaviour"
+    },
+    {
+      "key": "docsMaintenance",
+      "label": "Maintenance",
+      "note": "consolidate and refine traits"
+    },
+    {
+      "key": "docsSearch",
+      "label": "Search",
+      "note": "full-text search across souls"
+    },
+    {
+      "key": "docsEther",
+      "label": "The Ether",
+      "note": "the prompt catalog"
+    }
+  ]
+}
