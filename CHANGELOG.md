@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-27
+
+### Fixed
+
+- Creating, renaming or awakening a soul with a name or slug that is already taken fails with a clear message (`A soul with name "Reviewer" already exists (ID 1); choose a different name.`) instead of SQLite's raw `UNIQUE constraint failed: souls.name` system error.
+- Flag values that start with dashes are accepted; only a following `--name` token counts as the next flag.
+
 ## [0.4.0] - 2026-10-27
 
 ### Added
@@ -81,7 +88,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/GhostPawJS/souls/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/GhostPawJS/souls/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/GhostPawJS/souls/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/GhostPawJS/souls/compare/v0.2.2...v0.2.3
