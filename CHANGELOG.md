@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-27
+
 ### Added
 
 - 19 schema-derived command paths: `search`, `review`, `soul create|show|update|retire|awaken`, `shard drop|drop-batch|reveal`, `refinement add|revise|revert|reactivate|cite|attune`, and `level validate|up|revert`. Per-command help and bash, zsh and fish completions are included. Core commands work offline; search reads behavioral shards.
@@ -79,7 +81,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/GhostPawJS/souls/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/GhostPawJS/souls/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/GhostPawJS/souls/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/GhostPawJS/souls/compare/v0.2.1...v0.2.2
