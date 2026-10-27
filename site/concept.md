@@ -97,8 +97,9 @@ A prompt that changes only when the evidence agrees, and changes back when asked
 3. Explainer: soul, trait, shard, level-up, the rendered block. V016 V029
 4. Worry: self-modification, what souls does and does not do. V022 V034
 5. Numbers: 0 deps, Node 24+, 532 tests, 93.4% lines, 31.4 KB gzip, about 2.8 ms import, 7 tools.
-6. Start: install, quick start, GitHub, README, live demo, home and sibling pages.
-7. Footer: Impressum, Datenschutz.
+6. Binaries: since 0.4.0 the CLI ships as one executable per platform with Node.js inside; install lines (install.sh, install.ps1, mise, ubi, eget, npx), targets and archive sizes from the v0.4.0 release assets, SHA256SUMS and attestation check, unsigned note, and a real terminal session (soul create, shard drop, refinement add and cite, search, review, soul show).
+7. Start: install, quick start, GitHub, README, live demo, home and sibling pages.
+8. Footer: Impressum, Datenschutz.
 
 ## Palette
 | Role | Color | Source |
@@ -128,6 +129,7 @@ Shared panes: panel ground, 1px rule border, 14px chamfer, 3px top bar lit by st
 | --- | --- | --- | --- |
 | hero ghost-wolf | protagonist | a ghost-wolf head drawn in cyan light filaments, small shards floating toward it and one violet crystal forming; no text V016 V049 | generated |
 | layers | explanation | stacked glass plates of light with a violet beam and shards rising through them; generations of an identity V043 | generated |
+| terminal session | evidence | real output of the 0.4.0 linux-x64 binary against a fresh database, recorded with vhs in the void/spectral palette; never retouched | recorded |
 | share card | share preview | the hero art with the headline at 1200×630 | generated art, rendered from HTML |
 
 ## Motion
@@ -144,6 +146,7 @@ Reduced motion: no sweep or flash; changes in place.
 - Never present voices as customers. V051
 
 ## Changelog
+- 2026-10-27: souls 0.4.0 ships standalone binaries. New spine item 6, Binaries: install lines, targets and archive sizes from the v0.4.0 release assets, SHA256SUMS and attestation check, unsigned note, and the terminal session screenshot (new Imagery row). Kicker and JSON-LD version 0.4.0. Other sections unchanged.
 - 2026-10-24: first concept from the 2026-10-24 research batch (60 voices, 12 peers); evidence gate chosen; replay of a real souls 0.3.0 run.
 - 2026-10-24: depth pass (10 more voices, now 70); replay re-run against the current release; import time re-measured; comparison section added; page moved to https://souls.ghostpaw.dev/.
 - 2026-10-24: portal chrome pass. Shared top bar (GhostPaw/<lib>, Live demo or Docs, GitHub, npm), version badge, footer row of all seven libraries; sibling links row dropped from the start section; the ruled grid on the page ground was replaced by one radial glow (lfm 0.1.9 rejects ruled ground textures); share card relabelled GhostPaw/<lib> with the install line.
