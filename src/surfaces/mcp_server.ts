@@ -1,3 +1,4 @@
+import { schemaExample } from './schema_example.ts';
 import {
 	isErrorResult as defaultIsErrorResult,
 	type McpServer,
@@ -131,7 +132,15 @@ export function createMcpServer<TCtx>(options: McpServerOptions<TCtx>): McpServe
 				const input = params.arguments === undefined ? {} : params.arguments;
 				const errors = validateInput(tool.inputSchema, input);
 				if (errors.length)
-					return result({ content: [{ type: 'text', text: errors.join('\n') }], isError: true });
+					return result({
+						content: [
+							{
+								type: 'text',
+								text: `${errors.join('\n')}; pass ${JSON.stringify(schemaExample(tool.inputSchema, tool.name, (input as Record<string, unknown> | null)?.action as string | undefined))}`,
+							},
+						],
+						isError: true,
+					});
 				try {
 					context ??= Promise.resolve().then(options.context);
 					const value = await tool.handler(await context, input as Record<string, unknown>);

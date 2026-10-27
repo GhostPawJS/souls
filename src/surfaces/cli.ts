@@ -1,6 +1,7 @@
 import { type Readable, Writable } from 'node:stream';
 import { runCliCommand } from './cli_commands.ts';
 import { cliVersion } from './cli_version.ts';
+import { schemaExample } from './schema_example.ts';
 import { isErrorResult, type JsonSchema, type SurfaceTool } from './surface_types.ts';
 import { validateInput } from './validate_input.ts';
 
@@ -14,6 +15,7 @@ export interface ToolCliOptions<TCtx> {
 	commands?: {
 		mcp?: (opts: { db?: string }) => unknown | Promise<unknown>;
 		skill?: () => string | Promise<string>;
+		guides?: readonly { name: string; description: string; content: string }[];
 	};
 	stdin?: Readable & { isTTY?: boolean };
 	stdout?: Writable;
@@ -99,7 +101,23 @@ export async function runToolCli<TCtx>(
 	}
 	if (command === 'skill') {
 		if (!options.commands?.skill) return fail('skill command unavailable');
-		stdout.write(await options.commands.skill());
+		if (args.length > 1) return fail('Expected one guide name');
+		const guide = args[0];
+		if (guide === '--help' || guide === '-h') {
+			stdout.write(
+				`Usage:\n  ${options.bin} skill\n  ${options.bin} skill --list\n  ${options.bin} skill <guide>\n`,
+			);
+		} else if (guide === '--list') {
+			stdout.write(
+				`${(options.commands.guides ?? [])
+					.map((item) => `${item.name}  ${item.description.replace(/\s+/g, ' ')}`)
+					.join('\n')}\n`,
+			);
+		} else if (guide) {
+			const item = options.commands.guides?.find((item) => item.name === guide);
+			if (!item) return fail(`unknown guide ${guide}; run ${options.bin} skill --list`, 1);
+			stdout.write(item.content);
+		} else stdout.write(await options.commands.skill());
 		return 0;
 	}
 	if (command === 'mcp') {
@@ -188,7 +206,11 @@ export async function runToolCli<TCtx>(
 		return fail(`Invalid input: ${cause instanceof Error ? cause.message : String(cause)}`, 1);
 	}
 	const errors = validateInput(tool.inputSchema, input);
-	if (errors.length) return fail(errors.join('\n'), 1);
+	if (errors.length)
+		return fail(
+			`${errors.join('\n')}; pass ${JSON.stringify(schemaExample(tool.inputSchema, tool.name, (input as Record<string, unknown> | null)?.action as string | undefined))}`,
+			1,
+		);
 	let context: TCtx;
 	try {
 		context = await options.openContext(ctxOptions);

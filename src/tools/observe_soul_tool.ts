@@ -17,6 +17,7 @@ import { toShardRef } from './tool_ref.ts';
 import { summarizeCount } from './tool_summary.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
+import { validateToolInput } from './validate_tool_input.ts';
 
 export interface ObserveSoulDropData {
 	shardId: number;
@@ -54,6 +55,8 @@ export function observeSoulToolHandler(
 		shardIds?: number[] | undefined;
 	},
 ): ObserveSoulToolResult {
+	const invalid = validateToolInput(observeSoulTool, input);
+	if (invalid) return invalid;
 	try {
 		if (input.action === 'drop') {
 			if (!input.content || !input.source || !input.soulIds) {

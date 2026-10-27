@@ -32,6 +32,8 @@ export function translateToolError(
 		const result = toolFailure(kind, toolCode, options.summary ?? error.message, error.message, {
 			next: next.length > 0 ? next : undefined,
 		});
+		if (error.name === 'SoulsValidationError')
+			result.error.recovery = `${error.message}; inspect the tool schema and supply the required fields.`;
 		if (error.name === 'SoulsNotFoundError') {
 			result.error.recovery = 'Use search_souls or review_souls to find the correct ID.';
 		}

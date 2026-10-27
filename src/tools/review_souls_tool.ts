@@ -12,6 +12,7 @@ import { toSoulRef } from './tool_ref.ts';
 import { summarizeCount } from './tool_summary.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
+import { validateToolInput } from './validate_tool_input.ts';
 
 export interface ReviewSoulsListData {
 	souls: SoulRecord[];
@@ -36,6 +37,8 @@ export function reviewSoulsToolHandler(
 	db: SoulsDb,
 	input: { view: 'list' | 'maintenance' | 'readiness' },
 ): ReviewSoulsToolResult {
+	const invalid = validateToolInput(reviewSoulsTool, input);
+	if (invalid) return invalid;
 	try {
 		if (input.view === 'list') {
 			const souls = read.listSouls(db);

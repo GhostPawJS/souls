@@ -14,6 +14,7 @@ import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulRef } from './tool_ref.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess } from './tool_types.ts';
+import { validateToolInput } from './validate_tool_input.ts';
 
 export interface ManageSoulToolData {
 	soul: SoulRecord;
@@ -31,6 +32,8 @@ export function manageSoulToolHandler(
 		soulId?: number | undefined;
 	},
 ): ManageSoulToolResult {
+	const invalid = validateToolInput(manageSoulTool, input);
+	if (invalid) return invalid;
 	try {
 		if (input.action === 'create') {
 			if (!input.name || !input.essence || !input.description) {

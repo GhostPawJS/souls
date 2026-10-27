@@ -50,6 +50,10 @@ Read-only.
 | tags | array | no | Filter by topic tags (list mode). |
 | limit | integer | no | Maximum results. |
 
+```sh
+ghostpaw-souls call search_souls '{}'
+```
+
 ## review_souls
 
 List all active souls, run the maintenance cycle, or check crystallization readiness.
@@ -63,6 +67,10 @@ Writes: writes_state.
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
 | view | string | yes | list, maintenance, readiness. The operation to perform. |
+
+```sh
+ghostpaw-souls call review_souls '{"view":"list"}'
+```
 
 ## inspect_souls_item
 
@@ -79,6 +87,10 @@ Read-only.
 | soulId | integer | yes | The soul ID to inspect. |
 | includeEvidence | boolean | no | Include evidence report with clusters and signals. Default false. |
 | includeProvenance | boolean | no | Include provenance in rendered identity. Default false. |
+
+```sh
+ghostpaw-souls call inspect_souls_item '{"soulId":1}'
+```
 
 ## observe_soul
 
@@ -101,6 +113,18 @@ Writes: writes_state.
 | shards | array | no | Array of shards for batch deposit. |
 | shardIds | array | no | Shard IDs to reveal. |
 
+```sh
+ghostpaw-souls call observe_soul '{"action":"drop","content":"Observed careful review.","source":"manual_review","soulIds":[]}'
+```
+
+```sh
+ghostpaw-souls call observe_soul '{"action":"drop_batch","shards":[]}'
+```
+
+```sh
+ghostpaw-souls call observe_soul '{"action":"reveal","shardIds":[]}'
+```
+
 ## refine_soul
 
 Add, revise, revert, or reactivate traits; cite shards to traits; stamp attunement.
@@ -120,6 +144,18 @@ Writes: writes_state.
 | provenance | string | no | Evidence chain justifying the trait. |
 | shardId | integer | no | Shard ID to link (for cite_shard). |
 
+```sh
+ghostpaw-souls call refine_soul '{"action":"add_trait","soulId":1,"principle":"Check intent before details.","provenance":"Repeated review observations."}'
+```
+
+```sh
+ghostpaw-souls call refine_soul '{"action":"revise_trait","traitId":1,"principle":"Check intent before details.","provenance":"Repeated review observations."}'
+```
+
+```sh
+ghostpaw-souls call refine_soul '{"action":"revert_trait","traitId":1}'
+```
+
 ## level_up_soul
 
 Validate, execute, or revert a level-up plan for a soul — consolidating traits, promoting knowledge into essence, and incrementing the generation.
@@ -135,6 +171,22 @@ Writes: writes_state.
 | action | string | yes | validate, execute, revert. The operation to perform. |
 | soulId | integer | yes | The soul ID. |
 | plan | object | no | The level-up plan. |
+| plan.newEssence | string | yes | The new essence narrative after level-up. |
+| plan.consolidations | array | yes | Consolidation groups. |
+| plan.promotedTraitIds | array | yes | Trait IDs to absorb into essence. |
+| plan.carriedTraitIds | array | yes | Trait IDs to carry unchanged. |
+
+```sh
+ghostpaw-souls call level_up_soul '{"action":"validate","soulId":1,"plan":{"newEssence":"Review intent and evidence.","consolidations":[],"promotedTraitIds":[],"carriedTraitIds":[]}}'
+```
+
+```sh
+ghostpaw-souls call level_up_soul '{"action":"execute","soulId":1,"plan":{"newEssence":"Review intent and evidence.","consolidations":[],"promotedTraitIds":[],"carriedTraitIds":[]}}'
+```
+
+```sh
+ghostpaw-souls call level_up_soul '{"action":"revert","soulId":1}'
+```
 
 ## manage_soul
 
@@ -154,16 +206,28 @@ Writes: writes_state.
 | description | string | no | Soul description. |
 | soulId | integer | no | Soul ID. |
 
+```sh
+ghostpaw-souls call manage_soul '{"action":"create","name":"Reviewer","essence":"Read intent before details.","description":"Code review identity"}'
+```
+
+```sh
+ghostpaw-souls call manage_soul '{"action":"update","soulId":1}'
+```
+
+```sh
+ghostpaw-souls call manage_soul '{"action":"retire","soulId":1}'
+```
+
 ## Workflow guides
 
-- [observe-behavior-well](references/observe-behavior-well.md): Deposit high-quality behavioral observations with correct source labels and tags.
-- [run-maintenance-pass](references/run-maintenance-pass.md): Run the standard maintenance cycle, interpret results, and triage souls ready for refinement.
-- [produce-trait-proposals-from-evidence](references/produce-trait-proposals-from-evidence.md): Read an evidence report, interpret signals, and propose add/revise/revert trait mutations.
-- [judge-consolidation-versus-promotion](references/judge-consolidation-versus-promotion.md): Decide whether to consolidate, promote, or carry each trait during a level-up plan.
-- [execute-level-up-plan](references/execute-level-up-plan.md): Validate, execute, and verify a level-up plan for a soul.
-- [bootstrap-new-soul](references/bootstrap-new-soul.md): Create a new soul with an initial essence and begin the observation cycle.
-- [detect-and-fix-regression](references/detect-and-fix-regression.md): Spot regression signals in evidence, use revert-trait or revert-level-up to restore identity integrity.
-- [review-soul-health](references/review-soul-health.md): Interpret the health metric, staleness signals, and capacity state to assess the overall condition of a soul.
+- `ghostpaw-souls skill observe-behavior-well` ([observe-behavior-well](references/observe-behavior-well.md)): Deposit high-quality behavioral observations with correct source labels and tags.
+- `ghostpaw-souls skill run-maintenance-pass` ([run-maintenance-pass](references/run-maintenance-pass.md)): Run the standard maintenance cycle, interpret results, and triage souls ready for refinement.
+- `ghostpaw-souls skill produce-trait-proposals-from-evidence` ([produce-trait-proposals-from-evidence](references/produce-trait-proposals-from-evidence.md)): Read an evidence report, interpret signals, and propose add/revise/revert trait mutations.
+- `ghostpaw-souls skill judge-consolidation-versus-promotion` ([judge-consolidation-versus-promotion](references/judge-consolidation-versus-promotion.md)): Decide whether to consolidate, promote, or carry each trait during a level-up plan.
+- `ghostpaw-souls skill execute-level-up-plan` ([execute-level-up-plan](references/execute-level-up-plan.md)): Validate, execute, and verify a level-up plan for a soul.
+- `ghostpaw-souls skill bootstrap-new-soul` ([bootstrap-new-soul](references/bootstrap-new-soul.md)): Create a new soul with an initial essence and begin the observation cycle.
+- `ghostpaw-souls skill detect-and-fix-regression` ([detect-and-fix-regression](references/detect-and-fix-regression.md)): Spot regression signals in evidence, use revert-trait or revert-level-up to restore identity integrity.
+- `ghostpaw-souls skill review-soul-health` ([review-soul-health](references/review-soul-health.md)): Interpret the health metric, staleness signals, and capacity state to assess the overall condition of a soul.
 
 ## Principles
 

@@ -18,6 +18,7 @@ import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulIdRef } from './tool_ref.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess } from './tool_types.ts';
+import { validateToolInput } from './validate_tool_input.ts';
 
 export interface LevelUpSoulExecuteData {
 	result: LevelUpResult;
@@ -45,6 +46,8 @@ export function levelUpSoulToolHandler(
 		plan?: LevelUpPlan | undefined;
 	},
 ): LevelUpSoulToolResult {
+	const invalid = validateToolInput(levelUpSoulTool, input);
+	if (invalid) return invalid;
 	try {
 		if (input.action === 'validate') {
 			if (!input.plan) {

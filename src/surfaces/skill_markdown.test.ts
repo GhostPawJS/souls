@@ -72,3 +72,35 @@ test('release install opens the skill and npm fallback closes it', () => {
 	assert.ok(fallback?.includes('Node 24+'));
 	assert.ok(fallback?.includes('as a library'));
 });
+
+test('nested object alternatives show required fields and small optional fields', () => {
+	const markdown = renderSkillMarkdown({
+		...spec,
+		tools: [
+			{
+				...spec.tools[0]!,
+				inputSchema: {
+					type: 'object',
+					properties: {
+						target: {
+							oneOf: [
+								{
+									type: 'object',
+									required: ['id'],
+									properties: {
+										id: { type: 'integer', description: 'Record ID' },
+										mode: { type: 'string', enum: ['full', 'brief'] },
+									},
+								},
+								{ type: 'object', required: ['name'], properties: { name: { type: 'string' } } },
+							],
+						},
+					},
+				},
+			},
+		],
+	});
+	assert.match(markdown, /\| target.id \| integer \| yes \| Record ID/);
+	assert.match(markdown, /\| target.mode \| string \| no \| full, brief/);
+	assert.match(markdown, /\| target.name \| string \| yes \|/);
+});

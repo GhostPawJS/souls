@@ -1,4 +1,5 @@
-import type { SurfaceTool } from './surface_types.ts';
+import { schemaExample } from './schema_example.ts';
+import type { JsonSchema, SurfaceTool } from './surface_types.ts';
 
 export interface SkillMarkdownSpec<TCtx> {
 	name: string;
@@ -83,10 +84,32 @@ export function renderSkillMarkdown<TCtx>(
 			'| Parameter | Type | Required | Values / description |',
 			'| --- | --- | --- | --- |',
 		);
-		for (const [name, property] of Object.entries(tool.inputSchema.properties ?? {}))
+		const rows = (schema: JsonSchema, prefix = '') => {
+			for (const [name, property] of Object.entries(schema.properties ?? {})) {
+				if (
+					prefix &&
+					Object.keys(schema.properties ?? {}).length > 8 &&
+					!schema.required?.includes(name)
+				)
+					continue;
+				lines.push(
+					`| ${prefix}${name} | ${property.type ?? property.oneOf?.map((branch) => branch.type).join(' / ') ?? 'any'} | ${schema.required?.includes(name) ? 'yes' : 'no'} | ${(property.enum ? `${property.enum.join(', ')}. ` : '') + (property.description ?? '').replaceAll('|', '\\|').replaceAll('\n', ' ')} |`,
+				);
+				for (const branch of property.oneOf ?? [property]) {
+					if (branch.properties) rows(branch, `${prefix}${name}.`);
+				}
+			}
+		};
+		rows(tool.inputSchema);
+		const actions = tool.inputSchema.properties?.action?.enum?.slice(0, 3) ?? [undefined];
+		for (const action of actions) {
 			lines.push(
-				`| ${name} | ${property.type ?? property.oneOf?.map((branch) => branch.type).join(' / ') ?? 'any'} | ${tool.inputSchema.required?.includes(name) ? 'yes' : 'no'} | ${(property.enum ? `${property.enum.join(', ')}. ` : '') + (property.description ?? '').replaceAll('|', '\\|').replaceAll('\n', ' ')} |`,
+				'',
+				'```sh',
+				`${spec.bin} call ${tool.name} '${JSON.stringify(schemaExample(tool.inputSchema, tool.name, typeof action === 'string' ? action : undefined))}'`,
+				'```',
 			);
+		}
 		lines.push('');
 	}
 	lines.push(
@@ -94,7 +117,7 @@ export function renderSkillMarkdown<TCtx>(
 		'',
 		...spec.workflows.map(
 			(workflow) =>
-				`- [${workflow.name}](${referencesBase}/${workflow.name}.md): ${workflow.description}`,
+				`- \`${spec.bin} skill ${workflow.name}\` ([${workflow.name}](${referencesBase}/${workflow.name}.md)): ${workflow.description}`,
 		),
 		'',
 		'## Principles',

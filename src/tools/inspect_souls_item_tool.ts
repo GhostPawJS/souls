@@ -9,6 +9,7 @@ import { refineSoulNext, searchSoulsNext } from './tool_next.ts';
 import { toSoulRef } from './tool_ref.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
+import { validateToolInput } from './validate_tool_input.ts';
 
 export interface InspectSoulsItemToolData {
 	profile: SoulProfile;
@@ -26,6 +27,8 @@ export function inspectSoulsItemToolHandler(
 		includeProvenance?: boolean | undefined;
 	},
 ): InspectSoulsItemToolResult {
+	const invalid = validateToolInput(inspectSoulsItemTool, input);
+	if (invalid) return invalid;
 	try {
 		const profile = read.getSoulProfile(db, input.soulId);
 		const renderedIdentity = read.renderSoul(db, input.soulId, {

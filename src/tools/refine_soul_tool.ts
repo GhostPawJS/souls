@@ -15,6 +15,7 @@ import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulIdRef, toTraitRef } from './tool_ref.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
+import { validateToolInput } from './validate_tool_input.ts';
 
 export interface RefineSoulToolData {
 	trait?: TraitRecord | undefined;
@@ -41,6 +42,8 @@ export function refineSoulToolHandler(
 		shardId?: number | undefined;
 	},
 ): RefineSoulToolResult {
+	const invalid = validateToolInput(refineSoulTool, input);
+	if (invalid) return invalid;
 	try {
 		if (input.action === 'add_trait') {
 			if (!input.soulId || !input.principle || !input.provenance) {

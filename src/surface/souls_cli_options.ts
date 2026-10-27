@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { soulsSkills } from '../skills/skill_registry.ts';
 import type { ToolCliOptions } from '../surfaces/cli.ts';
 import { soulsVersion } from '../version.ts';
 import { soulsSurfaceTools } from './souls_surface_tools.ts';
@@ -15,6 +16,7 @@ export const soulsCliOptions: ToolCliOptions<SoulsDb> = {
 	},
 	closeContext: (db) => db.close(),
 	commands: {
+		guides: soulsSkills,
 		mcp: async (options) => {
 			const { serveSoulsMcp } = await import('./serve_souls_mcp.ts');
 			await serveSoulsMcp(options.db === undefined ? {} : { dbPath: options.db });

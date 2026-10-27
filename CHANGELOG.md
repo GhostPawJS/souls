@@ -7,6 +7,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Embed workflow guides in the CLI with listing and help, and include nested parameter rows and schema-checked call examples in generated skills.
+- Validate facade inputs before invoking tool handlers and include recovery shapes for invalid input.
+
 - Release binaries are the default installation path in the README and generated skill, with explicit installer targets and variant labels in human version output.
 
 ## [0.4.1] - 2026-10-27

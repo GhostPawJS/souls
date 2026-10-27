@@ -15,6 +15,7 @@ import { toSoulIdRef } from './tool_ref.ts';
 import { summarizeCount } from './tool_summary.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess } from './tool_types.ts';
+import { validateToolInput } from './validate_tool_input.ts';
 
 export interface SearchSoulsToolData {
 	shards: ShardRecord[];
@@ -32,6 +33,8 @@ export function searchSoulsToolHandler(
 		limit?: number | undefined;
 	},
 ): SearchSoulsToolResult {
+	const invalid = validateToolInput(searchSoulsTool, input);
+	if (invalid) return invalid;
 	try {
 		let shards: ShardRecord[];
 
