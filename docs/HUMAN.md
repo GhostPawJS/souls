@@ -453,3 +453,59 @@ Each faculty can deposit behavioral observations into souls as shards. The
 cross-faculty evidence naturally satisfies the crystallization diversity gate.
 Souls is the only faculty whose output — the rendered identity block — becomes
 the system prompt.
+
+## CLI Reference
+
+```text
+ghostpaw-souls search [query] [--soul-id N --tags TAG --limit N]
+ghostpaw-souls review <list|maintenance|readiness>
+ghostpaw-souls soul create <name> --essence TEXT --description TEXT
+ghostpaw-souls soul show|update|retire|awaken <soulId> [flags]
+ghostpaw-souls shard drop <content> --source LABEL --soul-ids N [flags]
+ghostpaw-souls shard drop-batch --shards JSON
+ghostpaw-souls shard reveal <shardIds...>
+ghostpaw-souls refinement add|attune <soulId> [flags]
+ghostpaw-souls refinement revise|revert|reactivate <traitId> [flags]
+ghostpaw-souls refinement cite <traitId> <shardId>
+ghostpaw-souls level validate|up|revert <soulId> [flags]
+ghostpaw-souls mcp|skill|tools|describe|call|completions|version|help
+```
+
+Global flags can appear anywhere: `--db <path>`, `--json`, `--quiet`,
+`--compact`, `--help`/`-h`, `--version`/`-V`/`-v`, `--no-color`.
+`NO_COLOR` is accepted; output uses no terminal colors.
+Noun-verb commands print the full tool result as JSON with `--json` or when
+stdout is piped. Terminal output shows the summary and payload.
+`--quiet` suppresses stdout. `--compact` removes JSON indentation.
+
+Use `help soul`, `soul --help` or `soul create --help` for schema-derived help.
+Array flags repeat, kebab-case flags map to schema properties, and `@path`
+reads a value from a file. `--` ends flags. A positional `-`, or piped stdin
+with no arguments, reads a JSON object; explicit flags override its fields.
+Database selection uses `--db`, `GHOSTPAW_SOULS_DB`, then `~/.ghostpaw/souls.db`.
+
+| Exit | Noun-verb result |
+|---|---|
+| 0 | Success, including no_op |
+| 1 | Tool error |
+| 2 | Usage or schema error |
+| 3 | Clarification needed or not found |
+| 4 | Conflict or version mismatch |
+| 70 | Internal error |
+
+Errors go to stderr. With `--json`, usage and internal errors also print
+`{ok:false,error:{code,message}}` to stdout. Tool results retain their full
+shape. Legacy `tools [--json]`, `describe <tool>`, `call <tool> [JSON|-]`
+and `<tool_name> --parameter value` keep their existing exit codes.
+`completions bash`, `completions zsh` and `completions fish` print shell scripts.
+
+```sh
+ghostpaw-souls soul create Reviewer --essence "Read carefully." --description "Review identity" --db /tmp/souls-example.db --json
+ghostpaw-souls soul show 1 --db /tmp/souls-example.db --json
+ghostpaw-souls review list --db /tmp/souls-example.db --json
+```
+
+Search reads behavioral shards. Creating a soul does not add searchable shards;
+use `shard drop` to deposit observations. Core commands work offline.
+
+See [installation instructions](../README.md#install).
