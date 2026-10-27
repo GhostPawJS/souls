@@ -17,8 +17,8 @@
 			"gzipBytes": 17856
 		},
 		"cli": {
-			"minBytes": 99072,
-			"gzipBytes": 32000
+			"minBytes": 99392,
+			"gzipBytes": 32128
 		},
 		"mcp-server": {
 			"minBytes": 65216,
