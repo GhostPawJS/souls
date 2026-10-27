@@ -5,6 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 19 schema-derived command paths: `search`, `review`, `soul create|show|update|retire|awaken`, `shard drop|drop-batch|reveal`, `refinement add|revise|revert|reactivate|cite|attune`, and `level validate|up|revert`. Per-command help and bash, zsh and fish completions are included. Core commands work offline; search reads behavioral shards.
+- Standalone binaries for linux-x64, linux-arm64, darwin-arm64, darwin-x64 and windows-x64, with SHA256SUMS and build attestations. Binaries are unsigned; macOS builds use ad-hoc signing.
+- `install.sh` and `install.ps1` refuse checksum mismatches. Release install checks cover ubuntu-24.04, macos-15 and windows-2025.
+
+### Changed
+
+- Noun-verb commands support global output flags and exit codes 0 (success), 1 (tool error), 2 (usage), 3 (not found or clarification), 4 (conflict), and 70 (internal error). Existing CLI forms retain their output and exit codes.
+- `SurfaceTool` accepts an optional `cli` mapping. MCP metadata remains unchanged.
+
+
 ## [0.3.0] - 2026-10-24
 
 ### Added
