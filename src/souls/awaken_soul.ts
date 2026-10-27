@@ -1,6 +1,7 @@
 import type { SoulsDb } from '../database.ts';
 import { SoulsStateError } from '../errors.ts';
 import { resolveNow } from '../resolve_now.ts';
+import { assertSoulNameFree } from './assert_soul_name_free.ts';
 import { getSoulOrThrow } from './get_soul_or_throw.ts';
 import type { AwakenSoulOptions, SoulRecord } from './types.ts';
 import { assertSoulName } from './validators.ts';
@@ -10,6 +11,7 @@ export function awakenSoul(db: SoulsDb, id: number, options?: AwakenSoulOptions)
 	if (!soul.isDormant) throw new SoulsStateError(`Soul ${id} is not dormant.`);
 
 	if (options?.name !== undefined) assertSoulName(options.name);
+	assertSoulNameFree(db, { name: options?.name ?? soul.name, slug: soul.slug }, id);
 	const now = resolveNow(options?.now);
 
 	db.prepare(

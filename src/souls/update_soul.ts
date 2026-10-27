@@ -1,5 +1,6 @@
 import type { SoulsDb } from '../database.ts';
 import { resolveNow } from '../resolve_now.ts';
+import { assertSoulNameFree } from './assert_soul_name_free.ts';
 import { getSoulOrThrow } from './get_soul_or_throw.ts';
 import type { SoulRecord, UpdateSoulInput } from './types.ts';
 import {
@@ -17,6 +18,7 @@ export function updateSoul(db: SoulsDb, id: number, input: UpdateSoulInput): Sou
 	if (input.description !== undefined) assertSoulDescription(input.description);
 	if (input.slug != null) assertSlug(input.slug);
 
+	assertSoulNameFree(db, input, soul.id);
 	const now = resolveNow(input.now);
 
 	db.prepare(
