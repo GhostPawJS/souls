@@ -1,6 +1,6 @@
 {
   "name": "ghostpaw-souls",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Local cognitive identity engine with traits, behavioral evidence, and revision history.",
   "author": {
     "name": "Anonyfox",
@@ -44,7 +44,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@ghostpaw/souls@0.4.4",
+        "@ghostpaw/souls@0.4.5",
         "mcp"
       ]
     }
