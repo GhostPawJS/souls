@@ -31,17 +31,18 @@
 <main>
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-copy">
-      <p class="kicker"><code>@ghostpaw/souls</code> <span class="ver">0.4.0</span></p>
+      <p class="kicker"><code>@ghostpaw/souls</code> <span class="ver">0.4.3</span></p>
       <h1 id="hero-title">Change your agent's prompt when the evidence agrees.</h1>
       <p class="lede">souls keeps an agent's identity as a short essence plus traits, and every trait carries the evidence that earned it. Observations pile up as shards, the soul is ready for a change only when they come from two independent sources over at least a day, and every level-up can be reverted.</p>
       <div class="install">
-        <p class="cmd-label" id="lib-label">As a library</p>
-        <div class="cmd"><input id="cmd-lib" readonly value="npm install @ghostpaw/souls" aria-labelledby="lib-label" spellcheck="false"><button type="button" class="copy" data-copy="cmd-lib">Copy</button></div>
-        <p class="cmd-label" id="mcp-label">As a local MCP server</p>
-        <div class="cmd"><input id="cmd-mcp" readonly value="npx -y @ghostpaw/souls mcp" aria-labelledby="mcp-label" spellcheck="false"><button type="button" class="copy" data-copy="cmd-mcp">Copy</button></div>
+        <p class="cmd-label" id="lib-label">Binary for linux-x64 (checked against SHA256SUMS)</p>
+        <div class="cmd"><input id="cmd-lib" readonly value="curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target linux-x64 &amp;&amp; export PATH=&quot;$HOME/.local/bin:$PATH&quot;" aria-labelledby="lib-label" spellcheck="false"><button type="button" class="copy" data-copy="cmd-lib">Copy</button></div>
+        <p class="cmd-label" id="mcp-label">Then run it as a local MCP server</p>
+        <div class="cmd"><input id="cmd-mcp" readonly value="ghostpaw-souls mcp" aria-labelledby="mcp-label" spellcheck="false"><button type="button" class="copy" data-copy="cmd-mcp">Copy</button></div>
+        <p class="cmd-label"><a href="#binaries">macOS, Windows, pinned versions, npx and the npm library</a></p>
       </div>
       <p class="actions"><a class="button" href="#run">Replay the run</a> <a href="{{.urls.github}}">Read the source on GitHub</a></p>
-      <p class="terms">Free and MIT licensed for Node.js 24 or newer, with zero runtime dependencies. The MCP server keeps identity and evidence in <code>~/.ghostpaw/souls.db</code> on your machine.</p>
+      <p class="terms">Free and MIT licensed; the binary carries its own Node.js and the npm package needs Node.js 24 or newer, with zero runtime dependencies. The MCP server keeps identity and evidence in <code>~/.ghostpaw/souls.db</code> on your machine.</p>
     </div>
     <figure class="hero-art frame">
       <div class="scope"><picture><source media="(min-width: 52rem)" srcset="assets/images/hero-720.webp" width="720" height="540"><img src="assets/images/hero-480.webp" width="480" height="360" alt="A ghost-wolf head drawn in cyan light filaments, small glass shards floating toward it and a violet crystal forming beside its muzzle." fetchpriority="high"></picture><span class="scan" aria-hidden="true"></span></div>
@@ -307,7 +308,7 @@ write.dropShard(db, {
 });
 
 const rendered = read.renderSoul(db, soul.id);</code></pre>
-    <p>To run it as an MCP server, add <code>npx -y @ghostpaw/souls mcp</code> to your client. <code>npx -y @ghostpaw/souls skill</code> prints the Agent Skill that ships in the package.</p>
+    <p>To run it as an MCP server, add <code>ghostpaw-souls mcp</code> to your client (or <code>npx -y @ghostpaw/souls mcp</code> under Node.js 24). <code>ghostpaw-souls skill</code> prints the Agent Skill that ships in the package.</p>
     <p class="links"><a class="more" href="{{.urls.readme}}">Read the README</a><a href="{{.urls.demo}}">Open the live demo</a><a href="{{.urls.npm}}">souls on npm</a></p>
     <nav class="docs-map" aria-labelledby="docs-map-title">
       <h3 id="docs-map-title">{{.data.docs.heading}}</h3>
