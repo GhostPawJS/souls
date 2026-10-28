@@ -1,1 +1,1 @@
-export const soulsVersion = '0.4.3';
+export const soulsVersion = '0.4.4';
