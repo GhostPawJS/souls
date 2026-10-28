@@ -5,6 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `skill --short` prints a compact command cheat sheet.
+
+### Fixed
+
+- Skill guide listings use runnable commands instead of reference file links.
+- Skill and describe parameter tables include nested object and array fields with nonempty descriptions.
+
 ### Changed
 
 - README and site add a labelled install line that also adds ~/.local/bin to ~/.profile, and a pinned line on the site.

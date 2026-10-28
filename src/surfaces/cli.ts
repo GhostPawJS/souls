@@ -2,6 +2,7 @@ import { type Readable, Writable } from 'node:stream';
 import { runCliCommand } from './cli_commands.ts';
 import { cliVersion } from './cli_version.ts';
 import { schemaExample } from './schema_example.ts';
+import { schemaRows } from './schema_rows.ts';
 import { isErrorResult, type JsonSchema, type SurfaceTool } from './surface_types.ts';
 import { validateInput } from './validate_input.ts';
 
@@ -110,8 +111,10 @@ export async function runToolCli<TCtx>(
 		const guide = args[0];
 		if (guide === '--help' || guide === '-h') {
 			stdout.write(
-				`Usage:\n  ${options.bin} skill\n  ${options.bin} skill --list\n  ${options.bin} skill <guide>\n`,
+				`Usage:\n  ${options.bin} skill\n  ${options.bin} skill --short  Compact cheat sheet\n  ${options.bin} skill --list\n  ${options.bin} skill <guide>\n`,
 			);
+		} else if (guide === '--short') {
+			stdout.write(renderShortSkill(options));
 		} else if (guide === '--list') {
 			stdout.write(
 				`${(options.commands.guides ?? [])
@@ -135,13 +138,10 @@ export async function runToolCli<TCtx>(
 	if (!tool) return fail(`Unknown tool: ${name ?? ''}`);
 	if (command === 'describe') {
 		stdout.write(
-			`${tool.name}\n${tool.description}\nUse when: ${tool.whenToUse ?? ''}\nNot for: ${tool.whenNotToUse ?? ''}\nRead only: ${tool.readOnly ?? false}\n\nParameter | Type | Required | Description\n${Object.entries(
-				tool.inputSchema.properties ?? {},
+			`${tool.name}\n${tool.description}\nUse when: ${tool.whenToUse ?? ''}\nNot for: ${tool.whenNotToUse ?? ''}\nRead only: ${tool.readOnly ?? false}\n\nParameter | Type | Required | Description\n${schemaRows(
+				tool.inputSchema,
 			)
-				.map(
-					([key, schema]) =>
-						`${key} | ${schema.type ?? 'oneOf'} | ${tool.inputSchema.required?.includes(key) ?? false} | ${schema.description ?? ''}`,
-				)
+				.map((row) => `${row.name} | ${row.type} | ${row.required} | ${row.description}`)
 				.join('\n')}\n\n${JSON.stringify(tool.inputSchema, null, 2)}\n`,
 		);
 		return 0;
@@ -238,4 +238,51 @@ export async function runToolCli<TCtx>(
 	} finally {
 		await options.closeContext?.(context);
 	}
+}
+
+function renderShortSkill<TCtx>(options: ToolCliOptions<TCtx>): string {
+	const bin = options.bin;
+	const tool = options.tools[0];
+	return [
+		`# ${bin} cheat sheet`,
+		'',
+		'Install (Linux/macOS):',
+		'curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh',
+		'Install (Windows):',
+		'irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex',
+		'',
+		`Version: ${options.version}`,
+		`${bin} --version`,
+		'',
+		'Command help:',
+		`${bin} --help`,
+		'',
+		'List tools:',
+		`${bin} tools`,
+		'',
+		'Inspect parameters:',
+		`${bin} describe ${tool?.name ?? '<tool>'}`,
+		'',
+		'Call a tool with JSON:',
+		`${bin} call ${tool?.name ?? '<tool>'} '${JSON.stringify(tool ? schemaExample(tool.inputSchema, tool.name) : {})}'`,
+		'',
+		'Start the MCP server:',
+		`${bin} mcp`,
+		'',
+		'Full skill and parameter tables:',
+		`${bin} skill`,
+		'',
+		'List workflow guides:',
+		`${bin} skill --list`,
+		...(options.commands?.guides?.[0]
+			? [`Read a guide: ${bin} skill ${options.commands.guides[0].name}`]
+			: []),
+		'',
+		'Compact cheat sheet:',
+		`${bin} skill --short`,
+		'',
+		`Select a database: ${bin} --db ./souls.db tools`,
+		'Use --json for structured output; --quiet suppresses stdout.',
+		'',
+	].join('\n');
 }

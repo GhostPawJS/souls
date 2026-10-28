@@ -85,6 +85,9 @@ ghostpaw-souls level validate|up|revert <soulId> [flags]
 ghostpaw-souls mcp|skill|tools|describe|call|completions|version|help
 ```
 
+Use `ghostpaw-souls skill --short` for a compact cheat sheet, `skill` for full
+parameter tables, and `skill --list` to list runnable workflow guides.
+
 Global flags can appear anywhere: `--db <path>`, `--json`, `--quiet`,
 `--compact`, `--help`/`-h`, `--version`/`-V`/`-v`, `--no-color`.
 `NO_COLOR` is accepted; output uses no terminal colors.
@@ -172,7 +175,7 @@ irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
 Pinned to a release:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target linux-x64 --version 0.4.3 && export PATH="$HOME/.local/bin:$PATH"
+curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target linux-x64 --version 0.4.4 && export PATH="$HOME/.local/bin:$PATH"
 ```
 
 Also adding ~/.local/bin to ~/.profile (edits ~/.profile once; skipped if it already mentions ~/.local/bin; zsh login shells read ~/.zprofile instead, so use that file name there):
@@ -189,7 +192,7 @@ $env:GHOSTPAW_NO_MODIFY_PATH=1; irm https://raw.githubusercontent.com/GhostPawJS
 
 ```text
 $ ghostpaw-souls --version
-souls 0.4.3 (binary, linux-x64)
+souls 0.4.4 (binary, linux-x64)
 ```
 
 Scripts that compare versions should use `--version --short` or `--version --json`.

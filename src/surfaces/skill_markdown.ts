@@ -1,5 +1,6 @@
 import { schemaExample } from './schema_example.ts';
-import type { JsonSchema, SurfaceTool } from './surface_types.ts';
+import { schemaRows } from './schema_rows.ts';
+import type { SurfaceTool } from './surface_types.ts';
 
 export interface SkillMarkdownSpec<TCtx> {
 	name: string;
@@ -17,7 +18,7 @@ export interface SkillMarkdownSpec<TCtx> {
 }
 export function renderSkillMarkdown<TCtx>(
 	spec: SkillMarkdownSpec<TCtx>,
-	{ referencesBase = 'references' }: { referencesBase?: string } = {},
+	_options: { referencesBase?: string } = {},
 ): string {
 	if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(spec.name) || spec.name.length > 64)
 		throw new Error('Invalid skill name');
@@ -62,6 +63,8 @@ export function renderSkillMarkdown<TCtx>(
 		'',
 		'## Calling tools',
 		'',
+		`Compact cheat sheet: \`${spec.bin} skill --short\`. List guides: \`${spec.bin} skill --list\`.`,
+		'',
 		`MCP: connect to ${spec.server}, then call a tool by name with its JSON arguments.`,
 		'',
 		`CLI: \`${spec.bin} call <tool> '<JSON object>'\` or \`${spec.bin} <tool> --parameter value\`.`,
@@ -84,23 +87,11 @@ export function renderSkillMarkdown<TCtx>(
 			'| Parameter | Type | Required | Values / description |',
 			'| --- | --- | --- | --- |',
 		);
-		const rows = (schema: JsonSchema, prefix = '') => {
-			for (const [name, property] of Object.entries(schema.properties ?? {})) {
-				if (
-					prefix &&
-					Object.keys(schema.properties ?? {}).length > 8 &&
-					!schema.required?.includes(name)
-				)
-					continue;
-				lines.push(
-					`| ${prefix}${name} | ${property.type ?? property.oneOf?.map((branch) => branch.type).join(' / ') ?? 'any'} | ${schema.required?.includes(name) ? 'yes' : 'no'} | ${(property.enum ? `${property.enum.join(', ')}. ` : '') + (property.description ?? '').replaceAll('|', '\\|').replaceAll('\n', ' ')} |`,
-				);
-				for (const branch of property.oneOf ?? [property]) {
-					if (branch.properties) rows(branch, `${prefix}${name}.`);
-				}
-			}
-		};
-		rows(tool.inputSchema);
+		for (const row of schemaRows(tool.inputSchema)) {
+			lines.push(
+				`| ${row.name} | ${row.type} | ${row.required ? 'yes' : 'no'} | ${row.description} |`,
+			);
+		}
 		const actions = tool.inputSchema.properties?.action?.enum?.slice(0, 3) ?? [undefined];
 		for (const action of actions) {
 			lines.push(
@@ -116,8 +107,7 @@ export function renderSkillMarkdown<TCtx>(
 		'## Workflow guides',
 		'',
 		...spec.workflows.map(
-			(workflow) =>
-				`- \`${spec.bin} skill ${workflow.name}\` ([${workflow.name}](${referencesBase}/${workflow.name}.md)): ${workflow.description}`,
+			(workflow) => `- \`${spec.bin} skill ${workflow.name}\`: ${workflow.description}`,
 		),
 		'',
 		'## Principles',

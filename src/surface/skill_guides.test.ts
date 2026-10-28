@@ -36,6 +36,29 @@ test('guides are served verbatim without opening a database', async () => {
 	output = '';
 	assert.equal(await runToolCli(['skill', '--help'], options), 0);
 	assert.match(output, /skill <guide>/);
+	assert.match(output, /skill --short/);
+	output = '';
+	assert.equal(await runToolCli(['skill', '--short'], options), 0);
+	assert.ok(output.trim().split('\n').length < 45);
+	assert.ok(output.trim().split('\n').length >= 30);
+	for (const text of [
+		'install.sh',
+		'--version',
+		'describe',
+		'call',
+		'mcp',
+		'skill --list',
+		'skill --short',
+	])
+		assert.ok(output.includes(text), text);
+	output = '';
+	assert.equal(await runToolCli(['skill'], options), 0);
+	assert.doesNotMatch(output, /references\//);
+	for (const line of output.split('\n').filter((line) => line.startsWith('| ')))
+		assert.doesNotMatch(line, /\|\s*\|$/);
+	output = '';
+	assert.equal(await runToolCli(['describe', 'level_up_soul'], options), 0);
+	assert.match(output, /plan.newEssence/);
 	output = '';
 	assert.equal(await runToolCli(['skill', 'missing'], options), 1);
 	assert.match(output, /unknown guide missing; run ghostpaw-souls skill --list/);

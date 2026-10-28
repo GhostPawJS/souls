@@ -27,6 +27,8 @@ Souls stores cognitive identities, traits, and behavioral evidence locally. Sear
 
 ## Calling tools
 
+Compact cheat sheet: `ghostpaw-souls skill --short`. List guides: `ghostpaw-souls skill --list`.
+
 MCP: connect to ghostpaw-souls, then call a tool by name with its JSON arguments.
 
 CLI: `ghostpaw-souls call <tool> '<JSON object>'` or `ghostpaw-souls <tool> --parameter value`.
@@ -104,13 +106,16 @@ Writes: writes_state.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
-| action | string | yes | drop, drop_batch, reveal.  |
+| action | string | yes | drop, drop_batch, reveal. string value. |
 | content | string | no | Behavioral observation text. |
 | source | string | no | Evidence channel origin label. |
 | soulIds | array | no | Soul IDs to attribute this observation to. |
 | tags | array | no | Optional topic tags. |
 | sealed | boolean | no | If true, shard is deferred until revealed. |
 | shards | array | no | Array of shards for batch deposit. |
+| shards[].content | string | yes | string value. |
+| shards[].source | string | yes | string value. |
+| shards[].soulIds | array | yes | array value. |
 | shardIds | array | no | Shard IDs to reveal. |
 
 ```sh
@@ -173,6 +178,9 @@ Writes: writes_state.
 | plan | object | no | The level-up plan. |
 | plan.newEssence | string | yes | The new essence narrative after level-up. |
 | plan.consolidations | array | yes | Consolidation groups. |
+| plan.consolidations[].sourceTraitIds | array | yes | Trait IDs to merge. |
+| plan.consolidations[].mergedPrinciple | string | yes | The merged principle. |
+| plan.consolidations[].mergedProvenance | string | yes | The merged provenance. |
 | plan.promotedTraitIds | array | yes | Trait IDs to absorb into essence. |
 | plan.carriedTraitIds | array | yes | Trait IDs to carry unchanged. |
 
@@ -220,14 +228,14 @@ ghostpaw-souls call manage_soul '{"action":"retire","soulId":1}'
 
 ## Workflow guides
 
-- `ghostpaw-souls skill observe-behavior-well` ([observe-behavior-well](skills/souls/references/observe-behavior-well.md)): Deposit high-quality behavioral observations with correct source labels and tags.
-- `ghostpaw-souls skill run-maintenance-pass` ([run-maintenance-pass](skills/souls/references/run-maintenance-pass.md)): Run the standard maintenance cycle, interpret results, and triage souls ready for refinement.
-- `ghostpaw-souls skill produce-trait-proposals-from-evidence` ([produce-trait-proposals-from-evidence](skills/souls/references/produce-trait-proposals-from-evidence.md)): Read an evidence report, interpret signals, and propose add/revise/revert trait mutations.
-- `ghostpaw-souls skill judge-consolidation-versus-promotion` ([judge-consolidation-versus-promotion](skills/souls/references/judge-consolidation-versus-promotion.md)): Decide whether to consolidate, promote, or carry each trait during a level-up plan.
-- `ghostpaw-souls skill execute-level-up-plan` ([execute-level-up-plan](skills/souls/references/execute-level-up-plan.md)): Validate, execute, and verify a level-up plan for a soul.
-- `ghostpaw-souls skill bootstrap-new-soul` ([bootstrap-new-soul](skills/souls/references/bootstrap-new-soul.md)): Create a new soul with an initial essence and begin the observation cycle.
-- `ghostpaw-souls skill detect-and-fix-regression` ([detect-and-fix-regression](skills/souls/references/detect-and-fix-regression.md)): Spot regression signals in evidence, use revert-trait or revert-level-up to restore identity integrity.
-- `ghostpaw-souls skill review-soul-health` ([review-soul-health](skills/souls/references/review-soul-health.md)): Interpret the health metric, staleness signals, and capacity state to assess the overall condition of a soul.
+- `ghostpaw-souls skill observe-behavior-well`: Deposit high-quality behavioral observations with correct source labels and tags.
+- `ghostpaw-souls skill run-maintenance-pass`: Run the standard maintenance cycle, interpret results, and triage souls ready for refinement.
+- `ghostpaw-souls skill produce-trait-proposals-from-evidence`: Read an evidence report, interpret signals, and propose add/revise/revert trait mutations.
+- `ghostpaw-souls skill judge-consolidation-versus-promotion`: Decide whether to consolidate, promote, or carry each trait during a level-up plan.
+- `ghostpaw-souls skill execute-level-up-plan`: Validate, execute, and verify a level-up plan for a soul.
+- `ghostpaw-souls skill bootstrap-new-soul`: Create a new soul with an initial essence and begin the observation cycle.
+- `ghostpaw-souls skill detect-and-fix-regression`: Spot regression signals in evidence, use revert-trait or revert-level-up to restore identity integrity.
+- `ghostpaw-souls skill review-soul-health`: Interpret the health metric, staleness signals, and capacity state to assess the overall condition of a soul.
 
 ## Principles
 
