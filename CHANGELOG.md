@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-10-28
+
 ### Security
 
 - CLI values are literal by default, including a leading `@`. Before this release any CLI flag value starting with `@` was read from a file. Only `soul create|update --essence` is file-capable now: `@path` reads the file as UTF-8, `@-` reads stdin and `@@text` passes a literal `@text`. An empty path or an unreadable file exits 2 and names the path, without file contents or the OS error text. Help marks it `(@file, @- stdin, @@ literal @)`.
@@ -122,7 +124,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/GhostPawJS/souls/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/GhostPawJS/souls/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/GhostPawJS/souls/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/GhostPawJS/souls/compare/v0.4.1...v0.4.2
