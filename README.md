@@ -96,8 +96,11 @@ stdout is piped. Terminal output shows the summary and payload.
 `--quiet` suppresses stdout. `--compact` removes JSON indentation.
 
 Use `help soul`, `soul --help` or `soul create --help` for schema-derived help.
-Array flags repeat, kebab-case flags map to schema properties, and `@path`
-reads a value from a file. `--` ends flags. A positional `-`, or piped stdin
+Array flags repeat and kebab-case flags map to schema properties. Values are
+literal, including a leading `@`. Only `soul create|update --essence` reads a
+file: `@path` (relative to the working directory), `@-` for stdin and `@@text`
+for a literal `@text`. Help marks it `(@file, @- stdin, @@ literal @)`; an empty or unreadable path
+exits 2. `--` ends flags. A positional `-`, or piped stdin
 with no arguments, reads a JSON object; explicit flags override its fields.
 Database selection uses `--db`, `GHOSTPAW_SOULS_DB`, then `~/.ghostpaw/souls.db`.
 
@@ -175,7 +178,7 @@ irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
 Pinned to a release:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target linux-x64 --version 0.4.4 && export PATH="$HOME/.local/bin:$PATH"
+curl -fsSL https://raw.githubusercontent.com/GhostPawJS/souls/main/install.sh | sh -s -- --target linux-x64 --version 0.4.5 && export PATH="$HOME/.local/bin:$PATH"
 ```
 
 Also adding ~/.local/bin to ~/.profile (edits ~/.profile once; skipped if it already mentions ~/.local/bin; zsh login shells read ~/.zprofile instead, so use that file name there):
@@ -192,7 +195,7 @@ $env:GHOSTPAW_NO_MODIFY_PATH=1; irm https://raw.githubusercontent.com/GhostPawJS
 
 ```text
 $ ghostpaw-souls --version
-souls 0.4.4 (binary, linux-x64)
+souls 0.4.5 (binary, linux-x64)
 ```
 
 Scripts that compare versions should use `--version --short` or `--version --json`.

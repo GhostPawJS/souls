@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- CLI values are literal by default, including a leading `@`. Before this release any CLI flag value starting with `@` was read from a file. Only `soul create|update --essence` is file-capable now: `@path` reads the file as UTF-8, `@-` reads stdin and `@@text` passes a literal `@text`. An empty path or an unreadable file exits 2 and names the path, without file contents or the OS error text. Help marks it `(@file, @- stdin, @@ literal @)`.
+
 ## [0.4.4] - 2026-10-28
 
 ### Added

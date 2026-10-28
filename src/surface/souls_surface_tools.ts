@@ -20,6 +20,7 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 	manage_soul: {
 		noun: 'soul',
 		verb: 'manage',
+		fileArgs: ['essence'],
 		action: {
 			property: 'action',
 			positionals: { create: ['name'], update: ['soulId'], retire: ['soulId'], awaken: ['soulId'] },
