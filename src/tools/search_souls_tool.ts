@@ -4,6 +4,7 @@ import type { ShardRecord } from '../shards/types.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	defineSoulsTool,
+	enumSchema,
 	integerSchema,
 	objectSchema,
 	stringArraySchema,
@@ -20,6 +21,8 @@ import { validateToolInput } from './validate_tool_input.ts';
 export interface SearchSoulsToolData {
 	shards: ShardRecord[];
 	count: number;
+	total: number;
+	hasMore: boolean;
 }
 
 export type SearchSoulsToolResult = ToolResult<SearchSoulsToolData>;
@@ -28,6 +31,8 @@ export function searchSoulsToolHandler(
 	db: SoulsDb,
 	input: {
 		query?: string | undefined;
+		status?: import('../shards/types.ts').ShardFilterStatus | undefined;
+		offset?: number | undefined;
 		soulId?: number | undefined;
 		tags?: string[] | undefined;
 		limit?: number | undefined;
@@ -36,20 +41,10 @@ export function searchSoulsToolHandler(
 	const invalid = validateToolInput(searchSoulsTool, input);
 	if (invalid) return invalid;
 	try {
-		let shards: ShardRecord[];
-
-		if (input.query) {
-			shards = read.searchShards(db, input.query, {
-				soulId: input.soulId,
-				limit: input.limit,
-			});
-		} else {
-			shards = read.listShards(db, {
-				soulId: input.soulId,
-				tags: input.tags,
-				limit: input.limit,
-			});
-		}
+		const page = input.query
+			? read.searchShardsPage(db, input.query, input)
+			: read.listShardsPage(db, input);
+		const shards = page.items;
 
 		const summary = input.query
 			? `${summarizeCount(shards.length, 'shard')} matching "${input.query}".`
@@ -59,7 +54,7 @@ export function searchSoulsToolHandler(
 
 		return toolSuccess(
 			summary,
-			{ shards, count: shards.length },
+			{ shards, count: shards.length, total: page.total, hasMore: page.hasMore },
 			{
 				entities: input.soulId !== undefined ? [toSoulIdRef(input.soulId)] : [],
 				next: next.length > 0 ? next : undefined,
@@ -88,15 +83,20 @@ export const searchSoulsTool = defineSoulsTool<
 	inputDescriptions: {
 		query: 'FTS5 search query. Omit to list pending shards by recency.',
 		soulId: 'Filter shards attributed to this soul.',
-		tags: 'Filter shards by topic tags (for list mode only).',
-		limit: 'Maximum results to return.',
+		tags: 'Filter shards by all supplied topic tags.',
+		limit: 'Maximum results to return (default 100, maximum 1000).',
 	},
 	outputDescription: 'Matching or listed shards with count.',
 	inputSchema: objectSchema(
 		{
+			status: enumSchema(
+				['pending', 'sealed', 'faded', 'all'],
+				'Filter status; defaults to pending for list and all for search.',
+			),
+			offset: integerSchema('Skip this many results.'),
 			query: stringSchema('FTS5 search query. Omit to list pending shards.'),
 			soulId: integerSchema('Filter by soul ID.'),
-			tags: stringArraySchema('Filter by topic tags (list mode).'),
+			tags: stringArraySchema('Filter by all supplied topic tags.'),
 			limit: integerSchema('Maximum results.'),
 		},
 		[],

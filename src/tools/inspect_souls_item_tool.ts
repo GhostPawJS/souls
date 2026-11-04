@@ -13,6 +13,8 @@ import { validateToolInput } from './validate_tool_input.ts';
 
 export interface InspectSoulsItemToolData {
 	profile: SoulProfile;
+	history?: ReturnType<typeof read.getRevisionHistory>;
+	reviews?: Record<string, unknown>[];
 	renderedIdentity: string;
 	evidence?: EvidenceReport | undefined;
 }
@@ -23,6 +25,9 @@ export function inspectSoulsItemToolHandler(
 	db: SoulsDb,
 	input: {
 		soulId: number;
+		history?: boolean | undefined;
+		full?: boolean | undefined;
+		maxMembersPerCluster?: number | undefined;
 		includeEvidence?: boolean | undefined;
 		includeProvenance?: boolean | undefined;
 	},
@@ -36,9 +41,18 @@ export function inspectSoulsItemToolHandler(
 		});
 
 		const data: InspectSoulsItemToolData = { profile, renderedIdentity };
+		if (input.history) {
+			data.history = read.getRevisionHistory(db, { soulId: input.soulId });
+			data.reviews = db
+				.prepare('SELECT * FROM soul_reviews WHERE soul_id=? ORDER BY id DESC')
+				.all(input.soulId);
+		}
 
 		if (input.includeEvidence) {
-			data.evidence = read.formatEvidence(db, input.soulId);
+			data.evidence = read.formatEvidence(db, input.soulId, {
+				full: input.full,
+				maxMembersPerCluster: input.maxMembersPerCluster,
+			});
 		}
 
 		const warnings = [];
@@ -96,6 +110,9 @@ export const inspectSoulsItemTool = defineSoulsTool<
 		'Soul profile with traits and health, rendered identity block markdown, and optionally the evidence report.',
 	inputSchema: objectSchema(
 		{
+			full: booleanSchema('Retain all selected cluster members in evidence payloads.'),
+			maxMembersPerCluster: integerSchema('Maximum cluster members rendered (default 5).'),
+			history: booleanSchema('Include wording revision history.'),
 			soulId: integerSchema('The soul ID to inspect.'),
 			includeEvidence: booleanSchema(
 				'Include evidence report with clusters and signals. Default false.',

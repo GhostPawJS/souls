@@ -5,9 +5,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+All new checks are opt-in. Without strict mode, existing calls behave as in 0.4.5 and only add warnings.
+
+### Added
+
+- Strict mode. It is on with `--strict`, `GHOSTPAW_SOULS_STRICT=1`, or `souls config set strict true` (stored per database; `--no-strict` or `strict: false` overrides). In strict mode `add_trait` and essence changes in `update_soul` need a crystallization-ready soul and at least one cited shard (`--shard-ids`). Without it the same checks print `warning: ...` and return `warnings`.
+- `--operator <name>` records an operator correction that bypasses the strict evidence gate and the one-day observation gate; the bypass is logged in the revision history.
+- Wording history: `revise_trait`, `update_soul`, `add_trait`, level-ups and reverts write `soul_revisions` rows (old text, new text, `--reason`, operator). `getRevisionHistory(db, { soulId, traitId, limit })`, `inspect_souls_item` with `history: true`, and `souls review <soul>`.
+- `souls review <soul> --no-change [--reason text]` records a review without an identity change and stamps the soul as attuned.
+- `refineWithEvidence` (tool action `refine_with_evidence`, CLI `refinement apply`) adds or revises a trait, cites shards and stamps attunement in one transaction; `expectedRevision` rejects a stale write with a conflict (exit 4).
+- Dated shard import: `shard drop|add --occurred-at <iso> --idempotency-key <k> --ref <ref>`; a repeated key returns the existing shard with `duplicate: true`. `shard drop-batch --shards @file` and `shard add --batch @file` read a JSON array or JSON Lines (`@-` for stdin), with the same fields per item.
+- External ids: `soul create|update --external-id <id>` (unique), `ext:<id>` wherever a soul reference is accepted, and `souls report --expect-ids @file` listing `missing:` and `extra:` ids (exit 1 when either is non-empty).
+- `souls render <soul> [--budget chars] [--into file --marker souls] [--expect-hash sha256|none]`. With `--into`, only the block between `<!-- souls:begin -->` and `<!-- souls:end -->` is replaced (appended when absent), written atomically, and recorded in `soul_publications` with the file and block sha256. `--budget` covers the whole file: lowest-ranked traits are dropped first, then the essence is shortened, text outside the markers is never trimmed, and cuts are reported (`trimmed: ...`). A budget that cannot be met writes nothing. A file hash that differs from `--expect-hash` exits 4 without writing.
+- `souls diff <soul> --against <file|->` compares the rendered block with the published one; exit 0 when identical, 1 on drift.
+- `souls config get|set|list`, `--trait-limit <n>` on commands that check capacity, shard `status` filters, and paged results with `total` and `hasMore`.
+- `GHOSTPAW_OUTPUT=json` selects JSON output; without `--db` or `GHOSTPAW_SOULS_DB` the CLI prints `using default db <path>` on stderr (`--quiet` or `GHOSTPAW_QUIET=1` hides it).
+
 ### Fixed
 
-- Report database directory creation failures clearly and exit the CLI with status 2.
+- `revert_level_up` keeps merged traits (marked `reverted`) and their citations, restores the recorded trait states and essence, and only restores shards faded by that level-up.
+- `reactivate_trait` and level-up plans check the trait limit: a plan must reduce the active count or end within the limit. This warns by default and fails in strict mode.
+- Readiness uses each shard's occurrence time; a one-day spread made only of backfilled shards from a single source no longer counts.
+- Shard lists and searches default to 100 results (max 1000); evidence reports render at most 5 members per cluster (`+N more`). Query and tag filters now apply together.
+- Staleness is measured from a trait's latest citation, alignment compares all cluster members, and the English-only negation cues of tension detection are documented and extendable with `negationWords`.
+- Maintenance fades shards and checks readiness in one transaction. The single-drop facade accepts `occurredAt`, `manage_soul` exposes `slug`, and `refine_soul` accepts `traitLimit`.
+- Database directory creation failures exit 2 with a clear message.
 
 ### Changed
 

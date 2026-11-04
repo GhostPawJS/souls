@@ -421,3 +421,33 @@ truthful core:
 Both operate on the same underlying model. The same deterministic engine runs
 underneath whether the caller is a TypeScript function call or an LLM tool
 invocation.
+
+### Bounded evidence and atomic refinement
+
+Shard search/list defaults to 100 results, with a maximum of 1000; `status`
+accepts pending, sealed, faded, or all. Lists default to pending unsealed shards,
+and searches retain their all-status default. Query and tags combine with AND.
+Results retain shards/count and add total/hasMore; use offset to continue.
+Evidence clusters show at most five members and `+N more`. Inspect accepts
+maxMembersPerCluster, full (retain selected raw members), and history.
+
+Use `refine_soul` action `refine_with_evidence` with soulId, principle,
+provenance, shardIds, and optionally traitId, reason, expectedRevision, strict,
+and operator. It adds (or revises when traitId is supplied), cites evidence, and
+stamps attunement atomically. A stale expectedRevision produces a conflict;
+use the latest history ID for the soul, or 0 for no revisions. CLI equivalent:
+`refinement apply <soulId>` with the corresponding flags.
+
+New readiness, missing-evidence, level-up capacity/merge, and reactivation
+capacity checks warn by default; strict opts into enforcement. Existing
+add-trait capacity enforcement remains. Operator names bypass the strict
+evidence gate and are audited as corrections. New string warnings appear in
+facade data, while existing facade warning objects retain their shape. CLI
+warnings are one-line stderr messages. Refine accepts traitLimit; manage-soul
+accepts slug and reason; observation drops accept occurredAt/now.
+
+Staleness uses the latest citation timestamp, falling back to trait creation.
+Alignment takes the maximum similarity across all cluster members. Negation
+cues are English-only; library evidence options accept negationWords to extend
+them. Level-up reversion retains merged traits as reverted with citations,
+restores prior wording/state, and avoids restoring unrelated faded shards.

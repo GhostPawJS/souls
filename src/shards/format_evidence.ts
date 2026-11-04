@@ -29,6 +29,7 @@ export function formatEvidence(
 	const shards = options?.query
 		? searchShards(db, options.query, {
 				soulId,
+				tags: options?.tags,
 				shardExpiryDays: options.shardExpiryDays,
 				now,
 			})
@@ -60,7 +61,10 @@ export function formatEvidence(
 	const traitSignalOptions: { staleDays?: number; now?: number } = { now };
 	if (options?.staleDays !== undefined) traitSignalOptions.staleDays = options.staleDays;
 	const traitSignals = computeTraitSignals(db, soulId, traitSignalOptions);
-	const tensions = detectTraitTensions(traitSignals);
+	const tensions = detectTraitTensions(
+		traitSignals,
+		options?.negationWords === undefined ? undefined : { negationWords: options.negationWords },
+	);
 	const consolidationSuggestions = suggestConsolidations(traitSignals);
 	const promotionCandidates = computePromotionCandidates(traitSignals);
 	const shardVelocity = computeShardVelocity(db, soulId, now);
@@ -86,6 +90,12 @@ export function formatEvidence(
 		renderedMarkdown: '',
 	};
 
-	report.renderedMarkdown = renderEvidenceMarkdown(report);
+	report.renderedMarkdown = renderEvidenceMarkdown(report, options);
+	if (!options?.full)
+		report.clusters = report.clusters.map((c) => ({
+			...c,
+			totalMembers: c.members.length,
+			members: c.members.slice(0, Math.max(0, options?.maxMembersPerCluster ?? 5)),
+		}));
 	return report;
 }

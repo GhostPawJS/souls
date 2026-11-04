@@ -3,6 +3,7 @@ import type { CrystallizationCheckOptions } from './shards/check_crystallization
 import { crystallizationReadiness } from './shards/crystallization_readiness.ts';
 import { fadeExhaustedShards } from './shards/fade_exhausted_shards.ts';
 import type { CrystallizationRecord } from './shards/types.ts';
+import { withTransaction } from './with_transaction.ts';
 
 export interface MaintenanceOptions extends CrystallizationCheckOptions {
 	fadeCitationThreshold?: number | undefined;
@@ -29,9 +30,11 @@ export function runMaintenance(db: SoulsDb, options?: MaintenanceOptions): Maint
 	if (options?.now !== undefined) {
 		fadeOptions.now = options.now;
 	}
-	const fadedShardCount = fadeExhaustedShards(db, fadeOptions);
+	return withTransaction(db, () => {
+		const fadedShardCount = fadeExhaustedShards(db, fadeOptions);
 
-	const readySouls = crystallizationReadiness(db, options);
+		const readySouls = crystallizationReadiness(db, options);
 
-	return { fadedShardCount, readySouls };
+		return { fadedShardCount, readySouls };
+	});
 }

@@ -16,6 +16,7 @@ export interface SoulProfile {
 	atCapacity: boolean;
 	pendingShardCount: number;
 	crystallizationReady: boolean;
+	readinessReason?: string;
 	health: number;
 }
 
@@ -43,7 +44,7 @@ export function getSoulProfile(
 	const atCapacity = activeTraitCount >= traitLimit;
 	const pending = pendingShardCount(db, soulId);
 	const check = checkCrystallizationForSoul(db, soulId, options);
-	const crystallizationReady = check !== null;
+	const crystallizationReady = check?.ready ?? false;
 
 	// Health computation
 	const now = options?.now ?? Date.now();
@@ -72,6 +73,7 @@ export function getSoulProfile(
 		atCapacity,
 		pendingShardCount: pending,
 		crystallizationReady,
+		...(check?.reason ? { readinessReason: check.reason } : {}),
 		health: Math.max(0, Math.min(1, health)),
 	};
 }

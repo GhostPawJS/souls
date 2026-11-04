@@ -49,3 +49,34 @@ describe('observeSoulToolHandler', () => {
 		strictEqual(result.outcome, 'error');
 	});
 });
+
+describe('idempotent observation summaries', () => {
+	it('counts new and duplicate entries without changing returned shard counts', () => {
+		const soul = createSoul(db, { name: 'Counts', essence: 'E', description: 'D' });
+		const item = {
+			content: 'Observation',
+			source: 'session',
+			soulIds: [soul.id],
+			idempotencyKey: 'single',
+		};
+		const first = observeSoulToolHandler(db, { action: 'drop', ...item });
+		ok(first.ok);
+		strictEqual(first.summary, '1 shard deposited, 0 duplicates skipped.');
+		const duplicate = observeSoulToolHandler(db, { action: 'drop', ...item });
+		ok(duplicate.ok);
+		strictEqual(duplicate.summary, '0 shards deposited, 1 duplicate skipped.');
+		const shards = [item, { ...item, idempotencyKey: 'two' }, { ...item, idempotencyKey: 'three' }];
+		for (const [summary, duplicates] of [
+			['2 shards deposited, 1 duplicate skipped.', 1],
+			['0 shards deposited, 3 duplicates skipped.', 3],
+		] as const) {
+			const result = observeSoulToolHandler(db, { action: 'drop_batch', shards });
+			ok(result.ok);
+			strictEqual(result.summary, summary);
+			ok('duplicates' in result.data);
+			strictEqual(result.data.duplicates, duplicates);
+			strictEqual(result.data.shardCount, 3);
+			strictEqual(result.data.result.shards.length, 3);
+		}
+	});
+});

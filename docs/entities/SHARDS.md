@@ -167,7 +167,11 @@ A two-phase gate that determines when a soul has enough evidence for refinement:
 1. At least `crystallizationThreshold` (default: 3) pending unsealed shards
    within the `shardExpiryDays` window
 2. From 2+ distinct source values (hardcoded invariant)
-3. With age spread exceeding 1 day between oldest and newest (hardcoded)
+3. With an age spread of at least one day measured on `occurredAt` (fallback
+   `createdAt`). Two pending shards from different sources must span that day,
+   or live shards whose occurrence is not earlier than insertion must span a day
+   on their own. Otherwise readiness reports
+   `Age spread must span at least two sources by occurrence time.`
 4. At least one shard created after `lastAttunedAt` (recency gate)
 5. Forming at least 2 distinct clusters (single-linkage at
    `clusteringThreshold`)
@@ -268,3 +272,15 @@ search via `read.searchShards()`.
   refinement, with priority scores.
 - `read.formatEvidence(db, soulId, options?)`: structured evidence report;
   accepts `tags` and `query` filters to scope to a topic subset.
+
+Lists and searches default to 100 items (maximum 1000). Both accept `status`
+(`pending`, `sealed`, `faded`, `all`) and `offset`; search retains its all-status
+default. `listShardsPage` and `searchShardsPage` add totals and `hasMore`.
+Evidence query and tag filters combine with AND. Reports cap each cluster's
+members at five, with `+N more`; `maxMembersPerCluster` changes the cap and
+`full: true` keeps all selected members in the structured payload. Alignment
+uses maximum similarity across all members. Tension negation cues are
+English-only and can be extended with `negationWords`.
+
+`read.formatEvidence(db, soulId, { negationWords: ["nicht"] })` extends the
+English-only tension cues through the public library facade.

@@ -1,3 +1,4 @@
+export { getSoulsConfig, resolveStrict, setSoulsConfig } from './config.ts';
 export type { SoulsDb } from './database.ts';
 export * from './errors.ts';
 export * as errors from './errors.ts';

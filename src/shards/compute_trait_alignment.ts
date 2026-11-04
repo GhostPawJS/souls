@@ -11,7 +11,7 @@ interface ActiveTrait {
 
 /**
  * For each cluster, compute shard-trait alignment.
- * The representative shard (first member, as a proxy) is compared via trigram Jaccard
+ * All members are compared via trigram Jaccard, taking the maximum similarity
  * against each active trait principle. Clusters with overlap above the threshold
  * are labeled `reinforcing`; those below are labeled `novel`.
  */
@@ -32,12 +32,11 @@ export function computeTraitAlignment(
 			return { kind: 'novel' };
 		}
 
-		// Use the first member as the cluster representative
-		const rep = (cluster.members[0] as (typeof cluster.members)[number]).content;
-
 		let bestTrait: { traitId: number; similarity: number } | null = null;
 		for (const trait of traits) {
-			const sim = trigramJaccard(rep, trait.principle);
+			const sim = Math.max(
+				...cluster.members.map((member) => trigramJaccard(member.content, trait.principle)),
+			);
 			if (sim >= threshold && (bestTrait === null || sim > bestTrait.similarity)) {
 				bestTrait = { traitId: trait.id, similarity: sim };
 			}

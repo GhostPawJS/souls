@@ -1,3 +1,4 @@
+import type { EvidenceGateOptions } from '../evidence_gate.ts';
 export const TRAIT_STATUSES = ['active', 'consolidated', 'promoted', 'reverted'] as const;
 export type TraitStatus = (typeof TRAIT_STATUSES)[number];
 
@@ -14,6 +15,7 @@ export interface TraitRow {
 }
 
 export interface TraitRecord {
+	warnings?: string[] | undefined;
 	id: number;
 	soulId: number;
 	principle: string;
@@ -25,13 +27,15 @@ export interface TraitRecord {
 	updatedAt: number;
 }
 
-export interface AddTraitInput {
+export interface AddTraitInput extends EvidenceGateOptions {
 	principle: string;
 	provenance: string;
 	now?: number | undefined;
 }
 
 export interface ReviseTraitInput {
+	reason?: string | undefined;
+	operator?: string | undefined;
 	principle?: string | undefined;
 	provenance?: string | undefined;
 	now?: number | undefined;

@@ -48,4 +48,28 @@ export function initShardTables(db: SoulsDb): void {
 	db.exec(`CREATE INDEX IF NOT EXISTS idx_shard_citations_trait ON shard_citations(trait_id)`);
 	db.exec(`CREATE INDEX IF NOT EXISTS idx_shard_tags_shard ON shard_tags(shard_id)`);
 	db.exec(`CREATE INDEX IF NOT EXISTS idx_shard_tags_tag ON shard_tags(tag)`);
+	if (
+		!db
+			.prepare('PRAGMA table_info(shard_citations)')
+			.all<{ name: string }>()
+			.some((c) => c.name === 'created_at')
+	)
+		db.exec('ALTER TABLE shard_citations ADD COLUMN created_at INTEGER');
+	for (const [name, type] of [
+		['occurred_at', 'INTEGER'],
+		['inserted_at', 'INTEGER'],
+		['idempotency_key', 'TEXT'],
+		['ref', 'TEXT'],
+	]) {
+		if (
+			!db
+				.prepare('PRAGMA table_info(soul_shards)')
+				.all<{ name: string }>()
+				.some((c) => c.name === name)
+		)
+			db.exec(`ALTER TABLE soul_shards ADD COLUMN ${name} ${type}`);
+	}
+	db.exec(
+		'CREATE UNIQUE INDEX IF NOT EXISTS idx_shard_idempotency ON soul_shards(idempotency_key) WHERE idempotency_key IS NOT NULL',
+	);
 }

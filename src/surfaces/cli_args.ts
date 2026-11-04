@@ -15,6 +15,8 @@ export interface CliArgument {
 	 * passes `@text`. Without it every value is literal, including a leading `@`.
 	 */
 	file?: boolean;
+	/** Accept a JSON array or one JSON value per line, always returning an array. */
+	jsonLines?: boolean;
 }
 export interface CliSpec {
 	command: string;
@@ -62,8 +64,17 @@ export function parseCliArgs(argv: string[], spec: CliSpec): Record<string, unkn
 		} else if (arg.type === 'json') {
 			try {
 				result = JSON.parse(value);
+				if (arg.jsonLines && !Array.isArray(result)) result = [result];
 			} catch {
-				throw new CliUsageError(`Invalid JSON for ${arg.name}`);
+				try {
+					if (!arg.jsonLines) throw new Error();
+					result = value
+						.split(/\r?\n/)
+						.filter((line) => line.trim())
+						.map((line) => JSON.parse(line));
+				} catch {
+					throw new CliUsageError(`Invalid JSON for ${arg.name}`);
+				}
 			}
 		}
 		if (arg.enum && !arg.enum.includes(result))

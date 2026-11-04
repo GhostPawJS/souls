@@ -4,15 +4,24 @@ import type { SearchShardsOptions, ShardRecord, ShardRow } from './types.ts';
 
 const MS_PER_DAY = 86_400_000;
 
-export function searchShards(
+function searchShardsQuery(
 	db: SoulsDb,
 	query: string,
 	options?: SearchShardsOptions,
-): ShardRecord[] {
-	if (!query.trim()) return [];
+	count = false,
+): ShardRecord[] | number {
+	if (!query.trim()) return count ? 0 : [];
 
 	const params: (string | number)[] = [query];
 	const conditions: string[] = [];
+
+	const status = options?.status ?? 'all';
+	if (status === 'sealed') conditions.push('ss.sealed = 1');
+	else if (status !== 'all') {
+		conditions.push('ss.status = ?');
+		params.push(status);
+		if (status === 'pending') conditions.push('ss.sealed = 0');
+	}
 
 	if (options?.soulId !== undefined) {
 		conditions.push(
@@ -28,10 +37,21 @@ export function searchShards(
 		params.push(cutoff);
 	}
 
+	if (options?.source !== undefined) {
+		conditions.push('ss.source = ?');
+		params.push(options.source);
+	}
+
+	for (const tag of options?.tags ?? []) {
+		conditions.push(
+			'EXISTS (SELECT 1 FROM shard_tags st WHERE st.shard_id = ss.id AND st.tag = ?)',
+		);
+		params.push(tag);
+	}
 	const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : '';
 
-	const limit = options?.limit;
-	const limitClause = limit !== undefined ? `LIMIT ${limit}` : '';
+	const limit = Math.min(1000, Math.max(0, Math.trunc(options?.limit ?? 100)));
+	const limitClause = `LIMIT ${limit} OFFSET ${Math.max(0, Math.trunc(options?.offset ?? 0))}`;
 
 	const sql = `
 		SELECT ss.*
@@ -42,8 +62,31 @@ export function searchShards(
 		${limitClause}
 	`;
 
+	if (count)
+		return (
+			db
+				.prepare(`SELECT COUNT(*) AS total FROM (${sql.replace(limitClause, '')})`)
+				.get<{ total: number }>(...params)?.total ?? 0
+		);
 	return db
 		.prepare(sql)
 		.all<ShardRow>(...params)
 		.map((row) => mapShardRow(db, row));
+}
+
+export function searchShards(
+	db: SoulsDb,
+	query: string,
+	options?: SearchShardsOptions,
+): ShardRecord[] {
+	return searchShardsQuery(db, query, options) as ShardRecord[];
+}
+export function searchShardsPage(
+	db: SoulsDb,
+	query: string,
+	options?: SearchShardsOptions,
+): import('./types.ts').ShardPage {
+	const items = searchShards(db, query, options);
+	const total = searchShardsQuery(db, query, options, true) as number;
+	return { items, total, hasMore: (options?.offset ?? 0) + items.length < total };
 }

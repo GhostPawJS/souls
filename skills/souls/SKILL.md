@@ -23,7 +23,7 @@ irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
 
 Run tools as `ghostpaw-souls ...`; use `~/.local/bin/ghostpaw-souls` if it is not on PATH.
 
-Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous.
+Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references accept ext:<externalId>. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).
 
 ## Calling tools
 
@@ -47,9 +47,11 @@ Read-only.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
+| status | string | no | pending, sealed, faded, all. Filter status; defaults to pending for list and all for search. |
+| offset | integer | no | Skip this many results. |
 | query | string | no | FTS5 search query. Omit to list pending shards. |
 | soulId | integer | no | Filter by soul ID. |
-| tags | array | no | Filter by topic tags (list mode). |
+| tags | array | no | Filter by all supplied topic tags. |
 | limit | integer | no | Maximum results. |
 
 ```sh
@@ -68,7 +70,10 @@ Writes: writes_state.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
-| view | string | yes | list, maintenance, readiness. The operation to perform. |
+| soulId | integer | no | Soul to review. |
+| noChange | boolean | no | Record a review without edits and stamp attuned. |
+| reason | string | no | Review reason. |
+| view | string | yes | list, maintenance, readiness, history. The operation to perform. |
 
 ```sh
 ghostpaw-souls call review_souls '{"view":"list"}'
@@ -86,6 +91,9 @@ Read-only.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
+| full | boolean | no | Retain all selected cluster members in evidence payloads. |
+| maxMembersPerCluster | integer | no | Maximum cluster members rendered (default 5). |
+| history | boolean | no | Include wording revision history. |
 | soulId | integer | yes | The soul ID to inspect. |
 | includeEvidence | boolean | no | Include evidence report with clusters and signals. Default false. |
 | includeProvenance | boolean | no | Include provenance in rendered identity. Default false. |
@@ -107,15 +115,25 @@ Writes: writes_state.
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
 | action | string | yes | drop, drop_batch, reveal. string value. |
+| occurredAt | integer / string | no | Observation timestamp, ISO or epoch milliseconds. |
+| idempotencyKey | string | no | Unique ingestion key. |
+| ref | string | no | External evidence reference. |
+| now | integer | no | Timestamp in epoch milliseconds; occurredAt takes precedence. |
 | content | string | no | Behavioral observation text. |
 | source | string | no | Evidence channel origin label. |
 | soulIds | array | no | Soul IDs to attribute this observation to. |
 | tags | array | no | Optional topic tags. |
 | sealed | boolean | no | If true, shard is deferred until revealed. |
 | shards | array | no | Array of shards for batch deposit. |
-| shards[].content | string | yes | string value. |
-| shards[].source | string | yes | string value. |
-| shards[].soulIds | array | yes | array value. |
+| shards[].content | string | yes | Observation text. |
+| shards[].source | string | yes | Evidence source. |
+| shards[].soulIds | array | yes | Attributed souls. |
+| shards[].tags | array | no | Topic tags. |
+| shards[].sealed | boolean | no | Defer until revealed. |
+| shards[].occurredAt | integer / string | no | integer / string value. |
+| shards[].idempotencyKey | string | no | Unique ingestion key. |
+| shards[].ref | string | no | External evidence reference. |
+| shards[].now | integer | no | Timestamp in epoch milliseconds. |
 | shardIds | array | no | Shard IDs to reveal. |
 
 ```sh
@@ -132,7 +150,7 @@ ghostpaw-souls call observe_soul '{"action":"reveal","shardIds":[]}'
 
 ## refine_soul
 
-Add, revise, revert, or reactivate traits; cite shards to traits; stamp attunement.
+Add, revise, revert, or reactivate traits; cite evidence; apply atomic refinement with revision conflict checks.
 
 Use when: Use after inspecting the evidence report (inspect_souls_item with includeEvidence) to make targeted identity mutations: add a new trait from a novel cluster, revise a stale trait, revert a trait that is causing regression, cite shards to earn provenance, stamp attuned after completing a refinement pass.
 
@@ -142,12 +160,23 @@ Writes: writes_state.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
-| action | string | yes | add_trait, revise_trait, revert_trait, reactivate_trait, cite_shard, stamp_attuned. The refinement action to perform. |
+| action | string | yes | refine_with_evidence, add_trait, revise_trait, revert_trait, reactivate_trait, cite_shard, stamp_attuned. The refinement action to perform. |
 | soulId | integer | no | Soul ID (required for add_trait, stamp_attuned). |
 | traitId | integer | no | Trait ID (required for revise_trait, revert_trait, reactivate_trait, cite_shard). |
 | principle | string | no | The cognitive rule text. |
 | provenance | string | no | Evidence chain justifying the trait. |
+| strict | boolean | no | Enforce readiness, evidence, and capacity checks. |
+| operator | string | no | Named operator correction; bypasses the strict evidence gate. |
+| reason | string | no | Reason for the wording change. |
+| shardIds | array | no | Supporting shard IDs. |
+| traitLimit | integer | no | Override active trait capacity. |
+| expectedRevision | integer | no | Expected latest revision id (0 for none). |
+| refineAction | string | no | add, revise. Atomic refinement operation; inferred from traitId when omitted. |
 | shardId | integer | no | Shard ID to link (for cite_shard). |
+
+```sh
+ghostpaw-souls call refine_soul '{"action":"refine_with_evidence"}'
+```
 
 ```sh
 ghostpaw-souls call refine_soul '{"action":"add_trait","soulId":1,"principle":"Check intent before details.","provenance":"Repeated review observations."}'
@@ -155,10 +184,6 @@ ghostpaw-souls call refine_soul '{"action":"add_trait","soulId":1,"principle":"C
 
 ```sh
 ghostpaw-souls call refine_soul '{"action":"revise_trait","traitId":1,"principle":"Check intent before details.","provenance":"Repeated review observations."}'
-```
-
-```sh
-ghostpaw-souls call refine_soul '{"action":"revert_trait","traitId":1}'
 ```
 
 ## level_up_soul
@@ -174,6 +199,8 @@ Writes: writes_state.
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
 | action | string | yes | validate, execute, revert. The operation to perform. |
+| traitLimit | integer | no | Override active trait capacity. |
+| strict | boolean | no | Reject new validation errors instead of warning. |
 | soulId | integer | yes | The soul ID. |
 | plan | object | no | The level-up plan. |
 | plan.newEssence | string | yes | The new essence narrative after level-up. |
@@ -198,7 +225,7 @@ ghostpaw-souls call level_up_soul '{"action":"revert","soulId":1}'
 
 ## manage_soul
 
-Create, update, retire, or awaken a soul.
+Create, update, retire, or awaken a soul; read or set database configuration.
 
 Use when: Use create to bootstrap a new soul with an initial essence. Use update to change the name, essence, or description without incrementing the level. Use retire to mark a soul as dormant. Use awaken to restore a dormant soul.
 
@@ -208,7 +235,15 @@ Writes: writes_state.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
-| action | string | yes | create, update, retire, awaken. The operation to perform. |
+| action | string | yes | create, update, retire, awaken, config_set, config_get, config_list. The operation to perform. |
+| externalId | string | no | Unique external identity binding. |
+| key | string | no | Configuration key (strict). |
+| value | string | no | Configuration value: true or false. |
+| strict | boolean | no | Enforce readiness and evidence checks for essence changes. |
+| operator | string | no | Named operator correction. |
+| reason | string | no | Reason for the change. |
+| shardIds | array | no | Supporting shard IDs. |
+| slug | string | no | Stable soul slug. |
 | name | string | no | Soul name. |
 | essence | string | no | Soul essence narrative. |
 | description | string | no | Soul description. |

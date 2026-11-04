@@ -15,7 +15,22 @@ const soulsSurfaceTools: readonly SurfaceTool<SoulsDb>[] = soulsTools.map((tool)
 
 const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 	search_souls: { verb: 'search', positionals: ['query'] },
-	review_souls: { verb: 'review', positionals: ['view'] },
+	review_souls: {
+		verb: 'review',
+		positionals: ['view'],
+		helpInputSchema: {
+			type: 'object',
+			required: ['view'],
+			properties: {
+				view: {
+					type: 'string',
+					enum: ['list', 'maintenance', 'readiness'],
+					description:
+						'list: all active souls, maintenance: run fade + readiness cycle, readiness: crystallization status only.',
+				},
+			},
+		},
+	},
 	inspect_souls_item: { noun: 'soul', verb: 'show', positionals: ['soulId'] },
 	manage_soul: {
 		noun: 'soul',
@@ -28,6 +43,7 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 	},
 	observe_soul: {
 		noun: 'shard',
+		fileArgs: ['shards'],
 		verb: 'observe',
 		action: {
 			property: 'action',
@@ -41,6 +57,7 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 		action: {
 			property: 'action',
 			verbs: {
+				refine_with_evidence: 'apply',
 				add_trait: 'add',
 				revise_trait: 'revise',
 				revert_trait: 'revert',
@@ -49,6 +66,7 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 				stamp_attuned: 'attune',
 			},
 			positionals: {
+				refine_with_evidence: ['soulId'],
 				add_trait: ['soulId'],
 				revise_trait: ['traitId'],
 				revert_trait: ['traitId'],

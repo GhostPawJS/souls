@@ -15,9 +15,10 @@ export function dropShards(
 
 	return withTransaction(db, () => {
 		// Insert all shards without running crystallization check per-shard
-		const shards = inputs.map(
-			(input) => dropShard(db, input, { crystallizationThreshold: Infinity }).shard,
+		const results = inputs.map((input) =>
+			dropShard(db, input, { crystallizationThreshold: Infinity }),
 		);
+		const shards = results.map((result) => result.shard);
 
 		// One crystallization check across all unique soul IDs after all inserts
 		const allSoulIds = new Set(inputs.flatMap((i) => i.soulIds));
@@ -26,9 +27,9 @@ export function dropShards(
 
 		for (const soulId of allSoulIds) {
 			const check = checkCrystallizationForSoul(db, soulId, { ...options, now });
-			if (check !== null) crystallizationTriggers.push(soulId);
+			if (check?.ready) crystallizationTriggers.push(soulId);
 		}
 
-		return { shards, crystallizationTriggers };
+		return { shards, crystallizationTriggers, results };
 	});
 }

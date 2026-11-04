@@ -26,4 +26,14 @@ export function initSoulTables(db: SoulsDb): void {
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_souls_slug ON souls(slug) WHERE slug IS NOT NULL AND deleted_at IS NULL`,
 	);
 	db.exec(`CREATE INDEX IF NOT EXISTS idx_souls_deleted_at ON souls(deleted_at)`);
+	if (
+		!db
+			.prepare('PRAGMA table_info(souls)')
+			.all<{ name: string }>()
+			.some((c) => c.name === 'external_id')
+	)
+		db.exec('ALTER TABLE souls ADD COLUMN external_id TEXT');
+	db.exec(
+		'CREATE UNIQUE INDEX IF NOT EXISTS idx_souls_external_id ON souls(external_id) WHERE external_id IS NOT NULL',
+	);
 }

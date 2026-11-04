@@ -124,21 +124,21 @@ The plan must also include a non-empty `newEssence`. An empty essence throws
 `write.revertLevelUp()` performs a full rollback of the last level-up:
 
 1. Reactivates all consolidated traits and clears `mergedInto`
-2. Deletes the merged traits created during the level-up
+2. Marks merged traits as `reverted`, preserving wording and citations
 3. Reactivates all promoted traits
 4. Restores the previous generation on carried traits
 5. Restores the previous essence and decrements the level
 6. Removes the level-up snapshot
-7. Re-unfades shards that drop below the fade threshold after citation deletion
+7. Restores only shards recorded as faded by that level-up. Legacy snapshots without this record use the earlier uncited-shard fallback and issue a warning.
 
-The revert is atomic. The soul returns to its exact pre-level-up state.
+The revert is atomic. New snapshots restore original trait wording, provenance, generation, status, and timestamps; merged traits remain as historical records. Essence returns to its earlier text. Wording changes are recorded in revision history.
 
 ## Operator Notes
 
 - A soul at level 1 has no level-up history. Attempting to revert throws
   `SoulsStateError`.
 - Level-up is the only mechanism that restructures the essence through the
-  evolutionary lifecycle. `updateSoul` is the administrative bypass.
+  evolutionary lifecycle. `updateSoul` supports named operator corrections and optional strict evidence checks.
 - The snapshot preserves `essenceBefore` and `essenceAfter` for every level-up,
   enabling full audit of identity evolution over time.
 - After a level-up, the trait count decreases (consolidated and promoted traits
@@ -170,3 +170,7 @@ The revert is atomic. The soul returns to its exact pre-level-up state.
 - `read.validateLevelUpPlan(db, soulId, plan)`: validate a plan before
   execution. Returns structured errors for missing, duplicate, or invalid trait
   IDs.
+
+In strict mode, a level-up plan must leave the active trait count within the
+configured limit or reduce the current count. A reduction may remain above the
+limit so an existing over-limit identity can consolidate incrementally.

@@ -12,8 +12,12 @@ export interface ToolCliOptions<TCtx> {
 	version: string;
 	description: string;
 	tools: readonly SurfaceTool<TCtx>[];
+	defaultDbPath?: () => string | undefined;
 	openContext(opts: { db?: string }): TCtx | Promise<TCtx>;
 	closeContext?: (ctx: TCtx) => void | Promise<void>;
+	customCommand?: (argv: string[], options: ToolCliOptions<TCtx>) => Promise<number | undefined>;
+	resolveReference?: (ctx: TCtx, ref: string) => number;
+	prepareInput?: (input: Record<string, unknown>, toolName: string) => void;
 	commands?: {
 		mcp?: (opts: { db?: string }) => unknown | Promise<unknown>;
 		skill?: () => string | Promise<string>;
@@ -27,6 +31,40 @@ export async function runToolCli<TCtx>(
 	argv: string[],
 	options: ToolCliOptions<TCtx>,
 ): Promise<number> {
+	if (process.env.GHOSTPAW_OUTPUT === 'json' && !argv.includes('--json'))
+		argv = [...argv, '--json'];
+	const originalOptions = options;
+	let noticed = false;
+	const notice = (opts: { db?: string }) => {
+		const path = opts.db === undefined ? originalOptions.defaultDbPath?.() : undefined;
+		if (
+			!noticed &&
+			path !== undefined &&
+			!argv.includes('--quiet') &&
+			process.env.GHOSTPAW_QUIET !== '1'
+		) {
+			noticed = true;
+			(originalOptions.stderr ?? process.stderr).write(`using default db ${path}\n`);
+		}
+	};
+	options = {
+		...options,
+		openContext: (opts) => {
+			notice(opts);
+			return originalOptions.openContext(opts);
+		},
+		...(options.commands?.mcp
+			? {
+					commands: {
+						...options.commands,
+						mcp: (opts: { db?: string }) => {
+							notice(opts);
+							return originalOptions.commands?.mcp?.(opts);
+						},
+					},
+				}
+			: {}),
+	};
 	const end = argv.indexOf('--');
 	const versionArgs = argv.slice(0, end < 0 ? argv.length : end);
 	if (versionArgs.some((arg) => ['--version', '-V', '-v'].includes(arg))) {
@@ -42,6 +80,8 @@ export async function runToolCli<TCtx>(
 			);
 		return 0;
 	}
+	const custom = await options.customCommand?.(argv, options);
+	if (custom !== undefined) return custom;
 	const modern = await runCliCommand(argv, options);
 	if (modern !== undefined) return modern;
 	const quiet = argv.includes('--quiet');

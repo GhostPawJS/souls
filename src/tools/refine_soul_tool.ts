@@ -1,11 +1,14 @@
 import type { SoulsDb } from '../database.ts';
+import { SoulsValidationError } from '../errors.ts';
 import * as read from '../read.ts';
 import type { TraitRecord } from '../traits/types.ts';
 import * as write from '../write.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
+	booleanSchema,
 	defineSoulsTool,
 	enumSchema,
+	integerArraySchema,
 	integerSchema,
 	objectSchema,
 	stringSchema,
@@ -18,6 +21,7 @@ import { toolSuccess, toolWarning } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
 
 export interface RefineSoulToolData {
+	warnings?: string[] | undefined;
 	trait?: TraitRecord | undefined;
 	traitId?: number | undefined;
 	soulId?: number | undefined;
@@ -29,6 +33,7 @@ export function refineSoulToolHandler(
 	db: SoulsDb,
 	input: {
 		action:
+			| 'refine_with_evidence'
 			| 'add_trait'
 			| 'revise_trait'
 			| 'revert_trait'
@@ -39,12 +44,36 @@ export function refineSoulToolHandler(
 		traitId?: number | undefined;
 		principle?: string | undefined;
 		provenance?: string | undefined;
+		strict?: boolean | undefined;
+		operator?: string | undefined;
+		reason?: string | undefined;
+		shardIds?: number[] | undefined;
+		traitLimit?: number | undefined;
+		expectedRevision?: number | undefined;
+		refineAction?: 'add' | 'revise' | undefined;
 		shardId?: number | undefined;
 	},
 ): RefineSoulToolResult {
 	const invalid = validateToolInput(refineSoulTool, input);
 	if (invalid) return invalid;
 	try {
+		if (input.action === 'refine_with_evidence') {
+			if (!input.soulId || !input.principle || !input.provenance || !input.shardIds)
+				throw new SoulsValidationError('soulId, principle, provenance, and shardIds are required.');
+			const trait = write.refineWithEvidence(db, {
+				...input,
+				soulId: input.soulId,
+				principle: input.principle,
+				provenance: input.provenance,
+				shardIds: input.shardIds,
+				action: input.refineAction ?? (input.traitId ? 'revise' : 'add'),
+			});
+			return toolSuccess(
+				'Refinement applied.',
+				{ trait, ...(trait.warnings?.length ? { warnings: trait.warnings } : {}) },
+				{ warnings: trait.warnings?.map((w) => toolWarning('partial_match', w)) },
+			);
+		}
 		if (input.action === 'add_trait') {
 			if (!input.soulId || !input.principle || !input.provenance) {
 				return {
@@ -61,11 +90,22 @@ export function refineSoulToolHandler(
 					},
 				};
 			}
-			const trait = write.addTrait(db, input.soulId, {
-				principle: input.principle,
-				provenance: input.provenance,
-			});
-			const traitLimit = read.getTraitLimit();
+			const trait = write.addTrait(
+				db,
+				input.soulId,
+				{
+					principle: input.principle,
+					provenance: input.provenance,
+					strict: input.strict,
+					operator: input.operator,
+					reason: input.reason,
+					shardIds: input.shardIds,
+				},
+				input.traitLimit === undefined ? undefined : { traitLimit: input.traitLimit },
+			);
+			const traitLimit = read.getTraitLimit(
+				input.traitLimit === undefined ? undefined : { traitLimit: input.traitLimit },
+			);
 			const activeCount = read.countActiveTraits(db, input.soulId);
 			const warnings =
 				activeCount >= traitLimit
@@ -78,11 +118,14 @@ export function refineSoulToolHandler(
 					: undefined;
 			return toolSuccess(
 				`Trait added to soul ${input.soulId}: "${trait.principle}"`,
-				{ trait },
+				{ trait, ...(trait.warnings?.length ? { warnings: trait.warnings } : {}) },
 				{
 					entities: [toSoulIdRef(input.soulId), toTraitRef(trait)],
 					next: [inspectSoulsItemNext(input.soulId)],
-					warnings,
+					warnings: [
+						...(warnings ?? []),
+						...(trait.warnings ?? []).map((w) => toolWarning('partial_match', w)),
+					],
 				},
 			);
 		}
@@ -104,10 +147,12 @@ export function refineSoulToolHandler(
 			const trait = write.reviseTrait(db, input.traitId, {
 				principle: input.principle,
 				provenance: input.provenance,
+				reason: input.reason,
+				operator: input.operator,
 			});
 			return toolSuccess(
 				`Trait ${input.traitId} revised.`,
-				{ trait },
+				{ trait, ...(trait.warnings?.length ? { warnings: trait.warnings } : {}) },
 				{
 					entities: [toTraitRef(trait)],
 				},
@@ -131,7 +176,7 @@ export function refineSoulToolHandler(
 			const trait = write.revertTrait(db, input.traitId);
 			return toolSuccess(
 				`Trait ${input.traitId} reverted.`,
-				{ trait },
+				{ trait, ...(trait.warnings?.length ? { warnings: trait.warnings } : {}) },
 				{
 					entities: [toTraitRef(trait)],
 				},
@@ -152,10 +197,13 @@ export function refineSoulToolHandler(
 					},
 				};
 			}
-			const trait = write.reactivateTrait(db, input.traitId);
+			const trait = write.reactivateTrait(db, input.traitId, {
+				...(input.strict === undefined ? {} : { strict: input.strict }),
+				...(input.traitLimit === undefined ? {} : { traitLimit: input.traitLimit }),
+			});
 			return toolSuccess(
 				`Trait ${input.traitId} reactivated.`,
-				{ trait },
+				{ trait, ...(trait.warnings?.length ? { warnings: trait.warnings } : {}) },
 				{
 					entities: [toTraitRef(trait)],
 				},
@@ -216,7 +264,7 @@ export const refineSoulTool = defineSoulsTool<
 >({
 	name: refineSoulToolName,
 	description:
-		'Add, revise, revert, or reactivate traits; cite shards to traits; stamp attunement.',
+		'Add, revise, revert, or reactivate traits; cite evidence; apply atomic refinement with revision conflict checks.',
 	whenToUse:
 		'Use after inspecting the evidence report (inspect_souls_item with includeEvidence) to make targeted identity mutations: add a new trait from a novel cluster, revise a stale trait, revert a trait that is causing regression, cite shards to earn provenance, stamp attuned after completing a refinement pass.',
 	whenNotToUse:
@@ -227,7 +275,7 @@ export const refineSoulTool = defineSoulsTool<
 	targetKinds: ['soul', 'trait', 'shard'],
 	inputDescriptions: {
 		action:
-			'add_trait, revise_trait, revert_trait, reactivate_trait, cite_shard, or stamp_attuned.',
+			'add_trait, revise_trait, revert_trait, reactivate_trait, cite_shard, stamp_attuned, or refine_with_evidence. New evidence gates warn by default; strict enforces them; operator records a correction.',
 		soulId: 'Required for add_trait, stamp_attuned.',
 		traitId: 'Required for revise_trait, revert_trait, reactivate_trait, cite_shard.',
 		principle: 'The cognitive rule (for add_trait, revise_trait).',
@@ -239,6 +287,7 @@ export const refineSoulTool = defineSoulsTool<
 		{
 			action: enumSchema(
 				[
+					'refine_with_evidence',
 					'add_trait',
 					'revise_trait',
 					'revert_trait',
@@ -254,6 +303,16 @@ export const refineSoulTool = defineSoulsTool<
 			),
 			principle: stringSchema('The cognitive rule text.'),
 			provenance: stringSchema('Evidence chain justifying the trait.'),
+			strict: booleanSchema('Enforce readiness, evidence, and capacity checks.'),
+			operator: stringSchema('Named operator correction; bypasses the strict evidence gate.'),
+			reason: stringSchema('Reason for the wording change.'),
+			shardIds: integerArraySchema('Supporting shard IDs.'),
+			traitLimit: integerSchema('Override active trait capacity.'),
+			expectedRevision: integerSchema('Expected latest revision id (0 for none).'),
+			refineAction: enumSchema(
+				['add', 'revise'],
+				'Atomic refinement operation; inferred from traitId when omitted.',
+			),
 			shardId: integerSchema('Shard ID to link (for cite_shard).'),
 		},
 		['action'],

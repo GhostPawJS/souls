@@ -22,14 +22,14 @@ export { formatEvidence } from './format_evidence.ts';
 export { getShardOrThrow } from './get_shard_or_throw.ts';
 export { initShardSearch } from './init_shard_search.ts';
 export { initShardTables } from './init_shard_tables.ts';
-export { listShards } from './list_shards.ts';
+export { listShards, listShardsPage } from './list_shards.ts';
 export { mapShardRow } from './map_shard_row.ts';
 export { normalizeShardContent } from './normalize_shard_content.ts';
 export { normalizeTag, normalizeTags } from './normalize_tag.ts';
 export { pendingShardCount } from './pending_shard_count.ts';
 export { renderEvidenceMarkdown } from './render_evidence_markdown.ts';
 export { revealShards } from './reveal_shards.ts';
-export { searchShards } from './search_shards.ts';
+export { searchShards, searchShardsPage } from './search_shards.ts';
 export type { SourceCountRecord } from './shard_counts_by_source.ts';
 export { shardCountsBySource } from './shard_counts_by_source.ts';
 export { shardCountsByTag } from './shard_counts_by_tag.ts';
@@ -49,7 +49,9 @@ export type {
 	SearchShardsOptions,
 	SHARD_STATUSES,
 	ShardCountRecord,
+	ShardFilterStatus,
 	ShardListOptions,
+	ShardPage,
 	ShardRecord,
 	ShardRow,
 	ShardStatus,

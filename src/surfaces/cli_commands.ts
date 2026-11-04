@@ -41,6 +41,8 @@ export async function runCliCommand<T>(
 	const stdin = options.stdin ?? process.stdin;
 	const args = [...argv];
 	const tree = cliCommands(options.tools);
+	const drop = tree.find((entry) => entry.path === 'shard drop');
+	if (drop) tree.push({ ...drop, path: 'shard add' });
 	let json = argv.includes('--json'),
 		quiet = argv.includes('--quiet'),
 		compact = false,
@@ -97,6 +99,18 @@ export async function runCliCommand<T>(
 			args.shift();
 		}
 		if (!args.length) help = true;
+		if (
+			args[0] === 'shard' &&
+			args[1] === 'add' &&
+			args.some((a) => a === '--batch' || a.startsWith('--batch='))
+		) {
+			args[1] = 'drop-batch';
+			for (let i = 2; i < args.length; i++) {
+				if (args[i] === '--batch') args[i] = '--shards';
+				else if (args[i]?.startsWith('--batch='))
+					args[i] = args[i]?.replace('--batch=', '--shards=') as string;
+			}
+		}
 		const entry = tree.find((command) =>
 			command.path.split(' ').every((part, i) => args[i] === part),
 		);
@@ -104,8 +118,15 @@ export async function runCliCommand<T>(
 			const argument = (name: string, schema: JsonSchema): CliArgument => ({
 				name,
 				type:
-					schema.type === 'object' || !schema.type ? 'json' : (schema.type as CliArgument['type']),
+					schema.type === 'array' && schema.items?.type === 'object'
+						? 'json'
+						: schema.oneOf?.some((b) => b.type === 'string')
+							? 'string'
+							: schema.type === 'object' || !schema.type
+								? 'json'
+								: (schema.type as CliArgument['type']),
 				description: schema.description,
+				...(schema.type === 'array' && schema.items?.type === 'object' ? { jsonLines: true } : {}),
 				enum: schema.enum,
 				...(command.tool.cli?.fileArgs?.includes(
 					name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase()),
@@ -114,7 +135,10 @@ export async function runCliCommand<T>(
 					: {}),
 				...(schema.items?.type ? { itemType: schema.items.type as CliArgument['type'] } : {}),
 			});
-			const properties = command.tool.inputSchema.properties ?? {};
+			const inputSchema = help
+				? (command.tool.cli?.helpInputSchema ?? command.tool.inputSchema)
+				: command.tool.inputSchema;
+			const properties = inputSchema.properties ?? {};
 			return {
 				command: `${options.bin} ${command.path}`,
 				description: command.tool.description,
@@ -135,7 +159,7 @@ export async function runCliCommand<T>(
 							schema,
 						),
 						required: false,
-						description: `${schema.description ?? ''}${command.tool.inputSchema.required?.includes(name) ? ' (required)' : ''}`,
+						description: `${schema.description ?? ''}${inputSchema.required?.includes(name) ? ' (required)' : ''}`,
 					})),
 			};
 		};
@@ -146,7 +170,7 @@ export async function runCliCommand<T>(
 				stdout.write(
 					entry
 						? renderCliHelp(specFor(entry))
-						: `${options.bin} ${options.version}\n${options.description}\n\nCommands:\n${matches.map((command) => `  ${command.path}`).join('\n')}\n  mcp, skill, tools [--json], describe <tool>, call <tool> [JSON|-], completions <bash|zsh|fish>, version\nGlobal flags: --db <path>, --json, --quiet, --compact, --help/-h, --version/-V/-v, --no-color\nVersion formats: --version --short, --version --json\n`,
+						: `${options.bin} ${options.version}\n${options.description}\n\nCommands:\n${matches.map((command) => `  ${command.path}`).join('\n')}\n  mcp, skill, tools [--json], describe <tool>, call <tool> [JSON|-], completions <bash|zsh|fish>, version\n${options.customCommand && !args.length ? 'Host commands: render, diff, config, report; review <soul> --no-change (see command --help)\n' : ''}Global flags: --db <path>, --json, --quiet, --compact, --help/-h, --version/-V/-v, --no-color\nVersion formats: --version --short, --version --json\n`,
 				);
 			return 0;
 		}
@@ -205,11 +229,55 @@ export async function runCliCommand<T>(
 			if (!base || typeof base !== 'object' || Array.isArray(base))
 				throw new CliUsageError('Expected stdin JSON object');
 		}
-		const input = { ...(base as object), ...parseCliArgs(rest, spec), ...entry.fixed };
-		const errors = validateInput(entry.tool.inputSchema, input);
-		if (errors.length) throw new CliUsageError(errors.join('\n'));
+		// File values use the injected stream as well as the process stdin.
+		for (let i = 0; i < rest.length; i++) {
+			const token = rest[i] as string;
+			const flag = spec.flags?.find(
+				(arg) => arg.file && (token === `--${arg.name}` || token.startsWith(`--${arg.name}=`)),
+			);
+			if (!flag) continue;
+			const inline = token.includes('=');
+			const raw = inline ? token.slice(token.indexOf('=') + 1) : rest[i + 1];
+			if (raw !== '@-') continue;
+			let text = '';
+			for await (const chunk of stdin) text += String(chunk);
+			const literal = text.startsWith('@') ? `@${text}` : text;
+			if (inline) rest[i] = `--${flag.name}=${literal}`;
+			else rest[i + 1] = literal;
+		}
+		const input: Record<string, unknown> = {
+			...(base as object),
+			...parseCliArgs(rest, {
+				...spec,
+				positionals: (spec.positionals ?? []).map((arg) =>
+					options.resolveReference && arg.name === 'soulId'
+						? { ...arg, type: 'string' as const }
+						: arg,
+				),
+				flags: (spec.flags ?? []).map((arg) =>
+					options.resolveReference && ['soul-id', 'soul-ids'].includes(arg.name)
+						? {
+								...arg,
+								...(arg.type === 'array'
+									? { itemType: 'string' as const }
+									: { type: 'string' as const }),
+							}
+						: arg,
+				),
+			}),
+			...entry.fixed,
+		};
+		options.prepareInput?.(input, entry.tool.name);
 		const context = await options.openContext(db === undefined ? {} : { db });
 		try {
+			if (options.resolveReference) {
+				const convert = (ref: unknown) =>
+					typeof ref === 'string' ? options.resolveReference?.(context, ref) : ref;
+				if (input.soulId !== undefined) input.soulId = convert(input.soulId);
+				if (Array.isArray(input.soulIds)) input.soulIds = input.soulIds.map(convert);
+			}
+			const errors = validateInput(entry.tool.inputSchema, input);
+			if (errors.length) throw new CliUsageError(errors.join('\n'));
 			const result = await entry.tool.handler(context, input);
 			const record = result as {
 				ok?: boolean;
@@ -218,6 +286,23 @@ export async function runCliCommand<T>(
 				summary?: string;
 				data?: unknown;
 			};
+			const warningMessages = new Set<string>();
+			function collectWarnings(value: unknown): void {
+				if (!value || typeof value !== 'object') return;
+				for (const [key, child] of Object.entries(value)) {
+					if (key === 'warnings' && Array.isArray(child))
+						for (const warning of child) {
+							const message = typeof warning === 'string' ? warning : warning?.message;
+							if (typeof message === 'string') warningMessages.add(message);
+						}
+					else if (key === 'data' || key === 'trait' || key === 'soul' || key === 'result')
+						collectWarnings(child);
+				}
+			}
+			collectWarnings(result);
+			for (const warning of warningMessages)
+				stderr.write(`warning: ${warning.replace(/\s+/g, ' ')}\n`);
+
 			const code =
 				record.outcome === 'needs_clarification' || record.error?.code === 'not_found'
 					? 3

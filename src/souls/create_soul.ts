@@ -21,10 +21,18 @@ export function createSoul(db: SoulsDb, input: CreateSoulInput): SoulRecord {
 
 	const result = db
 		.prepare(
-			`INSERT INTO souls (name, slug, essence, description, level, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, 1, ?, ?)`,
+			`INSERT INTO souls (name, slug, essence, description, level, created_at, updated_at, external_id)
+			 VALUES (?, ?, ?, ?, 1, ?, ?, ?)`,
 		)
-		.run(input.name, input.slug ?? null, input.essence, input.description, now, now);
+		.run(
+			input.name,
+			input.slug ?? null,
+			input.essence,
+			input.description,
+			now,
+			now,
+			input.externalId ?? null,
+		);
 
 	return getSoulOrThrow(db, Number(result.lastInsertRowid));
 }

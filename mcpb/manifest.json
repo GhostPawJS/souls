@@ -88,7 +88,7 @@
     },
     {
       "name": "refine_soul",
-      "description": "Add, revise, revert, or reactivate traits; cite shards to traits; stamp attunement."
+      "description": "Add, revise, revert, or reactivate traits; cite evidence; apply atomic refinement with revision conflict checks."
     },
     {
       "name": "level_up_soul",
@@ -96,7 +96,7 @@
     },
     {
       "name": "manage_soul",
-      "description": "Create, update, retire, or awaken a soul."
+      "description": "Create, update, retire, or awaken a soul; read or set database configuration."
     }
   ],
   "compatibility": {

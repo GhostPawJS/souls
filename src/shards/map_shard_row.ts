@@ -31,6 +31,10 @@ export function mapShardRow(db: SoulsDb, row: ShardRow): ShardRecord {
 
 	return {
 		id: row.id,
+		...(row.inserted_at == null ? {} : { insertedAt: row.inserted_at }),
+		...(row.occurred_at == null ? {} : { occurredAt: row.occurred_at }),
+		...(row.idempotency_key == null ? {} : { idempotencyKey: row.idempotency_key }),
+		...(row.ref == null ? {} : { ref: row.ref }),
 		content: row.content,
 		source: row.source,
 		status: row.status,

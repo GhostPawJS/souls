@@ -4,9 +4,21 @@ import type { ShardListOptions, ShardRecord, ShardRow } from './types.ts';
 
 const MS_PER_DAY = 86_400_000;
 
-export function listShards(db: SoulsDb, options?: ShardListOptions): ShardRecord[] {
-	const conditions: string[] = [`ss.status = 'pending'`, `ss.sealed = 0`];
+function listShardsQuery(
+	db: SoulsDb,
+	options?: ShardListOptions,
+	count = false,
+): ShardRecord[] | number {
+	const conditions: string[] = [];
 	const params: (string | number)[] = [];
+
+	const status = options?.status ?? 'pending';
+	if (status === 'sealed') conditions.push('ss.sealed = 1');
+	else if (status !== 'all') {
+		conditions.push('ss.status = ?');
+		params.push(status);
+		if (status === 'pending') conditions.push('ss.sealed = 0');
+	}
 
 	if (options?.soulId !== undefined) {
 		conditions.push(
@@ -36,12 +48,30 @@ export function listShards(db: SoulsDb, options?: ShardListOptions): ShardRecord
 		params.push(cutoff);
 	}
 
-	const limit = options?.limit;
-	const limitClause = limit !== undefined ? `LIMIT ${limit}` : '';
+	const limit = Math.min(1000, Math.max(0, Math.trunc(options?.limit ?? 100)));
+	const limitClause = `LIMIT ${limit} OFFSET ${Math.max(0, Math.trunc(options?.offset ?? 0))}`;
 
-	const sql = `SELECT ss.* FROM soul_shards ss WHERE ${conditions.join(' AND ')} ORDER BY ss.created_at DESC ${limitClause}`;
+	const sql = `SELECT ss.* FROM soul_shards ss WHERE ${conditions.length ? conditions.join(' AND ') : '1 = 1'} ORDER BY ss.created_at DESC ${limitClause}`;
+	if (count)
+		return (
+			db
+				.prepare(`SELECT COUNT(*) AS total FROM (${sql.replace(limitClause, '')})`)
+				.get<{ total: number }>(...params)?.total ?? 0
+		);
 	return db
 		.prepare(sql)
 		.all<ShardRow>(...params)
 		.map((row) => mapShardRow(db, row));
+}
+
+export function listShards(db: SoulsDb, options?: ShardListOptions): ShardRecord[] {
+	return listShardsQuery(db, options) as ShardRecord[];
+}
+export function listShardsPage(
+	db: SoulsDb,
+	options?: ShardListOptions,
+): import('./types.ts').ShardPage {
+	const items = listShards(db, options);
+	const total = listShardsQuery(db, options, true) as number;
+	return { items, total, hasMore: (options?.offset ?? 0) + items.length < total };
 }

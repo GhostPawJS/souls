@@ -1,5 +1,6 @@
 import type { TraitSignal, TraitTension } from './types.ts';
 
+// Built-in negation cues are English-only; callers can extend them.
 const NEGATION_PATTERNS = [
 	/\bnot\b/i,
 	/\bnever\b/i,
@@ -9,11 +10,23 @@ const NEGATION_PATTERNS = [
 	/\bwithout\b/i,
 ];
 
-function isNegated(text: string): boolean {
+function isNegated(text: string, words: string[] = []): boolean {
+	if (
+		words.some((word) =>
+			text
+				.toLocaleLowerCase()
+				.split(/[^\p{L}\p{N}']+/u)
+				.includes(word.toLocaleLowerCase()),
+		)
+	)
+		return true;
 	return NEGATION_PATTERNS.some((p) => p.test(text));
 }
 
-export function detectTraitTensions(traits: TraitSignal[]): TraitTension[] {
+export function detectTraitTensions(
+	traits: TraitSignal[],
+	options?: { negationWords?: string[] },
+): TraitTension[] {
 	const tensions: TraitTension[] = [];
 
 	for (let i = 0; i < traits.length; i++) {
@@ -22,8 +35,8 @@ export function detectTraitTensions(traits: TraitSignal[]): TraitTension[] {
 			const b = traits[j];
 			if (!a || !b) continue;
 
-			const aNegated = isNegated(a.principle);
-			const bNegated = isNegated(b.principle);
+			const aNegated = isNegated(a.principle, options?.negationWords);
+			const bNegated = isNegated(b.principle, options?.negationWords);
 
 			// Asymmetric negation: one side negates, the other does not
 			if (aNegated !== bNegated) {

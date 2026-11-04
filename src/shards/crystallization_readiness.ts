@@ -14,7 +14,7 @@ export function crystallizationReadiness(
 
 	for (const { id: soulId } of souls) {
 		const check = checkCrystallizationForSoul(db, soulId, options);
-		if (check === null) continue;
+		if (!check?.ready) continue;
 
 		results.push({
 			soulId,

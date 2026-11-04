@@ -484,3 +484,117 @@ npm run demo:serve   # build and serve at localhost:7777
 ## License
 
 MIT
+
+### Evidence-backed refinement
+
+Shard lists and searches return arrays with a default limit of 100 (maximum
+1000). `read.listShardsPage` and `read.searchShardsPage` return
+`{ items, total, hasMore }`; use `offset` to continue. Both accept `status`:
+`pending`, `sealed`, `faded`, or `all`. Lists default to pending unsealed shards;
+searches retain their all-status default. Query and tags combine with AND.
+
+Trait additions and essence edits warn when crystallization is not ready or no
+`shardIds` are supplied. Pass `strict: true` to require both. A named `operator`
+bypasses this gate and records an operator correction. Existing trait-addition
+capacity enforcement is unchanged; reactivation and new level-up checks warn
+unless strict is enabled. `addTrait`, `updateSoul`, and `refineWithEvidence` expose optional
+`warnings: string[]` as a non-enumerable property,
+so serialization and object spreads keep the record clean. Facade
+data also includes these strings while retaining existing warning objects.
+The CLI prints each warning as `warning: ...` on stderr.
+
+`write.refineWithEvidence(db, { soulId, action: 'add' | 'revise', traitId?,
+principle, provenance, shardIds, reason?, strict?, operator?, expectedRevision? })`
+updates wording, cites evidence, and stamps attunement atomically. Set
+`expectedRevision` to the latest revision ID for the soul (or 0) to detect
+conflicts. Read wording history with `read.getRevisionHistory(db, { soulId,
+traitId?, limit? })`, or inspect with `history: true`.
+
+The facade action is `refine_with_evidence`; CLI usage:
+
+```sh
+ghostpaw-souls refinement apply 1 --principle "Check assumptions" --provenance "Review evidence" --shard-ids 2,3 --strict
+ghostpaw-souls refinement revise 4 --principle "Check assumptions first" --reason "Clarify order"
+ghostpaw-souls soul update 1 --essence "Corrected identity" --strict --operator maintainer --reason "Correction"
+```
+
+`refinement apply` infers revise when `--trait-id` is supplied; otherwise it adds.
+Evidence reports render at most five members per cluster and show `+N more`.
+Set `maxMembersPerCluster` to change the cap, or `full: true` to retain every
+selected member in the structured payload. Alignment uses the maximum
+similarity across all cluster members. Staleness uses the latest citation time,
+falling back to trait creation. Tension detection has English-only negation
+cues; `detectTraitTensions(..., { negationWords })` extends them.
+
+`read.formatEvidence(db, soulId, { negationWords: ["nicht"] })` extends the
+English-only tension cues through the public library facade.
+
+### Publishing identities into host prompts
+
+```sh
+ghostpaw-souls soul create Reviewer --essence 'Read intent first.' --description 'Code review' --external-id reviewer
+ghostpaw-souls render ext:reviewer --provenance
+ghostpaw-souls render ext:reviewer --into ./AGENTS.md --marker souls --budget 8000 --expect-hash none
+ghostpaw-souls diff ext:reviewer --against ./AGENTS.md
+ghostpaw-souls review ext:reviewer --no-change --reason 'Identity still fits'
+ghostpaw-souls config set strict true
+ghostpaw-souls config get strict
+ghostpaw-souls report --expect-ids @expected-ids.txt
+```
+
+`render` prints only the identity, or atomically creates/replaces the content between
+`<!-- souls:begin -->` and `<!-- souls:end -->` with `--into`. It appends a block when
+markers are absent. `--marker` selects a different marker name. Successful writes
+print `wrote <file> sha256:<hash>` and record file/block hashes in `soul_publications`.
+`--expect-hash` requires the current full-file SHA-256 (`none` for a missing file);
+a mismatch exits 4 without writing. Omit it for an unconditional replacement.
+
+`--budget` counts characters across the entire composed output, including surrounding
+file text and markers. It removes lowest-ranked traits first, then shortens essence;
+very small budgets can empty the identity block. Text outside the markers stays
+intact. An impossible budget exits nonzero without writing. Cuts appear as one
+`trimmed:` line on stderr and as `{traitIds, essenceChars}` in `--json` output.
+`diff` prints changed lines, exits 0 when identical and 1 when different; `--json`
+returns `{same, added, removed, markerFound}`. When no block exists for the requested
+marker, `diff <soul> --against <file|->` compares the whole input, removing one
+trailing newline, with the rendered block and reports `markerFound: false`.
+Diff compares the current full identity, so a
+budget-trimmed publication can differ.
+
+Soul create/update accept `--external-id`; bindings are unique when set and appear
+in show/list JSON. CLI soul arguments accept numeric IDs, names, or `ext:<id>`.
+`report --expect-ids @file` reads one external ID per line (`@-` reads stdin), compares
+active bindings, and prints `missing:` and `extra:` lines. It exits 0 for a match,
+1 otherwise; JSON returns `{missing, extra}`.
+
+Shard drop accepts `--occurred-at <iso>`, `--idempotency-key <key>`, and `--ref <text>`.
+Repeated ingestion keys return the original shard with `duplicate: true`. Library
+and batch inputs accept `occurredAt` (ISO or epoch milliseconds), `idempotencyKey`,
+and `ref`. Occurrence time controls crystallization age/spread, falling back to
+creation time. The age spread uses `occurredAt` (falling back to `createdAt`): two pending
+shards from different sources must be at least one day apart, or live shards
+(occurrence time not earlier than insertion time) must span a day on their own.
+Otherwise readiness reports `Age spread must span at least two sources by occurrence time.` Legacy numeric CLI and facade occurrence timestamps retain their creation-time
+behavior; `insertedAt` records insertion time separately for backfill checks.
+
+Strict checks default off. Resolve strict in this order: explicit library `strict`
+or CLI `--strict`/`--no-strict`, `GHOSTPAW_SOULS_STRICT` (`1/true/yes` or
+`0/false/no`), then the database setting. Use `config set strict true|false`,
+`config get [key]`, and `config list`. Both read commands report effective boolean values and a `source` of `default`, `db`, or `env`; text output uses `strict: false (default)`. `read.getSoulsConfig(db)` reads persisted
+values; `write.setSoulsConfig(db, 'strict', 'true')` writes them. The manage tool
+provides `config_set`, `config_get`, and `config_list` actions.
+
+Refinement add/revise and soul update accept `--operator <name>` for a logged
+operator correction; strict evidence readiness can be bypassed with a named
+operator. Review output includes corrections. `review --no-change` records a review
+and stamps attuned without editing identity; the facade provides
+`write.reviewNoChange(db, soulId, {reason})` and the review tool accepts `noChange`.
+Show with `--history` includes revision and review records. Refinement
+add/reactivate/apply and level validate/up accept `--trait-limit <n>`.
+
+CLI batch ingestion accepts `shard drop-batch --shards @file` and
+`shard add --batch @file` with a JSON array or JSON Lines. `@-` reads stdin;
+`@@` escapes a literal leading at-sign. `shard add` also aliases `shard drop`.
+Set `GHOSTPAW_OUTPUT=json` for JSON output. Default database opens print
+`using default db <path>` on stderr; suppress with `--quiet` or
+`GHOSTPAW_QUIET=1`, or select `--db` / `GHOSTPAW_SOULS_DB`.

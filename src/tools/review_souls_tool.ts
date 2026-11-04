@@ -2,10 +2,19 @@ import type { SoulsDb } from '../database.ts';
 import type { MaintenanceResult } from '../maintenance.ts';
 import { runMaintenance } from '../maintenance.ts';
 import * as read from '../read.ts';
+import { reviewNoChange } from '../review.ts';
+import { getRevisionHistory } from '../revisions.ts';
 import type { CrystallizationRecord } from '../shards/types.ts';
 import type { SoulRecord } from '../souls/types.ts';
 import { translateToolError } from './tool_errors.ts';
-import { defineSoulsTool, enumSchema, objectSchema } from './tool_metadata.ts';
+import {
+	booleanSchema,
+	defineSoulsTool,
+	enumSchema,
+	integerSchema,
+	objectSchema,
+	stringSchema,
+} from './tool_metadata.ts';
 import { reviewSoulsToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulRef } from './tool_ref.ts';
@@ -14,6 +23,10 @@ import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
 
+export interface ReviewSoulsHistoryData {
+	history: ReturnType<typeof getRevisionHistory>;
+	reviews: Record<string, unknown>[];
+}
 export interface ReviewSoulsListData {
 	souls: SoulRecord[];
 }
@@ -29,17 +42,33 @@ export interface ReviewSoulsReadinessData {
 export type ReviewSoulsToolData =
 	| ReviewSoulsListData
 	| ReviewSoulsMaintenanceData
-	| ReviewSoulsReadinessData;
+	| ReviewSoulsReadinessData
+	| ReviewSoulsHistoryData;
 
 export type ReviewSoulsToolResult = ToolResult<ReviewSoulsToolData>;
 
 export function reviewSoulsToolHandler(
 	db: SoulsDb,
-	input: { view: 'list' | 'maintenance' | 'readiness' },
+	input: {
+		view: 'list' | 'maintenance' | 'readiness' | 'history';
+		soulId?: number | undefined;
+		noChange?: boolean | undefined;
+		reason?: string | undefined;
+	},
 ): ReviewSoulsToolResult {
 	const invalid = validateToolInput(reviewSoulsTool, input);
 	if (invalid) return invalid;
 	try {
+		if (input.noChange || input.view === 'history') {
+			if (!input.soulId) throw new Error('soulId is required.');
+			if (input.noChange) reviewNoChange(db, input.soulId, { reason: input.reason });
+			return toolSuccess('Review history.', {
+				history: getRevisionHistory(db, { soulId: input.soulId }),
+				reviews: db
+					.prepare('SELECT * FROM soul_reviews WHERE soul_id=? ORDER BY id DESC')
+					.all(input.soulId),
+			});
+		}
 		if (input.view === 'list') {
 			const souls = read.listSouls(db);
 			const data: ReviewSoulsListData = { souls };
@@ -108,7 +137,13 @@ export const reviewSoulsTool = defineSoulsTool<
 	outputDescription: 'Depends on view: soul list, maintenance result, or readiness records.',
 	inputSchema: objectSchema(
 		{
-			view: enumSchema(['list', 'maintenance', 'readiness'], 'The operation to perform.'),
+			soulId: integerSchema('Soul to review.'),
+			noChange: booleanSchema('Record a review without edits and stamp attuned.'),
+			reason: stringSchema('Review reason.'),
+			view: enumSchema(
+				['list', 'maintenance', 'readiness', 'history'],
+				'The operation to perform.',
+			),
 		},
 		['view'],
 		'Review souls or run maintenance.',

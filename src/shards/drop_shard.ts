@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { SoulsValidationError } from '../errors.ts';
 import { resolveNow } from '../resolve_now.ts';
 import { getSoulOrThrow } from '../souls/get_soul_or_throw.ts';
 import type { CrystallizationCheckOptions } from './check_crystallization_for_soul.ts';
@@ -12,8 +13,23 @@ import { assertShardContent, assertShardSource, assertSoulIds } from './validato
 export function dropShard(
 	db: SoulsDb,
 	input: DropShardInput,
-	options?: CrystallizationCheckOptions,
+	options?: CrystallizationCheckOptions & { insertedAt?: number },
 ): DropShardResult {
+	if (input.idempotencyKey !== undefined) {
+		const existing = db
+			.prepare('SELECT id FROM soul_shards WHERE idempotency_key = ?')
+			.get<{ id: number }>(input.idempotencyKey);
+		if (existing)
+			return {
+				shard: getShardOrThrow(db, existing.id),
+				crystallizationTriggers: [],
+				duplicate: true,
+			};
+	}
+	const occurredAt =
+		typeof input.occurredAt === 'string' ? Date.parse(input.occurredAt) : input.occurredAt;
+	if (occurredAt !== undefined && !Number.isSafeInteger(occurredAt))
+		throw new SoulsValidationError('Invalid occurredAt timestamp.');
 	assertShardContent(input.content);
 	assertShardSource(input.source);
 	assertSoulIds(input.soulIds);
@@ -27,10 +43,20 @@ export function dropShard(
 
 	const result = db
 		.prepare(
-			`INSERT INTO soul_shards (content, source, status, sealed, created_at, updated_at)
-			 VALUES (?, ?, 'pending', ?, ?, ?)`,
+			`INSERT INTO soul_shards (content, source, status, sealed, created_at, updated_at, occurred_at, idempotency_key, ref, inserted_at)
+			 VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)`,
 		)
-		.run(content, input.source, sealed, now, now);
+		.run(
+			content,
+			input.source,
+			sealed,
+			now,
+			now,
+			occurredAt ?? null,
+			input.idempotencyKey ?? null,
+			input.ref ?? null,
+			options?.insertedAt ?? now,
+		);
 
 	const shardId = Number(result.lastInsertRowid);
 
@@ -47,8 +73,11 @@ export function dropShard(
 	// 2-phase crystallization gate: run per attributed soul
 	const crystallizationTriggers: number[] = [];
 	for (const soulId of input.soulIds) {
-		const check = checkCrystallizationForSoul(db, soulId, { ...options, now });
-		if (check !== null) crystallizationTriggers.push(soulId);
+		const check = checkCrystallizationForSoul(db, soulId, {
+			...options,
+			now: options?.insertedAt ?? now,
+		});
+		if (check?.ready) crystallizationTriggers.push(soulId);
 	}
 
 	return { shard, crystallizationTriggers };

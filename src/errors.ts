@@ -14,6 +14,10 @@ export class SoulsStateError extends SoulsError {
 	override name: string = 'SoulsStateError';
 }
 
+export class SoulsConflictError extends SoulsStateError {
+	override name: string = 'SoulsConflictError';
+}
+
 export function isSoulsError(value: unknown): value is SoulsError {
 	return value instanceof SoulsError;
 }

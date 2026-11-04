@@ -6,6 +6,7 @@ import * as write from '../write.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	arraySchema,
+	booleanSchema,
 	defineSoulsTool,
 	enumSchema,
 	integerArraySchema,
@@ -21,11 +22,13 @@ import { toolSuccess } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
 
 export interface LevelUpSoulExecuteData {
+	warnings?: string[];
 	result: LevelUpResult;
 	soulId: number;
 }
 
 export interface LevelUpSoulRevertData {
+	warnings?: string[];
 	soulId: number;
 }
 
@@ -43,6 +46,8 @@ export function levelUpSoulToolHandler(
 	input: {
 		action: 'execute' | 'revert' | 'validate';
 		soulId: number;
+		strict?: boolean | undefined;
+		traitLimit?: number | undefined;
 		plan?: LevelUpPlan | undefined;
 	},
 ): LevelUpSoulToolResult {
@@ -63,7 +68,10 @@ export function levelUpSoulToolHandler(
 					},
 				};
 			}
-			const validation = read.validateLevelUpPlan(db, input.soulId, input.plan);
+			const validation = read.validateLevelUpPlan(db, input.soulId, input.plan, {
+				...(input.strict === undefined ? {} : { strict: input.strict }),
+				...(input.traitLimit === undefined ? {} : { traitLimit: input.traitLimit }),
+			});
 			return toolSuccess(
 				validation.valid ? 'Level-up plan is valid.' : 'Level-up plan has errors — see data.',
 				validation,
@@ -85,8 +93,15 @@ export function levelUpSoulToolHandler(
 					},
 				};
 			}
-			const result = write.levelUp(db, input.soulId, input.plan);
-			const data: LevelUpSoulExecuteData = { result, soulId: input.soulId };
+			const result = write.levelUp(db, input.soulId, input.plan, {
+				...(input.strict === undefined ? {} : { strict: input.strict }),
+				...(input.traitLimit === undefined ? {} : { traitLimit: input.traitLimit }),
+			});
+			const data: LevelUpSoulExecuteData = {
+				result,
+				soulId: input.soulId,
+				...(result.warnings?.length ? { warnings: result.warnings } : {}),
+			};
 			return toolSuccess(`Soul ${input.soulId} leveled up to level ${result.level}.`, data, {
 				entities: [toSoulIdRef(input.soulId)],
 				next: [inspectSoulsItemNext(input.soulId)],
@@ -94,10 +109,11 @@ export function levelUpSoulToolHandler(
 		}
 
 		if (input.action === 'revert') {
-			write.revertLevelUp(db, input.soulId);
+			const warnings: string[] = [];
+			write.revertLevelUp(db, input.soulId, { onWarning: (warning) => warnings.push(warning) });
 			return toolSuccess(
 				`Level-up reverted for soul ${input.soulId}.`,
-				{ soulId: input.soulId },
+				{ soulId: input.soulId, ...(warnings.length ? { warnings } : {}) },
 				{
 					entities: [toSoulIdRef(input.soulId)],
 					next: [inspectSoulsItemNext(input.soulId)],
@@ -138,6 +154,8 @@ export const levelUpSoulTool = defineSoulsTool<
 	inputSchema: objectSchema(
 		{
 			action: enumSchema(['validate', 'execute', 'revert'], 'The operation to perform.'),
+			traitLimit: integerSchema('Override active trait capacity.'),
+			strict: booleanSchema('Reject new validation errors instead of warning.'),
 			soulId: integerSchema('The soul ID.'),
 			plan: objectSchema(
 				{

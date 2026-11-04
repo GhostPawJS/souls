@@ -18,4 +18,8 @@ export function initLevelTables(db: SoulsDb): void {
 
 	db.exec(`CREATE INDEX IF NOT EXISTS idx_soul_levels_soul_id ON soul_levels(soul_id)`);
 	db.exec(`CREATE INDEX IF NOT EXISTS idx_soul_levels_soul_level ON soul_levels(soul_id, level)`);
+	const columns = db.prepare('PRAGMA table_info(soul_levels)').all<{ name: string }>();
+	for (const column of ['faded_shard_ids', 'state_before'])
+		if (!columns.some((c) => c.name === column))
+			db.exec(`ALTER TABLE soul_levels ADD COLUMN ${column} TEXT`);
 }

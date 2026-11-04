@@ -1,6 +1,9 @@
 import type { EvidenceReport } from './types.ts';
 
-export function renderEvidenceMarkdown(report: EvidenceReport): string {
+export function renderEvidenceMarkdown(
+	report: EvidenceReport,
+	options?: { maxMembersPerCluster?: number | undefined },
+): string {
 	const lines: string[] = [];
 
 	lines.push(`# Evidence Report`);
@@ -33,7 +36,7 @@ export function renderEvidenceMarkdown(report: EvidenceReport): string {
 
 			lines.push(`### Cluster ${i + 1} — weight ${cluster.weight.toFixed(2)}${alignLabel}`);
 			lines.push(
-				`*${cluster.members.length} shard${cluster.members.length === 1 ? '' : 's'} · ${cluster.sourceDiversity} source(s) · freshness ${(cluster.avgFreshness * 100).toFixed(1)}%*`,
+				`*${cluster.totalMembers ?? cluster.members.length} shard${(cluster.totalMembers ?? cluster.members.length) === 1 ? '' : 's'} · ${cluster.sourceDiversity} source(s) · freshness ${(cluster.avgFreshness * 100).toFixed(1)}%*`,
 			);
 
 			if (cluster.sharedWith.length > 0) {
@@ -44,9 +47,16 @@ export function renderEvidenceMarkdown(report: EvidenceReport): string {
 			}
 
 			lines.push('');
-			for (const shard of cluster.members) {
+			for (const shard of cluster.members.slice(
+				0,
+				Math.max(0, options?.maxMembersPerCluster ?? 5),
+			)) {
 				lines.push(`- ${shard.content} *(${shard.source})*`);
 			}
+			const remaining =
+				(cluster.totalMembers ?? cluster.members.length) -
+				Math.min(cluster.members.length, Math.max(0, options?.maxMembersPerCluster ?? 5));
+			if (remaining > 0) lines.push(`+${remaining} more`);
 			lines.push('');
 		}
 	}

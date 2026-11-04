@@ -19,6 +19,7 @@ export interface CrystallizationCheckOptions {
 
 export interface CrystallizationCheckResult {
 	ready: boolean;
+	reason?: string;
 	pendingCount: number;
 	sourceDiversity: number;
 	ageSpreadDays: number;
@@ -31,6 +32,8 @@ interface ShardCandidate {
 	content: string;
 	source: string;
 	created_at: number;
+	occurred_at: number;
+	inserted_at: number;
 }
 
 interface SoulMeta {
@@ -66,13 +69,13 @@ export function checkCrystallizationForSoul(
 	// Phase 1: cheap SQL pre-checks
 	const shards = db
 		.prepare(
-			`SELECT ss.id, ss.content, ss.source, ss.created_at
+			`SELECT ss.id, ss.content, ss.source, COALESCE(ss.occurred_at,ss.created_at) AS created_at, COALESCE(ss.inserted_at,ss.created_at) AS inserted_at, COALESCE(ss.occurred_at,ss.created_at) AS occurred_at
 			 FROM soul_shards ss
 			 JOIN shard_souls sr ON sr.shard_id = ss.id
 			 WHERE sr.soul_id = ?
 			   AND ss.status = 'pending'
 			   AND ss.sealed = 0
-			   AND ss.created_at > ?`,
+			   AND COALESCE(ss.occurred_at,ss.created_at) > ?`,
 		)
 		.all<ShardCandidate>(soulId, expiryMs);
 
@@ -82,7 +85,6 @@ export function checkCrystallizationForSoul(
 	// Condition: 2+ distinct source values (hardcoded invariant)
 	const sources = new Set(shards.map((s) => s.source));
 	const sourceDiversity = sources.size;
-	if (sourceDiversity < MIN_SOURCE_DIVERSITY) return null;
 
 	// Condition: age spread > 1 day (hardcoded invariant)
 	const timestamps = shards.map((s) => s.created_at);
@@ -91,6 +93,25 @@ export function checkCrystallizationForSoul(
 	const ageSpreadDays = (newest - oldest) / MS_PER_DAY;
 	if (ageSpreadDays < MIN_AGE_SPREAD_DAYS) return null;
 
+	const native = shards.filter((s) => s.occurred_at >= s.inserted_at);
+	const nativeTimes = native.map((s) => s.occurred_at);
+	const nativeSpread = nativeTimes.length ? Math.max(...nativeTimes) - Math.min(...nativeTimes) : 0;
+	const crossSourceSpread = shards.some((a) =>
+		shards.some(
+			(b) => a.source !== b.source && Math.abs(a.occurred_at - b.occurred_at) >= MS_PER_DAY,
+		),
+	);
+	if (nativeSpread < MS_PER_DAY && !crossSourceSpread)
+		return {
+			ready: false,
+			reason: 'Age spread must span at least two sources by occurrence time.',
+			pendingCount,
+			sourceDiversity,
+			ageSpreadDays,
+			clusterCount: 0,
+			priorityScore: 0,
+		};
+	if (sourceDiversity < MIN_SOURCE_DIVERSITY) return null;
 	// Condition: at least one shard after lastAttunedAt (recency gate)
 	const lastAttuned = soul.last_attuned_at ?? 0;
 	const hasRecentShard = shards.some((s) => s.created_at > lastAttuned);

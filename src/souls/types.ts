@@ -1,4 +1,6 @@
+import type { EvidenceGateOptions } from '../evidence_gate.ts';
 export interface SoulRow {
+	external_id?: string | null;
 	id: number;
 	name: string;
 	slug: string | null;
@@ -12,6 +14,8 @@ export interface SoulRow {
 }
 
 export interface SoulRecord {
+	externalId?: string | null;
+	warnings?: string[] | undefined;
 	id: number;
 	name: string;
 	slug: string | null;
@@ -26,6 +30,7 @@ export interface SoulRecord {
 }
 
 export interface CreateSoulInput {
+	externalId?: string | null | undefined;
 	name: string;
 	essence: string;
 	description: string;
@@ -33,7 +38,8 @@ export interface CreateSoulInput {
 	now?: number | undefined;
 }
 
-export interface UpdateSoulInput {
+export interface UpdateSoulInput extends EvidenceGateOptions {
+	externalId?: string | null | undefined;
 	name?: string | undefined;
 	slug?: string | null | undefined;
 	essence?: string | undefined;

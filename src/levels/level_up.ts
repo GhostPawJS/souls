@@ -1,6 +1,7 @@
 import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { resolveNow } from '../resolve_now.ts';
+import { recordRevision } from '../revisions.ts';
 import { getSoulOrThrow } from '../souls/get_soul_or_throw.ts';
 import { withTransaction } from '../with_transaction.ts';
 import { getLevelHistory } from './get_level_history.ts';
@@ -11,15 +12,15 @@ export function levelUp(
 	db: SoulsDb,
 	soulId: number,
 	plan: LevelUpPlan,
-	options?: { now?: number },
+	options?: { now?: number; strict?: boolean; traitLimit?: number },
 ): LevelUpResult {
 	const soul = getSoulOrThrow(db, soulId);
-	const validation = validateLevelUpPlan(db, soulId, plan);
+	const validation = validateLevelUpPlan(db, soulId, plan, options);
 
 	if (!validation.valid) {
 		const { missingTraitIds, duplicateTraitIds, invalidTraitIds } = validation.error;
 		throw new SoulsValidationError(
-			`Level-up plan is invalid. Missing: [${missingTraitIds}]. Duplicates: [${duplicateTraitIds}]. Invalid: [${invalidTraitIds}].`,
+			`${validation.errors?.join(' ') ?? ''} Level-up plan is invalid. Missing: [${missingTraitIds}]. Duplicates: [${duplicateTraitIds}]. Invalid: [${invalidTraitIds}].`,
 		);
 	}
 
@@ -28,6 +29,13 @@ export function levelUp(
 
 	return withTransaction(db, () => {
 		const mergedTraitIds: number[] = [];
+		const stateBefore = JSON.stringify(
+			db.prepare('SELECT * FROM soul_traits WHERE soul_id = ?').all(soulId),
+		);
+		recordRevision(db, 'essence', soulId, soulId, soul.essence, plan.newEssence, {
+			now,
+			reason: 'level up',
+		});
 
 		// 1. Process consolidations: mark sources as consolidated, create merged traits
 		for (const group of plan.consolidations) {
@@ -40,6 +48,10 @@ export function levelUp(
 
 			const mergedId = Number(mergeResult.lastInsertRowid);
 			mergedTraitIds.push(mergedId);
+			recordRevision(db, 'trait', mergedId, soulId, null, group.mergedPrinciple, {
+				now,
+				reason: 'level up merge',
+			});
 
 			for (const srcId of group.sourceTraitIds) {
 				db.prepare(
@@ -92,10 +104,21 @@ export function levelUp(
 				now,
 			);
 
+		// Level-up currently fades no shards; record the empty set explicitly for faithful rollback.
+		db.prepare('UPDATE soul_levels SET faded_shard_ids = ?, state_before = ? WHERE id = ?').run(
+			'[]',
+			stateBefore,
+			Number(snapshotResult.lastInsertRowid),
+		);
+
 		const history = getLevelHistory(db, soulId);
 		const snapshot = history.find((h) => h.id === Number(snapshotResult.lastInsertRowid));
 		if (!snapshot) throw new SoulsValidationError('Level-up snapshot not found after insert.');
 
-		return { level: newLevel, snapshot };
+		return {
+			level: newLevel,
+			snapshot,
+			...(validation.warnings?.length ? { warnings: validation.warnings } : {}),
+		};
 	});
 }

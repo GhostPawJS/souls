@@ -1,3 +1,4 @@
+export type { EvidenceGateOptions } from './evidence_gate.ts';
 export type {
 	ConsolidationGroup,
 	LevelRecord,
@@ -7,6 +8,9 @@ export type {
 	LevelUpWarning,
 } from './levels/types.ts';
 export type { MaintenanceOptions, MaintenanceResult } from './maintenance.ts';
+export type { RenderPublicationOptions } from './publication.ts';
+export type { RefineWithEvidenceInput } from './refine_with_evidence.ts';
+export type { RevisionRecord } from './revisions.ts';
 export type {
 	CrystallizationCheckOptions,
 	CrystallizationCheckResult,
@@ -24,7 +28,9 @@ export type {
 	PromotionCandidate,
 	SearchShardsOptions,
 	ShardCountRecord,
+	ShardFilterStatus,
 	ShardListOptions,
+	ShardPage,
 	ShardRecord,
 	ShardStatus,
 	SourceCountRecord,

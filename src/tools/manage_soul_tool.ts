@@ -1,10 +1,13 @@
+import { getSoulsConfig, setSoulsConfig } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
 import type { SoulRecord } from '../souls/types.ts';
 import * as write from '../write.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
+	booleanSchema,
 	defineSoulsTool,
 	enumSchema,
+	integerArraySchema,
 	integerSchema,
 	objectSchema,
 	stringSchema,
@@ -17,24 +20,48 @@ import { toolSuccess } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
 
 export interface ManageSoulToolData {
+	warnings?: string[] | undefined;
 	soul: SoulRecord;
 }
 
 export type ManageSoulToolResult = ToolResult<ManageSoulToolData>;
+export interface ManageConfigData {
+	config: Record<string, string>;
+}
+type ManageResult = ToolResult<ManageSoulToolData | ManageConfigData>;
 
+export interface ManageSoulInput {
+	action: 'create' | 'update' | 'retire' | 'awaken' | 'config_set' | 'config_get' | 'config_list';
+	externalId?: string | undefined;
+	key?: string | undefined;
+	value?: string | undefined;
+	name?: string | undefined;
+	slug?: string | undefined;
+	strict?: boolean | undefined;
+	operator?: string | undefined;
+	reason?: string | undefined;
+	shardIds?: number[] | undefined;
+	essence?: string | undefined;
+	description?: string | undefined;
+	soulId?: number | undefined;
+}
 export function manageSoulToolHandler(
 	db: SoulsDb,
-	input: {
-		action: 'create' | 'update' | 'retire' | 'awaken';
-		name?: string | undefined;
-		essence?: string | undefined;
-		description?: string | undefined;
-		soulId?: number | undefined;
-	},
-): ManageSoulToolResult {
+	input: ManageSoulInput & { action: 'create' | 'update' | 'retire' | 'awaken' },
+): ManageSoulToolResult;
+export function manageSoulToolHandler(db: SoulsDb, input: ManageSoulInput): ManageResult;
+export function manageSoulToolHandler(db: SoulsDb, input: ManageSoulInput): ManageResult {
 	const invalid = validateToolInput(manageSoulTool, input);
 	if (invalid) return invalid;
 	try {
+		if (input.action.startsWith('config_')) {
+			if (input.action === 'config_set') setSoulsConfig(db, input.key ?? '', input.value ?? '');
+			const all = getSoulsConfig(db);
+			const config = input.key
+				? { [input.key]: all[input.key] ?? (input.key === 'strict' ? 'false' : '') }
+				: all;
+			return toolSuccess('Configuration.', { config });
+		}
 		if (input.action === 'create') {
 			if (!input.name || !input.essence || !input.description) {
 				return {
@@ -52,13 +79,15 @@ export function manageSoulToolHandler(
 				};
 			}
 			const soul = write.createSoul(db, {
+				...(input.externalId === undefined ? {} : { externalId: input.externalId }),
 				name: input.name,
+				...(input.slug === undefined ? {} : { slug: input.slug }),
 				essence: input.essence,
 				description: input.description,
 			});
 			return toolSuccess(
 				`Soul "${soul.name}" created (ID: ${soul.id}).`,
-				{ soul },
+				{ soul, ...(soul.warnings?.length ? { warnings: soul.warnings } : {}) },
 				{
 					entities: [toSoulRef(soul)],
 					next: [inspectSoulsItemNext(soul.id, soul.name)],
@@ -81,13 +110,19 @@ export function manageSoulToolHandler(
 				};
 			}
 			const soul = write.updateSoul(db, input.soulId, {
+				strict: input.strict,
+				operator: input.operator,
+				reason: input.reason,
+				shardIds: input.shardIds,
+				...(input.externalId === undefined ? {} : { externalId: input.externalId }),
 				name: input.name,
+				...(input.slug === undefined ? {} : { slug: input.slug }),
 				essence: input.essence,
 				description: input.description,
 			});
 			return toolSuccess(
 				`Soul ${input.soulId} updated.`,
-				{ soul },
+				{ soul, ...(soul.warnings?.length ? { warnings: soul.warnings } : {}) },
 				{
 					entities: [toSoulRef(soul)],
 				},
@@ -111,7 +146,7 @@ export function manageSoulToolHandler(
 			const soul = write.retireSoul(db, input.soulId);
 			return toolSuccess(
 				`Soul ${input.soulId} retired.`,
-				{ soul },
+				{ soul, ...(soul.warnings?.length ? { warnings: soul.warnings } : {}) },
 				{
 					entities: [toSoulRef(soul)],
 				},
@@ -135,7 +170,7 @@ export function manageSoulToolHandler(
 			const soul = write.awakenSoul(db, input.soulId);
 			return toolSuccess(
 				`Soul ${input.soulId} awakened.`,
-				{ soul },
+				{ soul, ...(soul.warnings?.length ? { warnings: soul.warnings } : {}) },
 				{
 					entities: [toSoulRef(soul)],
 					next: [inspectSoulsItemNext(input.soulId, soul.name)],
@@ -153,10 +188,10 @@ export function manageSoulToolHandler(
 
 export const manageSoulTool = defineSoulsTool<
 	Parameters<typeof manageSoulToolHandler>[1],
-	ManageSoulToolData
+	ManageSoulToolData | ManageConfigData
 >({
 	name: manageSoulToolName,
-	description: 'Create, update, retire, or awaken a soul.',
+	description: 'Create, update, retire, or awaken a soul; read or set database configuration.',
 	whenToUse:
 		'Use create to bootstrap a new soul with an initial essence. Use update to change the name, essence, or description without incrementing the level. Use retire to mark a soul as dormant. Use awaken to restore a dormant soul.',
 	whenNotToUse:
@@ -175,7 +210,18 @@ export const manageSoulTool = defineSoulsTool<
 	outputDescription: 'The created or modified soul record.',
 	inputSchema: objectSchema(
 		{
-			action: enumSchema(['create', 'update', 'retire', 'awaken'], 'The operation to perform.'),
+			action: enumSchema(
+				['create', 'update', 'retire', 'awaken', 'config_set', 'config_get', 'config_list'],
+				'The operation to perform.',
+			),
+			externalId: stringSchema('Unique external identity binding.'),
+			key: stringSchema('Configuration key (strict).'),
+			value: stringSchema('Configuration value: true or false.'),
+			strict: booleanSchema('Enforce readiness and evidence checks for essence changes.'),
+			operator: stringSchema('Named operator correction.'),
+			reason: stringSchema('Reason for the change.'),
+			shardIds: integerArraySchema('Supporting shard IDs.'),
+			slug: stringSchema('Stable soul slug.'),
 			name: stringSchema('Soul name.'),
 			essence: stringSchema('Soul essence narrative.'),
 			description: stringSchema('Soul description.'),

@@ -10,6 +10,7 @@ interface TranslateErrorOptions {
 }
 
 function mapSoulsErrorCode(name: string): { kind: ToolErrorKind; toolCode: ToolErrorCode } {
+	if (name === 'SoulsConflictError') return { kind: 'domain', toolCode: 'conflict' };
 	if (name === 'SoulsNotFoundError') return { kind: 'domain', toolCode: 'not_found' };
 	if (name === 'SoulsValidationError') return { kind: 'protocol', toolCode: 'invalid_input' };
 	if (name === 'SoulsStateError') return { kind: 'domain', toolCode: 'invalid_state' };

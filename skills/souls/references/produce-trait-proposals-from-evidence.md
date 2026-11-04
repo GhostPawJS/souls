@@ -12,6 +12,8 @@ Use this after running a maintenance pass and selecting a soul for refinement. O
 
 4. **Evaluate consolidation suggestions.** For each suggestion: are the paired principles genuinely saying the same thing in different words, or are they usefully distinct? If genuinely redundant, propose a revision to the higher-citation trait to absorb the other.
 
+For atomic application, use `refine_soul` action `refine_with_evidence` (`refinement apply` in the CLI), passing shardIds and optionally expectedRevision. Readiness and evidence checks warn by default; strict enforces them. Named operator corrections bypass the gate and are audited. Inspect with history=true to review wording changes.
+
 5. **Produce a ranked list of proposed mutations:** (1) new traits from novel clusters, (2) revisions for stale or poorly evidenced traits, (3) reverts for traits with negative-signal evidence. Limit to the highest-value changes — do not saturate the soul with too many mutations at once.
 
 6. **Apply each approved proposal** using `refine_soul` with the appropriate action (add_trait, revise_trait, revert_trait). Always include a specific provenance that references the evidence that drove the mutation.

@@ -3,6 +3,7 @@ import type { SoulRecord, SoulRow } from './types.ts';
 export function mapSoulRow(row: SoulRow): SoulRecord {
 	return {
 		id: row.id,
+		...(row.external_id == null ? {} : { externalId: row.external_id }),
 		name: row.name,
 		slug: row.slug,
 		essence: row.essence,

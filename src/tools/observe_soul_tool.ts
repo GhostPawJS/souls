@@ -7,6 +7,7 @@ import {
 	booleanSchema,
 	defineSoulsTool,
 	integerArraySchema,
+	integerSchema,
 	objectSchema,
 	stringArraySchema,
 	stringSchema,
@@ -20,12 +21,14 @@ import { toolSuccess, toolWarning } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
 
 export interface ObserveSoulDropData {
+	duplicate?: boolean;
 	shardId: number;
 	shard: ShardRecord;
 	crystallizationTriggers: number[];
 }
 
 export interface ObserveSoulBatchData {
+	duplicates: number;
 	result: DropShardsResult;
 	shardCount: number;
 	crystallizationTriggers: number[];
@@ -47,6 +50,10 @@ export function observeSoulToolHandler(
 	input: {
 		action: 'drop' | 'drop_batch' | 'reveal';
 		content?: string | undefined;
+		occurredAt?: number | string | undefined;
+		idempotencyKey?: string | undefined;
+		ref?: string | undefined;
+		now?: number | undefined;
 		source?: string | undefined;
 		soulIds?: number[] | undefined;
 		tags?: string[] | undefined;
@@ -74,15 +81,24 @@ export function observeSoulToolHandler(
 					},
 				};
 			}
-			const result = write.dropShard(db, {
-				content: input.content,
-				source: input.source,
-				soulIds: input.soulIds,
-				tags: input.tags,
-				sealed: input.sealed,
-			});
+			const result = write.dropShard(
+				db,
+				{
+					content: input.content,
+					source: input.source,
+					soulIds: input.soulIds,
+					tags: input.tags,
+					sealed: input.sealed,
+					now: typeof input.occurredAt === 'number' ? input.occurredAt : input.now,
+					occurredAt: input.occurredAt,
+					idempotencyKey: input.idempotencyKey,
+					ref: input.ref,
+				},
+				{ insertedAt: input.now ?? Date.now() },
+			);
 			const data: ObserveSoulDropData = {
 				shardId: result.shard.id,
+				...(result.duplicate ? { duplicate: true } : {}),
 				shard: result.shard,
 				crystallizationTriggers: result.crystallizationTriggers,
 			};
@@ -100,7 +116,9 @@ export function observeSoulToolHandler(
 				next.push(inspectSoulsItemNext(soulId));
 			}
 			return toolSuccess(
-				`Shard ${result.shard.id} deposited${result.crystallizationTriggers.length > 0 ? ' — crystallization threshold reached' : ''}.`,
+				result.duplicate
+					? '0 shards deposited, 1 duplicate skipped.'
+					: `1 shard deposited, 0 duplicates skipped${result.crystallizationTriggers.length > 0 ? ' — crystallization threshold reached' : ''}.`,
 				data,
 				{ entities: [toShardRef(result.shard)], next, warnings },
 			);
@@ -121,14 +139,20 @@ export function observeSoulToolHandler(
 				};
 			}
 			const result = write.dropShards(db, input.shards);
+			const duplicates = result.results?.filter((item) => item.duplicate).length ?? 0;
 			const data: ObserveSoulBatchData = {
+				duplicates,
 				result,
 				shardCount: result.shards.length,
 				crystallizationTriggers: result.crystallizationTriggers,
 			};
-			return toolSuccess(`${summarizeCount(result.shards.length, 'shard')} deposited.`, data, {
-				entities: result.shards.map(toShardRef),
-			});
+			return toolSuccess(
+				`${summarizeCount(result.shards.length - duplicates, 'shard')} deposited, ${summarizeCount(duplicates, 'duplicate')} skipped.`,
+				data,
+				{
+					entities: result.shards.map(toShardRef),
+				},
+			);
 		}
 
 		if (input.action === 'reveal') {
@@ -189,6 +213,13 @@ export const observeSoulTool = defineSoulsTool<
 	inputSchema: objectSchema(
 		{
 			action: { type: 'string', enum: ['drop', 'drop_batch', 'reveal'] },
+			occurredAt: {
+				oneOf: [{ type: 'integer' }, { type: 'string' }],
+				description: 'Observation timestamp, ISO or epoch milliseconds.',
+			},
+			idempotencyKey: stringSchema('Unique ingestion key.'),
+			ref: stringSchema('External evidence reference.'),
+			now: integerSchema('Timestamp in epoch milliseconds; occurredAt takes precedence.'),
 			content: stringSchema('Behavioral observation text.'),
 			source: stringSchema('Evidence channel origin label.'),
 			soulIds: integerArraySchema('Soul IDs to attribute this observation to.'),
@@ -196,7 +227,17 @@ export const observeSoulTool = defineSoulsTool<
 			sealed: booleanSchema('If true, shard is deferred until revealed.'),
 			shards: arraySchema(
 				objectSchema(
-					{ content: stringSchema(''), source: stringSchema(''), soulIds: integerArraySchema('') },
+					{
+						content: stringSchema('Observation text.'),
+						source: stringSchema('Evidence source.'),
+						soulIds: integerArraySchema('Attributed souls.'),
+						tags: stringArraySchema('Topic tags.'),
+						sealed: booleanSchema('Defer until revealed.'),
+						occurredAt: { oneOf: [{ type: 'integer' }, { type: 'string' }] },
+						idempotencyKey: stringSchema('Unique ingestion key.'),
+						ref: stringSchema('External evidence reference.'),
+						now: integerSchema('Timestamp in epoch milliseconds.'),
+					},
 					['content', 'source', 'soulIds'],
 				),
 				'Array of shards for batch deposit.',

@@ -1,4 +1,8 @@
+export { setSoulsConfig } from './config.ts';
 export { levelUp, revertLevelUp } from './levels/index.ts';
+export { publishSoul } from './publication.ts';
+export { refineWithEvidence } from './refine_with_evidence.ts';
+export { reviewNoChange } from './review.ts';
 export {
 	citeShard,
 	dropShard,

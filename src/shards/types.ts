@@ -2,6 +2,10 @@ export const SHARD_STATUSES = ['pending', 'faded'] as const;
 export type ShardStatus = (typeof SHARD_STATUSES)[number];
 
 export interface ShardRow {
+	inserted_at?: number | null;
+	occurred_at?: number | null;
+	idempotency_key?: string | null;
+	ref?: string | null;
 	id: number;
 	content: string;
 	source: string;
@@ -12,6 +16,10 @@ export interface ShardRow {
 }
 
 export interface ShardRecord {
+	insertedAt?: number | null;
+	occurredAt?: number | null;
+	idempotencyKey?: string | null;
+	ref?: string | null;
 	id: number;
 	content: string;
 	source: string;
@@ -25,6 +33,9 @@ export interface ShardRecord {
 }
 
 export interface DropShardInput {
+	occurredAt?: number | string | undefined;
+	idempotencyKey?: string | undefined;
+	ref?: string | undefined;
 	content: string;
 	source: string;
 	soulIds: number[];
@@ -34,16 +45,27 @@ export interface DropShardInput {
 }
 
 export interface DropShardResult {
+	duplicate?: boolean;
 	shard: ShardRecord;
 	crystallizationTriggers: number[];
 }
 
 export interface DropShardsResult {
+	results?: DropShardResult[];
 	shards: ShardRecord[];
 	crystallizationTriggers: number[];
 }
 
+export type ShardFilterStatus = 'pending' | 'sealed' | 'faded' | 'all';
+export interface ShardPage {
+	items: ShardRecord[];
+	total: number;
+	hasMore: boolean;
+}
+
 export interface ShardListOptions {
+	status?: ShardFilterStatus | undefined;
+	offset?: number | undefined;
 	soulId?: number | undefined;
 	source?: string | undefined;
 	tags?: string[] | undefined;
@@ -52,7 +74,7 @@ export interface ShardListOptions {
 	now?: number | undefined;
 }
 
-export interface SearchShardsOptions {
+export interface SearchShardsOptions extends ShardListOptions {
 	soulId?: number | undefined;
 	limit?: number | undefined;
 	shardExpiryDays?: number | undefined;
@@ -88,6 +110,7 @@ export interface CrossSoulOverlap {
 }
 
 export interface EvidenceCluster {
+	totalMembers?: number | undefined;
 	members: ShardRecord[];
 	weight: number;
 	sourceDiversity: number;
@@ -141,6 +164,9 @@ export interface EvidenceReport {
 }
 
 export interface FormatEvidenceOptions {
+	negationWords?: string[] | undefined;
+	maxMembersPerCluster?: number | undefined;
+	full?: boolean | undefined;
 	clusterThreshold?: number | undefined;
 	tags?: string[] | undefined;
 	query?: string | undefined;

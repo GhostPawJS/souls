@@ -38,6 +38,7 @@ export interface LevelUpPlan {
 }
 
 export interface LevelUpResult {
+	warnings?: string[];
 	level: number;
 	snapshot: LevelRecord;
 }

@@ -24,7 +24,7 @@ export function computeTraitSignals(
 	const traits = db
 		.prepare(
 			`SELECT t.id AS traitId, t.principle, t.generation, t.created_at, t.updated_at,
-			        COUNT(DISTINCT sc.shard_id) AS citationCount
+			        MAX(sc.created_at) AS last_cited_at, COUNT(DISTINCT sc.shard_id) AS citationCount
 			 FROM soul_traits t
 			 LEFT JOIN shard_citations sc ON sc.trait_id = t.id
 			 WHERE t.soul_id = ? AND t.status = 'active'
@@ -37,6 +37,7 @@ export function computeTraitSignals(
 			created_at: number;
 			updated_at: number;
 			citationCount: number;
+			last_cited_at: number | null;
 		}>(soulId);
 
 	return traits.map((t) => {
@@ -50,8 +51,8 @@ export function computeTraitSignals(
 		// essenceRedundancy: trigram Jaccard between principle and essence
 		const essenceRedundancy = trigramJaccard(t.principle, soul.essence);
 
-		// stale: trait unchanged for more than staleDays
-		const lastUpdated = Math.max(t.created_at, t.updated_at);
+		// Staleness follows latest evidence, falling back to creation for uncited traits.
+		const lastUpdated = t.last_cited_at ?? t.created_at;
 		const stale = now - lastUpdated > staleMs;
 
 		// survivalCount: level-ups survived since trait was added

@@ -127,7 +127,7 @@ evidence reports:
 
 - **Tenure** — normalized age relative to soul age (0..1). High tenure means
   deeply established.
-- **Staleness** — flagged when unchanged for `staleDays` (default: 90 days).
+- **Staleness** — flagged when the latest citation is older than `staleDays` (default: 90 days), falling back to creation for uncited or legacy undated citations. Wording edits do not refresh evidence.
   A trait without recent shard citations may be dead weight.
 - **Citation count** — how many shards cite this trait. Well-evidenced traits
   have high counts.

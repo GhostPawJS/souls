@@ -229,7 +229,13 @@ const byTag = read.shardCountsByTag(db, soulId);
 const perSoul = read.shardCountsPerSoul(db);
 ```
 
-`searchShards` uses FTS5 full-text search with BM25 ranking.
+`searchShards` uses FTS5 full-text search, ordered by recency. Both query
+functions default to 100 results and cap explicit limits at 1000. Both accept
+`status: 'pending' | 'sealed' | 'faded' | 'all'` and `offset`. Lists default to
+pending unsealed shards; searches default to all statuses. Query and tags are
+combined with AND. Use `listShardsPage` / `searchShardsPage` for
+`{ items, total, hasMore }`; facade and CLI JSON retain `shards` and `count`
+and add `total` and `hasMore`.
 
 ### Source Labels
 
@@ -299,10 +305,11 @@ thresholds are deterministic — trigram Jaccard, FTS5 BM25, count-based.
 ### Validate a Plan
 
 ```ts
-const { errors, warnings } = read.validateLevelUpPlan(db, soulId, plan);
-// errors.missingTraitIds    — active traits not accounted for
-// errors.duplicateTraitIds  — traits appearing in multiple groups
-// errors.invalidTraitIds    — IDs that don't belong to this soul
+const validation = read.validateLevelUpPlan(db, soulId, plan, { strict: true });
+const { errors, warnings } = validation;
+// validation.error?.missingTraitIds    — active traits not accounted for
+// validation.error?.duplicateTraitIds  — traits appearing in multiple groups
+// validation.error?.invalidTraitIds    — IDs that don't belong to this soul
 // warnings                  — weak consolidation, premature promotion
 ```
 
@@ -512,3 +519,53 @@ Search reads behavioral shards. Creating a soul does not add searchable shards;
 use `shard drop` to deposit observations. Core commands work offline.
 
 See [installation instructions](../README.md#install).
+
+### Refinement checks and history
+
+`addTrait` and essence changes in `updateSoul` accept `shardIds`, `strict`,
+`operator`, and `reason`. Readiness and missing citations produce string
+warnings by default; strict mode rejects either condition. A non-empty operator
+name bypasses the gate and records an operator correction in `soul_revisions`.
+Trait citations and mutations share a transaction. Essence evidence is retained
+in `soul_revision_shards`, linked to the essence revision because trait citations
+require a trait target. `reviseTrait` also accepts `reason` and `operator`.
+
+`read.getRevisionHistory(db, { soulId?, traitId?, limit? })` returns newest-first
+revision rows, defaulting to 100 (maximum 1000). Inspect adds history only with
+`history: true`. `write.refineWithEvidence` accepts `soulId`, `action` (`add` or
+`revise`), optional `traitId`, `principle`, `provenance`, `shardIds`, and optional
+`reason`, `strict`, `operator`, `expectedRevision`. It mutates, cites, and stamps
+attunement in one transaction. A changed latest soul revision ID raises
+`SoulsConflictError`; 0 means no revisions. The facade action is
+`refine_with_evidence`, and the CLI command is `refinement apply` (revise when
+`--trait-id` is supplied). CLI flags include `--strict`, `--operator`, `--reason`,
+and `--expected-revision`. New library warning strings appear in facade data;
+existing facade warning objects retain their format. CLI warnings go to stderr.
+
+Level-up validation reports over-cap results, increases while already at
+capacity, empty merge groups, and blank merged wording/provenance in `errors`.
+These new conditions warn by default and make `valid` false only with strict.
+Existing missing/duplicate/invalid trait checks retain their failure behavior.
+Semantic warnings flag source pairs below 0.15 trigram similarity (or singleton
+merges) and promotions surviving fewer than two level-ups. Execution accepts
+`strict` and `traitLimit`; reactivation accepts these options too and warns at
+capacity unless strict is enabled. Existing add-trait capacity checks remain.
+The refine facade accepts `traitLimit` to override capacity.
+
+Evidence reports cap rendered and structured members at five per cluster;
+`maxMembersPerCluster` changes this and `full: true` retains the selected raw
+members in the payload. Markdown shows `+N more` when truncated. Alignment takes
+the maximum trigram similarity over every member, so order does not affect it.
+Staleness follows the latest citation timestamp (creation time for uncited or
+legacy undated citations). Editing wording does not refresh evidence. Tension
+negation cues are English-only; `detectTraitTensions` accepts `negationWords` to
+extend them. These heuristics do not provide language-neutral contradiction
+analysis.
+
+Observe single-drop accepts `occurredAt` or `now` in epoch milliseconds;
+`occurredAt` takes precedence. Batch members accept content, source, soulIds,
+tags, sealed, and now. Manage-soul exposes `slug`. Maintenance fades and checks
+readiness within one transaction.
+
+`read.formatEvidence(db, soulId, { negationWords: ["nicht"] })` extends the
+English-only tension cues through the public library facade.

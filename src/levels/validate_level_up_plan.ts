@@ -1,14 +1,21 @@
+import { resolveStrict } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
+import { trigramJaccard } from '../lib/trigram_jaccard.ts';
+import { getTraitLimit } from '../traits/get_trait_limit.ts';
 import type { TraitRecord } from '../traits/types.ts';
 import type { LevelUpPlan, LevelUpValidationError } from './types.ts';
 
 export interface ValidationResult {
 	valid: true;
+	warnings?: string[];
+	errors?: string[];
 }
 
 export interface ValidationFailure {
 	valid: false;
+	warnings?: string[];
+	errors?: string[];
 	error: LevelUpValidationError;
 }
 
@@ -16,6 +23,7 @@ export function validateLevelUpPlan(
 	db: SoulsDb,
 	soulId: number,
 	plan: LevelUpPlan,
+	options?: { strict?: boolean; traitLimit?: number },
 ): ValidationResult | ValidationFailure {
 	if (!plan.newEssence || plan.newEssence.trim().length === 0) {
 		throw new SoulsValidationError('Level-up plan must include a non-empty newEssence.');
@@ -47,12 +55,55 @@ export function validateLevelUpPlan(
 	// Check for missing (active traits not in plan)
 	const missingTraitIds = [...activeIds].filter((id) => !seen.has(id));
 
+	const warnings: string[] = [];
+	const errors: string[] = [];
+	const limit = getTraitLimit(options);
+	const resultingCount = plan.carriedTraitIds.length + plan.consolidations.length;
+	if (resultingCount > limit && resultingCount >= activeRows.length)
+		errors.push(`Resulting active trait count ${resultingCount} exceeds trait limit ${limit}.`);
+	if (activeRows.length >= limit && resultingCount > activeRows.length)
+		errors.push('Cannot increase active traits while at or above the trait limit.');
+	for (const group of plan.consolidations) {
+		if (!group.sourceTraitIds.length) errors.push('Consolidation groups must not be empty.');
+		if (!group.mergedPrinciple?.trim() || !group.mergedProvenance?.trim())
+			errors.push('Merged principle and provenance must be non-empty.');
+		const members = activeRows.filter((t) => group.sourceTraitIds.includes(t.id));
+		if (
+			members.length < 2 ||
+			members.some((a, i) =>
+				members.slice(i + 1).some((b) => trigramJaccard(a.principle, b.principle) < 0.15),
+			)
+		)
+			warnings.push('Weak consolidation: source traits have little wording overlap.');
+	}
+	const level =
+		db.prepare('SELECT level FROM souls WHERE id = ?').get<{ level: number }>(soulId)?.level ?? 1;
+	for (const id of plan.promotedTraitIds) {
+		const trait = db
+			.prepare('SELECT generation FROM soul_traits WHERE id = ?')
+			.get<{ generation: number }>(id);
+		if (trait && level - trait.generation < 2)
+			warnings.push(`Premature promotion: trait ${id} has survived fewer than two level-ups.`);
+	}
 	if (duplicateTraitIds.length > 0 || invalidTraitIds.length > 0 || missingTraitIds.length > 0) {
 		return {
 			valid: false,
 			error: { missingTraitIds, duplicateTraitIds, invalidTraitIds },
+			...(errors.length ? { errors } : {}),
+			...(warnings.length || errors.length ? { warnings: [...warnings, ...errors] } : {}),
 		};
 	}
 
-	return { valid: true };
+	if (errors.length && resolveStrict(db, options?.strict))
+		return {
+			valid: false,
+			error: { missingTraitIds: [], duplicateTraitIds: [], invalidTraitIds: [] },
+			errors,
+			warnings,
+		};
+	return {
+		valid: true,
+		...(errors.length ? { errors } : {}),
+		...(warnings.length || errors.length ? { warnings: [...warnings, ...errors] } : {}),
+	};
 }

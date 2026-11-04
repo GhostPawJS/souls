@@ -15,6 +15,8 @@ export interface SurfaceTool<TCtx> {
 		positionals?: string[];
 		/** Input properties whose CLI value may be `@path`, `@-` or `@@text`; every other value is literal. */
 		fileArgs?: readonly string[];
+		/** Optional compatibility schema used only when rendering command help. */
+		helpInputSchema?: JsonSchema;
 		action?: {
 			property: string;
 			verbs?: Record<string, string>;

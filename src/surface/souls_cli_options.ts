@@ -2,10 +2,24 @@ import type { SoulsDb } from '../database.ts';
 import { soulsSkills } from '../skills/skill_registry.ts';
 import type { ToolCliOptions } from '../surfaces/cli.ts';
 import { soulsVersion } from '../version.ts';
+import { resolveSoulReference, runHostCommand } from './host_commands.ts';
+import { resolveSoulsDbPath } from './resolve_souls_db_path.ts';
 import { soulsSurfaceTools } from './souls_surface_tools.ts';
 
 export const soulsCliOptions: ToolCliOptions<SoulsDb> = {
 	bin: 'ghostpaw-souls',
+	defaultDbPath: () => (process.env.GHOSTPAW_SOULS_DB ? undefined : resolveSoulsDbPath()),
+	customCommand: runHostCommand,
+	resolveReference: resolveSoulReference,
+	prepareInput: (input, toolName) => {
+		if (
+			toolName === 'observe_soul' &&
+			typeof input.occurredAt === 'string' &&
+			/^\d+$/.test(input.occurredAt)
+		) {
+			input.occurredAt = Number(input.occurredAt);
+		}
+	},
 	version: soulsVersion,
 	description: 'Local cognitive identity and behavioral evidence engine',
 	tools: soulsSurfaceTools,

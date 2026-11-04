@@ -1,6 +1,7 @@
 export type ToolEntityKind = 'soul' | 'trait' | 'shard' | 'level';
 export type ToolOutcomeKind = 'success' | 'no_op' | 'needs_clarification' | 'error';
 export type ToolErrorCode =
+	| 'conflict'
 	| 'clarification_needed'
 	| 'invalid_input'
 	| 'invalid_state'

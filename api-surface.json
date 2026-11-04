@@ -5,6 +5,9 @@
 	".:exports.errors.isSoulsError": {
 		"kind": "function"
 	},
+	".:exports.errors.SoulsConflictError": {
+		"kind": "function"
+	},
 	".:exports.errors.SoulsError": {
 		"kind": "function"
 	},
@@ -130,6 +133,9 @@
 	".:exports.ether.search": {
 		"kind": "function"
 	},
+	".:exports.getSoulsConfig": {
+		"kind": "function"
+	},
 	".:exports.initSoulsTables": {
 		"kind": "function"
 	},
@@ -145,19 +151,31 @@
 	".:exports.read.crystallizationReadiness": {
 		"kind": "function"
 	},
+	".:exports.read.diffSoul": {
+		"kind": "function"
+	},
 	".:exports.read.formatEvidence": {
 		"kind": "function"
 	},
 	".:exports.read.getLevelHistory": {
 		"kind": "function"
 	},
+	".:exports.read.getRevisionHistory": {
+		"kind": "function"
+	},
 	".:exports.read.getSoul": {
+		"kind": "function"
+	},
+	".:exports.read.getSoulByExternalId": {
 		"kind": "function"
 	},
 	".:exports.read.getSoulByName": {
 		"kind": "function"
 	},
 	".:exports.read.getSoulProfile": {
+		"kind": "function"
+	},
+	".:exports.read.getSoulsConfig": {
 		"kind": "function"
 	},
 	".:exports.read.getTrait": {
@@ -172,6 +190,9 @@
 	".:exports.read.listShards": {
 		"kind": "function"
 	},
+	".:exports.read.listShardsPage": {
+		"kind": "function"
+	},
 	".:exports.read.listSouls": {
 		"kind": "function"
 	},
@@ -181,13 +202,22 @@
 	".:exports.read.pendingShardCount": {
 		"kind": "function"
 	},
+	".:exports.read.renderPublication": {
+		"kind": "function"
+	},
 	".:exports.read.renderSoul": {
+		"kind": "function"
+	},
+	".:exports.read.resolveStrict": {
 		"kind": "function"
 	},
 	".:exports.read.runMaintenance": {
 		"kind": "function"
 	},
 	".:exports.read.searchShards": {
+		"kind": "function"
+	},
+	".:exports.read.searchShardsPage": {
 		"kind": "function"
 	},
 	".:exports.read.shardCountsBySource": {
@@ -200,6 +230,12 @@
 		"kind": "function"
 	},
 	".:exports.read.validateLevelUpPlan": {
+		"kind": "function"
+	},
+	".:exports.resolveStrict": {
+		"kind": "function"
+	},
+	".:exports.setSoulsConfig": {
 		"kind": "function"
 	},
 	".:exports.skills": {
@@ -294,7 +330,7 @@
 	},
 	".:exports.skills.produceTraitProposalsFromEvidenceSkill.content": {
 		"kind": "string",
-		"value": "# Produce Trait Proposals from Evidence\n\nUse this after running a maintenance pass and selecting a soul for refinement. Only proceed if crystallization is ready.\n\n## Procedure\n\n1. **Get the evidence report.** Use `inspect_souls_item` with includeEvidence=true for the soul. Read the full evidence report — clusters, trait signals, tensions, consolidation suggestions, promotion candidates, and suggested actions.\n\n2. **Evaluate novel clusters.** For each novel cluster (alignment.kind = \"novel\"): is the pattern sufficiently distinct from existing traits? Does it represent a real behavioral pattern or a one-off incident? Novel clusters with weight > 1.5 and 2+ sources warrant a new trait proposal.\n\n3. **Evaluate stale traits.** For each stale trait signal (stale = true): does the principle still reflect current behavior? Can you cite 2+ shards supporting it? If not, it is a revert or revision candidate.\n\n4. **Evaluate consolidation suggestions.** For each suggestion: are the paired principles genuinely saying the same thing in different words, or are they usefully distinct? If genuinely redundant, propose a revision to the higher-citation trait to absorb the other.\n\n5. **Produce a ranked list of proposed mutations:** (1) new traits from novel clusters, (2) revisions for stale or poorly evidenced traits, (3) reverts for traits with negative-signal evidence. Limit to the highest-value changes — do not saturate the soul with too many mutations at once.\n\n6. **Apply each approved proposal** using `refine_soul` with the appropriate action (add_trait, revise_trait, revert_trait). Always include a specific provenance that references the evidence that drove the mutation.\n\n7. **Stamp attunement** using `refine_soul` with action=stamp_attuned to record the attunement timestamp.\n\n## Notes\n\nDo not act on a single shard. Do not act on a single source. Evidence must converge across 2+ sources and 2+ clusters before a mutation is warranted. The suggestedActions list in the report is a starting triage, not a binding instruction."
+		"value": "# Produce Trait Proposals from Evidence\n\nUse this after running a maintenance pass and selecting a soul for refinement. Only proceed if crystallization is ready.\n\n## Procedure\n\n1. **Get the evidence report.** Use `inspect_souls_item` with includeEvidence=true for the soul. Read the full evidence report — clusters, trait signals, tensions, consolidation suggestions, promotion candidates, and suggested actions.\n\n2. **Evaluate novel clusters.** For each novel cluster (alignment.kind = \"novel\"): is the pattern sufficiently distinct from existing traits? Does it represent a real behavioral pattern or a one-off incident? Novel clusters with weight > 1.5 and 2+ sources warrant a new trait proposal.\n\n3. **Evaluate stale traits.** For each stale trait signal (stale = true): does the principle still reflect current behavior? Can you cite 2+ shards supporting it? If not, it is a revert or revision candidate.\n\n4. **Evaluate consolidation suggestions.** For each suggestion: are the paired principles genuinely saying the same thing in different words, or are they usefully distinct? If genuinely redundant, propose a revision to the higher-citation trait to absorb the other.\n\nFor atomic application, use `refine_soul` action `refine_with_evidence` (`refinement apply` in the CLI), passing shardIds and optionally expectedRevision. Readiness and evidence checks warn by default; strict enforces them. Named operator corrections bypass the gate and are audited. Inspect with history=true to review wording changes.\n\n5. **Produce a ranked list of proposed mutations:** (1) new traits from novel clusters, (2) revisions for stale or poorly evidenced traits, (3) reverts for traits with negative-signal evidence. Limit to the highest-value changes — do not saturate the soul with too many mutations at once.\n\n6. **Apply each approved proposal** using `refine_soul` with the appropriate action (add_trait, revise_trait, revert_trait). Always include a specific provenance that references the evidence that drove the mutation.\n\n7. **Stamp attunement** using `refine_soul` with action=stamp_attuned to record the attunement timestamp.\n\n## Notes\n\nDo not act on a single shard. Do not act on a single source. Evidence must converge across 2+ sources and 2+ clusters before a mutation is warranted. The suggestedActions list in the report is a starting triage, not a binding instruction."
 	},
 	".:exports.skills.produceTraitProposalsFromEvidenceSkill.description": {
 		"kind": "string",
@@ -401,6 +437,9 @@
 	},
 	".:exports.soul.soulsSoulTraits.1": {
 		"kind": "object"
+	},
+	".:exports.SoulsConflictError": {
+		"kind": "function"
 	},
 	".:exports.SoulsError": {
 		"kind": "function"
@@ -553,7 +592,7 @@
 	},
 	".:exports.tools.manageSoulTool.description": {
 		"kind": "string",
-		"value": "Create, update, retire, or awaken a soul."
+		"value": "Create, update, retire, or awaken a soul; read or set database configuration."
 	},
 	".:exports.tools.manageSoulTool.handler": {
 		"kind": "function"
@@ -675,7 +714,7 @@
 	},
 	".:exports.tools.refineSoulTool.description": {
 		"kind": "string",
-		"value": "Add, revise, revert, or reactivate traits; cite shards to traits; stamp attunement."
+		"value": "Add, revise, revert, or reactivate traits; cite evidence; apply atomic refinement with revision conflict checks."
 	},
 	".:exports.tools.refineSoulTool.handler": {
 		"kind": "function"
@@ -1021,7 +1060,13 @@
 	".:exports.write.levelUp": {
 		"kind": "function"
 	},
+	".:exports.write.publishSoul": {
+		"kind": "function"
+	},
 	".:exports.write.reactivateTrait": {
+		"kind": "function"
+	},
+	".:exports.write.refineWithEvidence": {
 		"kind": "function"
 	},
 	".:exports.write.retireSoul": {
@@ -1036,7 +1081,13 @@
 	".:exports.write.revertTrait": {
 		"kind": "function"
 	},
+	".:exports.write.reviewNoChange": {
+		"kind": "function"
+	},
 	".:exports.write.reviseTrait": {
+		"kind": "function"
+	},
+	".:exports.write.setSoulsConfig": {
 		"kind": "function"
 	},
 	".:exports.write.stampAttuned": {
@@ -1053,6 +1104,10 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"principle": {
 				"type": "string",
 				"optional": false
@@ -1060,9 +1115,24 @@
 			"provenance": {
 				"type": "string",
 				"optional": false
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
+			"strict": {
+				"type": "boolean | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface AddTraitInput { principle: string; provenance: string; now?: number | undefined; }"
+		"definition": "interface AddTraitInput extends EvidenceGateOptions { principle: string; provenance: string; now?: number | undefined; }",
+		"references": {
+			"EvidenceGateOptions": ".:public.EvidenceGateOptions"
+		}
 	},
 	".:public.arraySchema": {
 		"kind": "value",
@@ -1147,6 +1217,10 @@
 				"type": "string",
 				"optional": false
 			},
+			"externalId": {
+				"type": "string | null | undefined",
+				"optional": true
+			},
 			"name": {
 				"type": "string",
 				"optional": false
@@ -1160,7 +1234,7 @@
 				"optional": true
 			}
 		},
-		"definition": "interface CreateSoulInput { name: string; essence: string; description: string; slug?: string | null | undefined; now?: number | undefined; }"
+		"definition": "interface CreateSoulInput { externalId?: string | null | undefined; name: string; essence: string; description: string; slug?: string | null | undefined; now?: number | undefined; }"
 	},
 	".:public.CrossSoulOverlap": {
 		"kind": "type",
@@ -1224,12 +1298,16 @@
 				"type": "boolean",
 				"optional": false
 			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"sourceDiversity": {
 				"type": "number",
 				"optional": false
 			}
 		},
-		"definition": "interface CrystallizationCheckResult { ready: boolean; pendingCount: number; sourceDiversity: number; ageSpreadDays: number; clusterCount: number; priorityScore: number; }"
+		"definition": "interface CrystallizationCheckResult { ready: boolean; reason?: string; pendingCount: number; sourceDiversity: number; ageSpreadDays: number; clusterCount: number; priorityScore: number; }"
 	},
 	".:public.CrystallizationRecord": {
 		"kind": "type",
@@ -1306,8 +1384,20 @@
 				"type": "string",
 				"optional": false
 			},
+			"idempotencyKey": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"now": {
 				"type": "number | undefined",
+				"optional": true
+			},
+			"occurredAt": {
+				"type": "string | number | undefined",
+				"optional": true
+			},
+			"ref": {
+				"type": "string | undefined",
 				"optional": true
 			},
 			"sealed": {
@@ -1327,7 +1417,7 @@
 				"optional": true
 			}
 		},
-		"definition": "interface DropShardInput { content: string; source: string; soulIds: number[]; tags?: string[] | undefined; sealed?: boolean | undefined; now?: number | undefined; }"
+		"definition": "interface DropShardInput { occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; content: string; source: string; soulIds: number[]; tags?: string[] | undefined; sealed?: boolean | undefined; now?: number | undefined; }"
 	},
 	".:public.DropShardResult": {
 		"kind": "type",
@@ -1337,12 +1427,16 @@
 				"type": "number[]",
 				"optional": false
 			},
+			"duplicate": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
 			"shard": {
 				"type": "ShardRecord",
 				"optional": false
 			}
 		},
-		"definition": "interface DropShardResult { shard: ShardRecord; crystallizationTriggers: number[]; }",
+		"definition": "interface DropShardResult { duplicate?: boolean; shard: ShardRecord; crystallizationTriggers: number[]; }",
 		"references": {
 			"ShardRecord": ".:public.ShardRecord"
 		}
@@ -1355,13 +1449,18 @@
 				"type": "number[]",
 				"optional": false
 			},
+			"results": {
+				"type": "DropShardResult[] | undefined",
+				"optional": true
+			},
 			"shards": {
 				"type": "ShardRecord[]",
 				"optional": false
 			}
 		},
-		"definition": "interface DropShardsResult { shards: ShardRecord[]; crystallizationTriggers: number[]; }",
+		"definition": "interface DropShardsResult { results?: DropShardResult[]; shards: ShardRecord[]; crystallizationTriggers: number[]; }",
 		"references": {
+			"DropShardResult": ".:public.DropShardResult",
 			"ShardRecord": ".:public.ShardRecord"
 		}
 	},
@@ -1378,6 +1477,32 @@
 	".:public.errors.isSoulsError": {
 		"kind": "value",
 		"type": "(value: unknown) => value is SoulsError"
+	},
+	".:public.errors.SoulsConflictError": {
+		"kind": "type",
+		"type": "SoulsConflictError",
+		"members": {
+			"cause": {
+				"type": "unknown",
+				"optional": true
+			},
+			"message": {
+				"type": "string",
+				"optional": false
+			},
+			"name": {
+				"type": "string",
+				"optional": false
+			},
+			"stack": {
+				"type": "string | undefined",
+				"optional": true
+			}
+		},
+		"definition": "type errors_SoulsConflictError = SoulsConflictError; errors_SoulsConflictError: typeof SoulsConflictError",
+		"references": {
+			"SoulsConflictError": ".:public.SoulsConflictError"
+		}
 	},
 	".:public.errors.SoulsError": {
 		"kind": "type",
@@ -2146,7 +2271,7 @@
 		"kind": "type",
 		"type": "EtherSourceKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -2413,7 +2538,7 @@
 		"kind": "type",
 		"type": "EtherSourceKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -3036,17 +3161,48 @@
 				"type": "number",
 				"optional": false
 			},
+			"totalMembers": {
+				"type": "number | undefined",
+				"optional": true
+			},
 			"weight": {
 				"type": "number",
 				"optional": false
 			}
 		},
-		"definition": "interface EvidenceCluster { members: ShardRecord[]; weight: number; sourceDiversity: number; avgFreshness: number; alignment: TraitAlignment; sharedWith: CrossSoulOverlap[]; }",
+		"definition": "interface EvidenceCluster { totalMembers?: number | undefined; members: ShardRecord[]; weight: number; sourceDiversity: number; avgFreshness: number; alignment: TraitAlignment; sharedWith: CrossSoulOverlap[]; }",
 		"references": {
 			"CrossSoulOverlap": ".:public.CrossSoulOverlap",
 			"ShardRecord": ".:public.ShardRecord",
 			"TraitAlignment": ".:public.TraitAlignment"
 		}
+	},
+	".:public.EvidenceGateOptions": {
+		"kind": "type",
+		"type": "EvidenceGateOptions",
+		"members": {
+			"now": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
+			"strict": {
+				"type": "boolean | undefined",
+				"optional": true
+			}
+		},
+		"definition": "interface EvidenceGateOptions { strict?: boolean | undefined; shardIds?: number[] | undefined; operator?: string | undefined; reason?: string | undefined; now?: number | undefined; }"
 	},
 	".:public.EvidenceReport": {
 		"kind": "type",
@@ -3114,6 +3270,18 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"full": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
+			"maxMembersPerCluster": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"negationWords": {
+				"type": "string[] | undefined",
+				"optional": true
+			},
 			"now": {
 				"type": "number | undefined",
 				"optional": true
@@ -3135,7 +3303,7 @@
 				"optional": true
 			}
 		},
-		"definition": "interface FormatEvidenceOptions { clusterThreshold?: number | undefined; tags?: string[] | undefined; query?: string | undefined; shardExpiryDays?: number | undefined; staleDays?: number | undefined; now?: number | undefined; }"
+		"definition": "interface FormatEvidenceOptions { negationWords?: string[] | undefined; maxMembersPerCluster?: number | undefined; full?: boolean | undefined; clusterThreshold?: number | undefined; tags?: string[] | undefined; query?: string | undefined; shardExpiryDays?: number | undefined; staleDays?: number | undefined; now?: number | undefined; }"
 	},
 	".:public.GetSoulProfileOptions": {
 		"kind": "type",
@@ -3167,6 +3335,13 @@
 			"CrystallizationCheckOptions": ".:public.CrystallizationCheckOptions"
 		}
 	},
+	".:public.getSoulsConfig": {
+		"kind": "value",
+		"type": "(db: SoulsDb) => Record<string, string>",
+		"references": {
+			"SoulsDb": ".:public.SoulsDb"
+		}
+	},
 	".:public.getSoulsSkillByName": {
 		"kind": "value",
 		"type": "(name: string) => { name: string; description: string; content: string; } | null"
@@ -3194,7 +3369,7 @@
 	},
 	".:public.inspectSoulsItemTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ soulId: number; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData>",
+		"type": "SoulsToolDefinition<{ soulId: number; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData>",
 		"references": {
 			"InspectSoulsItemToolData": ".:public.InspectSoulsItemToolData",
 			"SoulsToolDefinition": ".:public.SoulsToolDefinition"
@@ -3208,6 +3383,10 @@
 				"type": "EvidenceReport | undefined",
 				"optional": true
 			},
+			"history": {
+				"type": "RevisionRecord[] | undefined",
+				"optional": true
+			},
 			"profile": {
 				"type": "SoulProfile",
 				"optional": false
@@ -3215,9 +3394,13 @@
 			"renderedIdentity": {
 				"type": "string",
 				"optional": false
+			},
+			"reviews": {
+				"type": "Record<string, unknown>[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface InspectSoulsItemToolData { profile: SoulProfile; renderedIdentity: string; evidence?: EvidenceReport | undefined; }",
+		"definition": "interface InspectSoulsItemToolData { profile: SoulProfile; history?: ReturnType<typeof getRevisionHistory>; reviews?: Record<string, unknown>[]; renderedIdentity: string; evidence?: EvidenceReport | undefined; }",
 		"references": {
 			"EvidenceReport": ".:public.EvidenceReport",
 			"SoulProfile": ".:public.SoulProfile"
@@ -3225,7 +3408,7 @@
 	},
 	".:public.inspectSoulsItemToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { soulId: number; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }) => InspectSoulsItemToolResult",
+		"type": "(db: SoulsDb, input: { soulId: number; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }) => InspectSoulsItemToolResult",
 		"references": {
 			"InspectSoulsItemToolResult": ".:public.InspectSoulsItemToolResult",
 			"SoulsDb": ".:public.SoulsDb"
@@ -3333,7 +3516,7 @@
 		"kind": "type",
 		"type": "JsonSchemaType",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -3632,16 +3815,20 @@
 			"snapshot": {
 				"type": "LevelRecord",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface LevelUpResult { level: number; snapshot: LevelRecord; }",
+		"definition": "interface LevelUpResult { warnings?: string[]; level: number; snapshot: LevelRecord; }",
 		"references": {
 			"LevelRecord": ".:public.LevelRecord"
 		}
 	},
 	".:public.levelUpSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData>",
+		"type": "SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData>",
 		"references": {
 			"LevelUpPlan": ".:public.LevelUpPlan",
 			"LevelUpSoulToolData": ".:public.LevelUpSoulToolData",
@@ -3651,7 +3838,12 @@
 	".:public.LevelUpSoulToolData": {
 		"kind": "type",
 		"type": "LevelUpSoulToolData",
-		"members": {},
+		"members": {
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
+			}
+		},
 		"definition": "type LevelUpSoulToolData = LevelUpSoulExecuteData | LevelUpSoulRevertData | LevelUpValidationData;",
 		"references": {
 			"LevelUpSoulExecuteData": ".:public.LevelUpSoulToolData.types.LevelUpSoulExecuteData",
@@ -3670,9 +3862,13 @@
 			"soulId": {
 				"type": "number",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface LevelUpSoulExecuteData { result: LevelUpResult; soulId: number; }",
+		"definition": "interface LevelUpSoulExecuteData { warnings?: string[]; result: LevelUpResult; soulId: number; }",
 		"references": {
 			"LevelUpResult": ".:public.LevelUpResult"
 		}
@@ -3684,17 +3880,29 @@
 			"soulId": {
 				"type": "number",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface LevelUpSoulRevertData { soulId: number; }"
+		"definition": "interface LevelUpSoulRevertData { warnings?: string[]; soulId: number; }"
 	},
 	".:public.LevelUpSoulToolData.types.LevelUpValidationData": {
 		"kind": "type",
 		"type": "LevelUpValidationData",
 		"members": {
+			"errors": {
+				"type": "string[] | undefined",
+				"optional": true
+			},
 			"valid": {
 				"type": "boolean",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type LevelUpValidationData = ValidationResult | ValidationFailure;",
@@ -3711,12 +3919,20 @@
 				"type": "LevelUpValidationError",
 				"optional": false
 			},
+			"errors": {
+				"type": "string[] | undefined",
+				"optional": true
+			},
 			"valid": {
 				"type": "false",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface ValidationFailure { valid: false; error: LevelUpValidationError; }",
+		"definition": "interface ValidationFailure { valid: false; warnings?: string[]; errors?: string[]; error: LevelUpValidationError; }",
 		"references": {
 			"LevelUpValidationError": ".:public.LevelUpValidationError"
 		}
@@ -3725,16 +3941,24 @@
 		"kind": "type",
 		"type": "ValidationResult",
 		"members": {
+			"errors": {
+				"type": "string[] | undefined",
+				"optional": true
+			},
 			"valid": {
 				"type": "true",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface ValidationResult { valid: true; }"
+		"definition": "interface ValidationResult { valid: true; warnings?: string[]; errors?: string[]; }"
 	},
 	".:public.levelUpSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { action: \"execute\" | \"revert\" | \"validate\"; soulId: number; plan?: LevelUpPlan | undefined; }) => LevelUpSoulToolResult",
+		"type": "(db: SoulsDb, input: { action: \"execute\" | \"revert\" | \"validate\"; soulId: number; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }) => LevelUpSoulToolResult",
 		"references": {
 			"LevelUpPlan": ".:public.LevelUpPlan",
 			"LevelUpSoulToolResult": ".:public.LevelUpSoulToolResult",
@@ -3824,19 +4048,92 @@
 	},
 	".:public.listSoulsToolDefinitions": {
 		"kind": "value",
-		"type": "() => (SoulsToolDefinition<{ soulId: number; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ action: \"create\" | \"update\" | \"retire\" | \"awaken\"; name?: string | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }, ManageSoulToolData> | SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ action: \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\"; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>)[]",
+		"type": "() => (SoulsToolDefinition<{ soulId: number; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>)[]",
 		"references": {
 			"DropShardInput": ".:public.DropShardInput",
 			"InspectSoulsItemToolData": ".:public.InspectSoulsItemToolData",
 			"LevelUpPlan": ".:public.LevelUpPlan",
 			"LevelUpSoulToolData": ".:public.LevelUpSoulToolData",
+			"ManageConfigData": ".:public.listSoulsToolDefinitions.types.ManageConfigData",
+			"ManageSoulInput": ".:public.listSoulsToolDefinitions.types.ManageSoulInput",
 			"ManageSoulToolData": ".:public.ManageSoulToolData",
 			"ObserveSoulToolData": ".:public.ObserveSoulToolData",
 			"RefineSoulToolData": ".:public.RefineSoulToolData",
 			"ReviewSoulsToolData": ".:public.ReviewSoulsToolData",
 			"SearchSoulsToolData": ".:public.SearchSoulsToolData",
+			"ShardFilterStatus": ".:public.ShardFilterStatus",
 			"SoulsToolDefinition": ".:public.SoulsToolDefinition"
 		}
+	},
+	".:public.listSoulsToolDefinitions.types.ManageConfigData": {
+		"kind": "type",
+		"type": "ManageConfigData",
+		"members": {
+			"config": {
+				"type": "Record<string, string>",
+				"optional": false
+			}
+		},
+		"definition": "interface ManageConfigData { config: Record<string, string>; }"
+	},
+	".:public.listSoulsToolDefinitions.types.ManageSoulInput": {
+		"kind": "type",
+		"type": "ManageSoulInput",
+		"members": {
+			"action": {
+				"type": "\"create\" | \"update\" | \"retire\" | \"awaken\" | \"config_set\" | \"config_get\" | \"config_list\"",
+				"optional": false
+			},
+			"description": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"essence": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"externalId": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"key": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"name": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
+			"slug": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"soulId": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"strict": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
+			"value": {
+				"type": "string | undefined",
+				"optional": true
+			}
+		},
+		"definition": "interface ManageSoulInput { action: 'create' | 'update' | 'retire' | 'awaken' | 'config_set' | 'config_get' | 'config_list'; externalId?: string | undefined; key?: string | undefined; value?: string | undefined; name?: string | undefined; slug?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }"
 	},
 	".:public.ListTraitsOptions": {
 		"kind": "type",
@@ -3906,8 +4203,10 @@
 	},
 	".:public.manageSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ action: \"create\" | \"update\" | \"retire\" | \"awaken\"; name?: string | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }, ManageSoulToolData>",
+		"type": "SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData>",
 		"references": {
+			"ManageConfigData": ".:public.listSoulsToolDefinitions.types.ManageConfigData",
+			"ManageSoulInput": ".:public.listSoulsToolDefinitions.types.ManageSoulInput",
 			"ManageSoulToolData": ".:public.ManageSoulToolData",
 			"SoulsToolDefinition": ".:public.SoulsToolDefinition"
 		}
@@ -3919,19 +4218,61 @@
 			"soul": {
 				"type": "SoulRecord",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface ManageSoulToolData { soul: SoulRecord; }",
+		"definition": "interface ManageSoulToolData { warnings?: string[] | undefined; soul: SoulRecord; }",
 		"references": {
 			"SoulRecord": ".:public.SoulRecord"
 		}
 	},
 	".:public.manageSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { action: \"create\" | \"update\" | \"retire\" | \"awaken\"; name?: string | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }) => ManageSoulToolResult",
+		"type": "{ (db: SoulsDb, input: ManageSoulInput & { action: \"create\" | \"update\" | \"retire\" | \"awaken\"; }): ManageSoulToolResult; (db: SoulsDb, input: ManageSoulInput): ManageResult; }",
 		"references": {
+			"ManageResult": ".:public.manageSoulToolHandler.types.ManageResult",
+			"ManageSoulInput": ".:public.listSoulsToolDefinitions.types.ManageSoulInput",
 			"ManageSoulToolResult": ".:public.ManageSoulToolResult",
 			"SoulsDb": ".:public.SoulsDb"
+		}
+	},
+	".:public.manageSoulToolHandler.types.ManageResult": {
+		"kind": "type",
+		"type": "ManageResult",
+		"members": {
+			"entities": {
+				"type": "ToolEntityRef[]",
+				"optional": false
+			},
+			"next": {
+				"type": "ToolNextStepHint[] | undefined",
+				"optional": true
+			},
+			"ok": {
+				"type": "boolean",
+				"optional": false
+			},
+			"outcome": {
+				"type": "\"error\" | \"needs_clarification\" | \"success\" | \"no_op\"",
+				"optional": false
+			},
+			"summary": {
+				"type": "string",
+				"optional": false
+			},
+			"warnings": {
+				"type": "ToolWarning[] | undefined",
+				"optional": true
+			}
+		},
+		"definition": "type ManageResult = ToolResult<ManageSoulToolData | ManageConfigData>;",
+		"references": {
+			"ManageConfigData": ".:public.listSoulsToolDefinitions.types.ManageConfigData",
+			"ManageSoulToolData": ".:public.ManageSoulToolData",
+			"ToolResult": ".:public.ToolResult"
 		}
 	},
 	".:public.manageSoulToolName": {
@@ -4007,7 +4348,7 @@
 	},
 	".:public.observeSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData>",
+		"type": "SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData>",
 		"references": {
 			"DropShardInput": ".:public.DropShardInput",
 			"ObserveSoulToolData": ".:public.ObserveSoulToolData",
@@ -4033,6 +4374,10 @@
 				"type": "number[]",
 				"optional": false
 			},
+			"duplicates": {
+				"type": "number",
+				"optional": false
+			},
 			"result": {
 				"type": "DropShardsResult",
 				"optional": false
@@ -4042,7 +4387,7 @@
 				"optional": false
 			}
 		},
-		"definition": "interface ObserveSoulBatchData { result: DropShardsResult; shardCount: number; crystallizationTriggers: number[]; }",
+		"definition": "interface ObserveSoulBatchData { duplicates: number; result: DropShardsResult; shardCount: number; crystallizationTriggers: number[]; }",
 		"references": {
 			"DropShardsResult": ".:public.DropShardsResult"
 		}
@@ -4055,6 +4400,10 @@
 				"type": "number[]",
 				"optional": false
 			},
+			"duplicate": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
 			"shard": {
 				"type": "ShardRecord",
 				"optional": false
@@ -4064,7 +4413,7 @@
 				"optional": false
 			}
 		},
-		"definition": "interface ObserveSoulDropData { shardId: number; shard: ShardRecord; crystallizationTriggers: number[]; }",
+		"definition": "interface ObserveSoulDropData { duplicate?: boolean; shardId: number; shard: ShardRecord; crystallizationTriggers: number[]; }",
 		"references": {
 			"ShardRecord": ".:public.ShardRecord"
 		}
@@ -4082,7 +4431,7 @@
 	},
 	".:public.observeSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }) => ObserveSoulToolResult",
+		"type": "(db: SoulsDb, input: { action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }) => ObserveSoulToolResult",
 		"references": {
 			"DropShardInput": ".:public.DropShardInput",
 			"ObserveSoulToolResult": ".:public.ObserveSoulToolResult",
@@ -4169,6 +4518,10 @@
 		"kind": "value",
 		"type": "(db: SoulsDb, options?: CrystallizationCheckOptions) => CrystallizationRecord[]"
 	},
+	".:public.read.diffSoul": {
+		"kind": "value",
+		"type": "(db: SoulsDb, soulId: number, file: string, marker?: string, content?: string) => { same: boolean; markerFound: boolean; added: string[]; removed: string[]; lines: string[]; }"
+	},
 	".:public.read.formatEvidence": {
 		"kind": "value",
 		"type": "(db: SoulsDb, soulId: number, options?: FormatEvidenceOptions) => EvidenceReport"
@@ -4177,9 +4530,17 @@
 		"kind": "value",
 		"type": "(db: SoulsDb, soulId: number) => LevelRecord[]"
 	},
+	".:public.read.getRevisionHistory": {
+		"kind": "value",
+		"type": "(db: SoulsDb, options?: { soulId?: number; traitId?: number; limit?: number; }) => RevisionRecord[]"
+	},
 	".:public.read.getSoul": {
 		"kind": "value",
 		"type": "(db: SoulsDb, id: number) => SoulRecord | undefined"
+	},
+	".:public.read.getSoulByExternalId": {
+		"kind": "value",
+		"type": "(db: SoulsDb, externalId: string) => SoulRecord | undefined"
 	},
 	".:public.read.getSoulByName": {
 		"kind": "value",
@@ -4188,6 +4549,10 @@
 	".:public.read.getSoulProfile": {
 		"kind": "value",
 		"type": "(db: SoulsDb, soulId: number, options?: GetSoulProfileOptions) => SoulProfile"
+	},
+	".:public.read.getSoulsConfig": {
+		"kind": "value",
+		"type": "(db: SoulsDb) => Record<string, string>"
 	},
 	".:public.read.getTrait": {
 		"kind": "value",
@@ -4205,6 +4570,10 @@
 		"kind": "value",
 		"type": "(db: SoulsDb, options?: ShardListOptions) => ShardRecord[]"
 	},
+	".:public.read.listShardsPage": {
+		"kind": "value",
+		"type": "(db: SoulsDb, options?: ShardListOptions) => ShardPage"
+	},
 	".:public.read.listSouls": {
 		"kind": "value",
 		"type": "(db: SoulsDb) => SoulRecord[]"
@@ -4217,9 +4586,17 @@
 		"kind": "value",
 		"type": "(db: SoulsDb, soulId: number) => number"
 	},
+	".:public.read.renderPublication": {
+		"kind": "value",
+		"type": "(db: SoulsDb, soulId: number, options?: RenderPublicationOptions) => { text: string; block: string; trimmed: { traitIds: number[]; essenceChars: number; }; current: string; exists: boolean; }"
+	},
 	".:public.read.renderSoul": {
 		"kind": "value",
 		"type": "(db: SoulsDb, id: number, options?: RenderSoulOptions) => string"
+	},
+	".:public.read.resolveStrict": {
+		"kind": "value",
+		"type": "(db: SoulsDb, strict?: boolean) => boolean"
 	},
 	".:public.read.runMaintenance": {
 		"kind": "value",
@@ -4228,6 +4605,10 @@
 	".:public.read.searchShards": {
 		"kind": "value",
 		"type": "(db: SoulsDb, query: string, options?: SearchShardsOptions) => ShardRecord[]"
+	},
+	".:public.read.searchShardsPage": {
+		"kind": "value",
+		"type": "(db: SoulsDb, query: string, options?: SearchShardsOptions) => ShardPage"
 	},
 	".:public.read.shardCountsBySource": {
 		"kind": "value",
@@ -4243,7 +4624,7 @@
 	},
 	".:public.read.validateLevelUpPlan": {
 		"kind": "value",
-		"type": "(db: SoulsDb, soulId: number, plan: LevelUpPlan) => ValidationResult | ValidationFailure"
+		"type": "(db: SoulsDb, soulId: number, plan: LevelUpPlan, options?: { strict?: boolean; traitLimit?: number; }) => ValidationResult | ValidationFailure"
 	},
 	".:public.refineSoulNext": {
 		"kind": "value",
@@ -4254,7 +4635,7 @@
 	},
 	".:public.refineSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ action: \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; shardId?: number | undefined; }, RefineSoulToolData>",
+		"type": "SoulsToolDefinition<{ action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData>",
 		"references": {
 			"RefineSoulToolData": ".:public.RefineSoulToolData",
 			"SoulsToolDefinition": ".:public.SoulsToolDefinition"
@@ -4275,16 +4656,20 @@
 			"traitId": {
 				"type": "number | undefined",
 				"optional": true
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface RefineSoulToolData { trait?: TraitRecord | undefined; traitId?: number | undefined; soulId?: number | undefined; }",
+		"definition": "interface RefineSoulToolData { warnings?: string[] | undefined; trait?: TraitRecord | undefined; traitId?: number | undefined; soulId?: number | undefined; }",
 		"references": {
 			"TraitRecord": ".:public.TraitRecord"
 		}
 	},
 	".:public.refineSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { action: \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; shardId?: number | undefined; }) => RefineSoulToolResult",
+		"type": "(db: SoulsDb, input: { action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }) => RefineSoulToolResult",
 		"references": {
 			"RefineSoulToolResult": ".:public.RefineSoulToolResult",
 			"SoulsDb": ".:public.SoulsDb"
@@ -4329,6 +4714,91 @@
 			"ToolResult": ".:public.ToolResult"
 		}
 	},
+	".:public.RefineWithEvidenceInput": {
+		"kind": "type",
+		"type": "RefineWithEvidenceInput",
+		"members": {
+			"action": {
+				"type": "\"add\" | \"revise\"",
+				"optional": false
+			},
+			"expectedRevision": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"now": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"principle": {
+				"type": "string",
+				"optional": false
+			},
+			"provenance": {
+				"type": "string",
+				"optional": false
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[]",
+				"optional": false
+			},
+			"soulId": {
+				"type": "number",
+				"optional": false
+			},
+			"strict": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
+			"traitId": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"traitLimit": {
+				"type": "number | undefined",
+				"optional": true
+			}
+		},
+		"definition": "interface RefineWithEvidenceInput extends EvidenceGateOptions { soulId: number; action: 'add' | 'revise'; traitId?: number | undefined; principle: string; provenance: string; shardIds: number[]; expectedRevision?: number | undefined; traitLimit?: number | undefined; }",
+		"references": {
+			"EvidenceGateOptions": ".:public.EvidenceGateOptions"
+		}
+	},
+	".:public.RenderPublicationOptions": {
+		"kind": "type",
+		"type": "RenderPublicationOptions",
+		"members": {
+			"budget": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"expectHash": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"includeProvenance": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
+			"into": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"marker": {
+				"type": "string | undefined",
+				"optional": true
+			}
+		},
+		"definition": "interface RenderPublicationOptions { includeProvenance?: boolean | undefined; budget?: number | undefined; into?: string | undefined; marker?: string | undefined; expectHash?: string | undefined; }"
+	},
 	".:public.RenderSoulOptions": {
 		"kind": "type",
 		"type": "RenderSoulOptions",
@@ -4345,6 +4815,13 @@
 		"type": "(soul?: SoulsSoul) => string",
 		"references": {
 			"SoulsSoul": ".:public.SoulsSoul"
+		}
+	},
+	".:public.resolveStrict": {
+		"kind": "value",
+		"type": "(db: SoulsDb, strict?: boolean) => boolean",
+		"references": {
+			"SoulsDb": ".:public.SoulsDb"
 		}
 	},
 	".:public.retryNext": {
@@ -4409,7 +4886,7 @@
 	},
 	".:public.reviewSoulsTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\"; }, ReviewSoulsToolData>",
+		"type": "SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData>",
 		"references": {
 			"ReviewSoulsToolData": ".:public.ReviewSoulsToolData",
 			"SoulsToolDefinition": ".:public.SoulsToolDefinition"
@@ -4419,16 +4896,32 @@
 		"kind": "type",
 		"type": "ReviewSoulsToolData",
 		"members": {},
-		"definition": "type ReviewSoulsToolData = ReviewSoulsListData | ReviewSoulsMaintenanceData | ReviewSoulsReadinessData;",
+		"definition": "type ReviewSoulsToolData = ReviewSoulsListData | ReviewSoulsMaintenanceData | ReviewSoulsReadinessData | ReviewSoulsHistoryData;",
 		"references": {
+			"ReviewSoulsHistoryData": ".:public.ReviewSoulsToolData.types.ReviewSoulsHistoryData",
 			"ReviewSoulsListData": ".:public.ReviewSoulsListData",
 			"ReviewSoulsMaintenanceData": ".:public.ReviewSoulsMaintenanceData",
 			"ReviewSoulsReadinessData": ".:public.ReviewSoulsReadinessData"
 		}
 	},
+	".:public.ReviewSoulsToolData.types.ReviewSoulsHistoryData": {
+		"kind": "type",
+		"type": "ReviewSoulsHistoryData",
+		"members": {
+			"history": {
+				"type": "RevisionRecord[]",
+				"optional": false
+			},
+			"reviews": {
+				"type": "Record<string, unknown>[]",
+				"optional": false
+			}
+		},
+		"definition": "interface ReviewSoulsHistoryData { history: ReturnType<typeof getRevisionHistory>; reviews: Record<string, unknown>[]; }"
+	},
 	".:public.reviewSoulsToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { view: \"list\" | \"maintenance\" | \"readiness\"; }) => ReviewSoulsToolResult",
+		"type": "(db: SoulsDb, input: { view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | undefined; noChange?: boolean | undefined; reason?: string | undefined; }) => ReviewSoulsToolResult",
 		"references": {
 			"ReviewSoulsToolResult": ".:public.ReviewSoulsToolResult",
 			"SoulsDb": ".:public.SoulsDb"
@@ -4481,6 +4974,10 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"principle": {
 				"type": "string | undefined",
 				"optional": true
@@ -4488,9 +4985,60 @@
 			"provenance": {
 				"type": "string | undefined",
 				"optional": true
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface ReviseTraitInput { principle?: string | undefined; provenance?: string | undefined; now?: number | undefined; }"
+		"definition": "interface ReviseTraitInput { reason?: string | undefined; operator?: string | undefined; principle?: string | undefined; provenance?: string | undefined; now?: number | undefined; }"
+	},
+	".:public.RevisionRecord": {
+		"kind": "type",
+		"type": "RevisionRecord",
+		"members": {
+			"createdAt": {
+				"type": "number",
+				"optional": false
+			},
+			"entity": {
+				"type": "\"trait\" | \"essence\"",
+				"optional": false
+			},
+			"entityId": {
+				"type": "number",
+				"optional": false
+			},
+			"id": {
+				"type": "number",
+				"optional": false
+			},
+			"newText": {
+				"type": "string",
+				"optional": false
+			},
+			"oldText": {
+				"type": "string | null",
+				"optional": false
+			},
+			"operator": {
+				"type": "string | null",
+				"optional": false
+			},
+			"reason": {
+				"type": "string | null",
+				"optional": false
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
+			"soulId": {
+				"type": "number",
+				"optional": false
+			}
+		},
+		"definition": "interface RevisionRecord { id: number; entity: 'trait' | 'essence'; entityId: number; soulId: number; oldText: string | null; newText: string; reason: string | null; operator: string | null; createdAt: number; shardIds?: number[]; }"
 	},
 	".:public.runMaintenancePassSkill": {
 		"kind": "value",
@@ -4508,6 +5056,10 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"offset": {
+				"type": "number | undefined",
+				"optional": true
+			},
 			"shardExpiryDays": {
 				"type": "number | undefined",
 				"optional": true
@@ -4515,9 +5067,24 @@
 			"soulId": {
 				"type": "number | undefined",
 				"optional": true
+			},
+			"source": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"status": {
+				"type": "ShardFilterStatus | undefined",
+				"optional": true
+			},
+			"tags": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface SearchShardsOptions { soulId?: number | undefined; limit?: number | undefined; shardExpiryDays?: number | undefined; now?: number | undefined; }"
+		"definition": "interface SearchShardsOptions extends ShardListOptions { soulId?: number | undefined; limit?: number | undefined; shardExpiryDays?: number | undefined; now?: number | undefined; }",
+		"references": {
+			"ShardListOptions": ".:public.ShardListOptions"
+		}
 	},
 	".:public.searchSoulsNext": {
 		"kind": "value",
@@ -4528,9 +5095,10 @@
 	},
 	".:public.searchSoulsTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ query?: string | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>",
+		"type": "SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>",
 		"references": {
 			"SearchSoulsToolData": ".:public.SearchSoulsToolData",
+			"ShardFilterStatus": ".:public.ShardFilterStatus",
 			"SoulsToolDefinition": ".:public.SoulsToolDefinition"
 		}
 	},
@@ -4542,21 +5110,30 @@
 				"type": "number",
 				"optional": false
 			},
+			"hasMore": {
+				"type": "boolean",
+				"optional": false
+			},
 			"shards": {
 				"type": "ShardRecord[]",
 				"optional": false
+			},
+			"total": {
+				"type": "number",
+				"optional": false
 			}
 		},
-		"definition": "interface SearchSoulsToolData { shards: ShardRecord[]; count: number; }",
+		"definition": "interface SearchSoulsToolData { shards: ShardRecord[]; count: number; total: number; hasMore: boolean; }",
 		"references": {
 			"ShardRecord": ".:public.ShardRecord"
 		}
 	},
 	".:public.searchSoulsToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { query?: string | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }) => SearchSoulsToolResult",
+		"type": "(db: SoulsDb, input: { query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }) => SearchSoulsToolResult",
 		"references": {
 			"SearchSoulsToolResult": ".:public.SearchSoulsToolResult",
+			"ShardFilterStatus": ".:public.ShardFilterStatus",
 			"SoulsDb": ".:public.SoulsDb"
 		}
 	},
@@ -4599,6 +5176,13 @@
 			"ToolResult": ".:public.ToolResult"
 		}
 	},
+	".:public.setSoulsConfig": {
+		"kind": "value",
+		"type": "(db: SoulsDb, key: string, value: string) => void",
+		"references": {
+			"SoulsDb": ".:public.SoulsDb"
+		}
+	},
 	".:public.ShardCountRecord": {
 		"kind": "type",
 		"type": "ShardCountRecord",
@@ -4614,6 +5198,221 @@
 		},
 		"definition": "interface ShardCountRecord { soulId: number; pendingCount: number; }"
 	},
+	".:public.ShardFilterStatus": {
+		"kind": "type",
+		"type": "ShardFilterStatus",
+		"members": {
+			"__@iterator@878": {
+				"type": "() => StringIterator<string>",
+				"optional": false
+			},
+			"anchor": {
+				"type": "(name: string) => string",
+				"optional": false
+			},
+			"at": {
+				"type": "(index: number) => string | undefined",
+				"optional": false
+			},
+			"big": {
+				"type": "() => string",
+				"optional": false
+			},
+			"blink": {
+				"type": "() => string",
+				"optional": false
+			},
+			"bold": {
+				"type": "() => string",
+				"optional": false
+			},
+			"charAt": {
+				"type": "(pos: number) => string",
+				"optional": false
+			},
+			"charCodeAt": {
+				"type": "(index: number) => number",
+				"optional": false
+			},
+			"codePointAt": {
+				"type": "(pos: number) => number | undefined",
+				"optional": false
+			},
+			"concat": {
+				"type": "(...strings: string[]) => string",
+				"optional": false
+			},
+			"endsWith": {
+				"type": "(searchString: string, endPosition?: number) => boolean",
+				"optional": false
+			},
+			"fixed": {
+				"type": "() => string",
+				"optional": false
+			},
+			"fontcolor": {
+				"type": "(color: string) => string",
+				"optional": false
+			},
+			"fontsize": {
+				"type": "{ (size: number): string; (size: string): string; }",
+				"optional": false
+			},
+			"includes": {
+				"type": "(searchString: string, position?: number) => boolean",
+				"optional": false
+			},
+			"indexOf": {
+				"type": "(searchString: string, position?: number) => number",
+				"optional": false
+			},
+			"isWellFormed": {
+				"type": "() => boolean",
+				"optional": false
+			},
+			"italics": {
+				"type": "() => string",
+				"optional": false
+			},
+			"lastIndexOf": {
+				"type": "(searchString: string, position?: number) => number",
+				"optional": false
+			},
+			"length": {
+				"type": "number",
+				"optional": false
+			},
+			"link": {
+				"type": "(url: string) => string",
+				"optional": false
+			},
+			"localeCompare": {
+				"type": "{ (that: string): number; (that: string, locales?: string | string[], options?: Intl.CollatorOptions): number; (that: string, locales?: Intl.LocalesArgument, options?: Intl.CollatorOptions): number; }",
+				"optional": false
+			},
+			"match": {
+				"type": "{ (regexp: string | RegExp): RegExpMatchArray | null; (matcher: { [Symbol.match](string: string): RegExpMatchArray | null; }): RegExpMatchArray | null; }",
+				"optional": false
+			},
+			"matchAll": {
+				"type": "(regexp: RegExp) => RegExpStringIterator<RegExpExecArray>",
+				"optional": false
+			},
+			"normalize": {
+				"type": "{ (form: \"NFC\" | \"NFD\" | \"NFKC\" | \"NFKD\"): string; (form?: string): string; }",
+				"optional": false
+			},
+			"padEnd": {
+				"type": "(maxLength: number, fillString?: string) => string",
+				"optional": false
+			},
+			"padStart": {
+				"type": "(maxLength: number, fillString?: string) => string",
+				"optional": false
+			},
+			"repeat": {
+				"type": "(count: number) => string",
+				"optional": false
+			},
+			"replace": {
+				"type": "{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { [Symbol.replace](string: string, replaceValue: string): string; }, replaceValue: string): string; (searchValue: { [Symbol.replace](string: string, replacer: (substring: string, ...args: any[]) => string): string; }, replacer: (substring: string, ...args: any[]) => string): string; }",
+				"optional": false
+			},
+			"replaceAll": {
+				"type": "{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; }",
+				"optional": false
+			},
+			"search": {
+				"type": "{ (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }",
+				"optional": false
+			},
+			"slice": {
+				"type": "(start?: number, end?: number) => string",
+				"optional": false
+			},
+			"small": {
+				"type": "() => string",
+				"optional": false
+			},
+			"split": {
+				"type": "{ (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }",
+				"optional": false
+			},
+			"startsWith": {
+				"type": "(searchString: string, position?: number) => boolean",
+				"optional": false
+			},
+			"strike": {
+				"type": "() => string",
+				"optional": false
+			},
+			"sub": {
+				"type": "() => string",
+				"optional": false
+			},
+			"substr": {
+				"type": "(from: number, length?: number) => string",
+				"optional": false
+			},
+			"substring": {
+				"type": "(start: number, end?: number) => string",
+				"optional": false
+			},
+			"sup": {
+				"type": "() => string",
+				"optional": false
+			},
+			"toLocaleLowerCase": {
+				"type": "{ (locales?: string | string[]): string; (locales?: Intl.LocalesArgument): string; }",
+				"optional": false
+			},
+			"toLocaleUpperCase": {
+				"type": "{ (locales?: string | string[]): string; (locales?: Intl.LocalesArgument): string; }",
+				"optional": false
+			},
+			"toLowerCase": {
+				"type": "() => string",
+				"optional": false
+			},
+			"toString": {
+				"type": "() => string",
+				"optional": false
+			},
+			"toUpperCase": {
+				"type": "() => string",
+				"optional": false
+			},
+			"toWellFormed": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trim": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trimEnd": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trimLeft": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trimRight": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trimStart": {
+				"type": "() => string",
+				"optional": false
+			},
+			"valueOf": {
+				"type": "() => string",
+				"optional": false
+			}
+		},
+		"definition": "type ShardFilterStatus = 'pending' | 'sealed' | 'faded' | 'all';"
+	},
 	".:public.ShardListOptions": {
 		"kind": "type",
 		"type": "ShardListOptions",
@@ -4623,6 +5422,10 @@
 				"optional": true
 			},
 			"now": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"offset": {
 				"type": "number | undefined",
 				"optional": true
 			},
@@ -4638,12 +5441,41 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"status": {
+				"type": "ShardFilterStatus | undefined",
+				"optional": true
+			},
 			"tags": {
 				"type": "string[] | undefined",
 				"optional": true
 			}
 		},
-		"definition": "interface ShardListOptions { soulId?: number | undefined; source?: string | undefined; tags?: string[] | undefined; limit?: number | undefined; shardExpiryDays?: number | undefined; now?: number | undefined; }"
+		"definition": "interface ShardListOptions { status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; source?: string | undefined; tags?: string[] | undefined; limit?: number | undefined; shardExpiryDays?: number | undefined; now?: number | undefined; }",
+		"references": {
+			"ShardFilterStatus": ".:public.ShardFilterStatus"
+		}
+	},
+	".:public.ShardPage": {
+		"kind": "type",
+		"type": "ShardPage",
+		"members": {
+			"hasMore": {
+				"type": "boolean",
+				"optional": false
+			},
+			"items": {
+				"type": "ShardRecord[]",
+				"optional": false
+			},
+			"total": {
+				"type": "number",
+				"optional": false
+			}
+		},
+		"definition": "interface ShardPage { items: ShardRecord[]; total: number; hasMore: boolean; }",
+		"references": {
+			"ShardRecord": ".:public.ShardRecord"
+		}
 	},
 	".:public.ShardRecord": {
 		"kind": "type",
@@ -4660,6 +5492,22 @@
 			"id": {
 				"type": "number",
 				"optional": false
+			},
+			"idempotencyKey": {
+				"type": "string | null | undefined",
+				"optional": true
+			},
+			"insertedAt": {
+				"type": "number | null | undefined",
+				"optional": true
+			},
+			"occurredAt": {
+				"type": "number | null | undefined",
+				"optional": true
+			},
+			"ref": {
+				"type": "string | null | undefined",
+				"optional": true
 			},
 			"sealed": {
 				"type": "boolean",
@@ -4690,7 +5538,7 @@
 				"optional": false
 			}
 		},
-		"definition": "interface ShardRecord { id: number; content: string; source: string; status: ShardStatus; sealed: boolean; soulIds: number[]; traitIds: number[]; tags: string[]; createdAt: number; updatedAt: number; }",
+		"definition": "interface ShardRecord { insertedAt?: number | null; occurredAt?: number | null; idempotencyKey?: string | null; ref?: string | null; id: number; content: string; source: string; status: ShardStatus; sealed: boolean; soulIds: number[]; traitIds: number[]; tags: string[]; createdAt: number; updatedAt: number; }",
 		"references": {
 			"ShardStatus": ".:public.ShardStatus"
 		}
@@ -4699,7 +5547,7 @@
 		"kind": "type",
 		"type": "\"pending\" | \"faded\"",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -4983,11 +5831,11 @@
 		"kind": "type",
 		"type": "SoulsSkillRegistry",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => ArrayIterator<SoulsSkill>",
 				"optional": false
 			},
-			"__@unscopables@818": {
+			"__@unscopables@898": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -5230,6 +6078,10 @@
 				"type": "number",
 				"optional": false
 			},
+			"readinessReason": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"soul": {
 				"type": "SoulRecord",
 				"optional": false
@@ -5239,7 +6091,7 @@
 				"optional": false
 			}
 		},
-		"definition": "interface SoulProfile { soul: SoulRecord; activeTraits: TraitRecord[]; activeTraitCount: number; traitLimit: number; atCapacity: boolean; pendingShardCount: number; crystallizationReady: boolean; health: number; }",
+		"definition": "interface SoulProfile { soul: SoulRecord; activeTraits: TraitRecord[]; activeTraitCount: number; traitLimit: number; atCapacity: boolean; pendingShardCount: number; crystallizationReady: boolean; readinessReason?: string; health: number; }",
 		"references": {
 			"SoulRecord": ".:public.SoulRecord",
 			"TraitRecord": ".:public.TraitRecord"
@@ -5264,6 +6116,10 @@
 			"essence": {
 				"type": "string",
 				"optional": false
+			},
+			"externalId": {
+				"type": "string | null | undefined",
+				"optional": true
 			},
 			"id": {
 				"type": "number",
@@ -5292,9 +6148,39 @@
 			"updatedAt": {
 				"type": "number",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface SoulRecord { id: number; name: string; slug: string | null; essence: string; description: string; level: number; createdAt: number; updatedAt: number; deletedAt: number | null; lastAttunedAt: number | null; isDormant: boolean; }"
+		"definition": "interface SoulRecord { externalId?: string | null; warnings?: string[] | undefined; id: number; name: string; slug: string | null; essence: string; description: string; level: number; createdAt: number; updatedAt: number; deletedAt: number | null; lastAttunedAt: number | null; isDormant: boolean; }"
+	},
+	".:public.SoulsConflictError": {
+		"kind": "class",
+		"type": "typeof SoulsConflictError",
+		"members": {
+			"cause": {
+				"type": "unknown",
+				"optional": true
+			},
+			"message": {
+				"type": "string",
+				"optional": false
+			},
+			"name": {
+				"type": "string",
+				"optional": false
+			},
+			"stack": {
+				"type": "string | undefined",
+				"optional": true
+			}
+		},
+		"definition": "declare class SoulsConflictError extends SoulsStateError { name: string; }",
+		"references": {
+			"SoulsStateError": ".:public.SoulsStateError"
+		}
 	},
 	".:public.SoulsDb": {
 		"kind": "type",
@@ -5432,11 +6318,11 @@
 		"kind": "type",
 		"type": "SoulsSkillRegistry",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => ArrayIterator<SoulsSkill>",
 				"optional": false
 			},
-			"__@unscopables@818": {
+			"__@unscopables@898": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -5758,17 +6644,20 @@
 	},
 	".:public.soulsTools": {
 		"kind": "value",
-		"type": "(SoulsToolDefinition<{ soulId: number; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ action: \"create\" | \"update\" | \"retire\" | \"awaken\"; name?: string | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }, ManageSoulToolData> | SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ action: \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\"; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>)[]",
+		"type": "(SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<{ soulId: number; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>)[]",
 		"references": {
 			"DropShardInput": ".:public.DropShardInput",
 			"InspectSoulsItemToolData": ".:public.InspectSoulsItemToolData",
 			"LevelUpPlan": ".:public.LevelUpPlan",
 			"LevelUpSoulToolData": ".:public.LevelUpSoulToolData",
+			"ManageConfigData": ".:public.listSoulsToolDefinitions.types.ManageConfigData",
+			"ManageSoulInput": ".:public.listSoulsToolDefinitions.types.ManageSoulInput",
 			"ManageSoulToolData": ".:public.ManageSoulToolData",
 			"ObserveSoulToolData": ".:public.ObserveSoulToolData",
 			"RefineSoulToolData": ".:public.RefineSoulToolData",
 			"ReviewSoulsToolData": ".:public.ReviewSoulsToolData",
 			"SearchSoulsToolData": ".:public.SearchSoulsToolData",
+			"ShardFilterStatus": ".:public.ShardFilterStatus",
 			"SoulsToolDefinition": ".:public.SoulsToolDefinition"
 		}
 	},
@@ -5891,7 +6780,7 @@
 		"kind": "type",
 		"type": "ToolClarificationCode",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -6106,11 +6995,11 @@
 		"kind": "type",
 		"type": "ToolDefinitionRegistry",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => ArrayIterator<SoulsToolDefinition<any, any>>",
 				"optional": false
 			},
-			"__@unscopables@818": {
+			"__@unscopables@898": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -6244,7 +7133,7 @@
 		"kind": "type",
 		"type": "ToolEntityKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -6459,48 +7348,48 @@
 		"kind": "type",
 		"type": "ToolEntityKindSet",
 		"members": {
-			"__@iterator@798": {
-				"type": "() => ArrayIterator<\"shard\" | \"soul\" | \"trait\" | \"level\">",
+			"__@iterator@878": {
+				"type": "() => ArrayIterator<\"shard\" | \"trait\" | \"soul\" | \"level\">",
 				"optional": false
 			},
-			"__@unscopables@818": {
+			"__@unscopables@898": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
 			"at": {
-				"type": "(index: number) => \"shard\" | \"soul\" | \"trait\" | \"level\" | undefined",
+				"type": "(index: number) => \"shard\" | \"trait\" | \"soul\" | \"level\" | undefined",
 				"optional": false
 			},
 			"concat": {
-				"type": "{ (...items: ConcatArray<\"shard\" | \"soul\" | \"trait\" | \"level\">[]): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; (...items: (\"shard\" | \"soul\" | \"trait\" | \"level\" | ConcatArray<\"shard\" | \"soul\" | \"trait\" | \"level\">)[]): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; }",
+				"type": "{ (...items: ConcatArray<\"shard\" | \"trait\" | \"soul\" | \"level\">[]): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; (...items: (\"shard\" | \"trait\" | \"soul\" | \"level\" | ConcatArray<\"shard\" | \"trait\" | \"soul\" | \"level\">)[]): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; }",
 				"optional": false
 			},
 			"entries": {
-				"type": "() => ArrayIterator<[number, \"shard\" | \"soul\" | \"trait\" | \"level\"]>",
+				"type": "() => ArrayIterator<[number, \"shard\" | \"trait\" | \"soul\" | \"level\"]>",
 				"optional": false
 			},
 			"every": {
-				"type": "{ <S extends \"shard\" | \"soul\" | \"trait\" | \"level\">(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => value is S, thisArg?: any): this is readonly S[]; (predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any): boolean; }",
+				"type": "{ <S extends \"shard\" | \"trait\" | \"soul\" | \"level\">(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => value is S, thisArg?: any): this is readonly S[]; (predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any): boolean; }",
 				"optional": false
 			},
 			"filter": {
-				"type": "{ <S extends \"shard\" | \"soul\" | \"trait\" | \"level\">(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => value is S, thisArg?: any): S[]; (predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; }",
+				"type": "{ <S extends \"shard\" | \"trait\" | \"soul\" | \"level\">(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => value is S, thisArg?: any): S[]; (predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; }",
 				"optional": false
 			},
 			"find": {
-				"type": "{ <S extends \"shard\" | \"soul\" | \"trait\" | \"level\">(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, obj: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, obj: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any): \"shard\" | \"soul\" | \"trait\" | \"level\" | undefined; }",
+				"type": "{ <S extends \"shard\" | \"trait\" | \"soul\" | \"level\">(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, obj: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, obj: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any): \"shard\" | \"trait\" | \"soul\" | \"level\" | undefined; }",
 				"optional": false
 			},
 			"findIndex": {
-				"type": "(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, obj: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any) => number",
+				"type": "(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, obj: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any) => number",
 				"optional": false
 			},
 			"findLast": {
-				"type": "{ <S extends \"shard\" | \"soul\" | \"trait\" | \"level\">(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any): \"shard\" | \"soul\" | \"trait\" | \"level\" | undefined; }",
+				"type": "{ <S extends \"shard\" | \"trait\" | \"soul\" | \"level\">(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any): \"shard\" | \"trait\" | \"soul\" | \"level\" | undefined; }",
 				"optional": false
 			},
 			"findLastIndex": {
-				"type": "(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any) => number",
+				"type": "(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any) => number",
 				"optional": false
 			},
 			"flat": {
@@ -6508,19 +7397,19 @@
 				"optional": false
 			},
 			"flatMap": {
-				"type": "<U, This = undefined>(callback: (this: This, value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => U | readonly U[], thisArg?: This | undefined) => U[]",
+				"type": "<U, This = undefined>(callback: (this: This, value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => U | readonly U[], thisArg?: This | undefined) => U[]",
 				"optional": false
 			},
 			"forEach": {
-				"type": "(callbackfn: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => void, thisArg?: any) => void",
+				"type": "(callbackfn: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => void, thisArg?: any) => void",
 				"optional": false
 			},
 			"includes": {
-				"type": "(searchElement: \"shard\" | \"soul\" | \"trait\" | \"level\", fromIndex?: number) => boolean",
+				"type": "(searchElement: \"shard\" | \"trait\" | \"soul\" | \"level\", fromIndex?: number) => boolean",
 				"optional": false
 			},
 			"indexOf": {
-				"type": "(searchElement: \"shard\" | \"soul\" | \"trait\" | \"level\", fromIndex?: number) => number",
+				"type": "(searchElement: \"shard\" | \"trait\" | \"soul\" | \"level\", fromIndex?: number) => number",
 				"optional": false
 			},
 			"join": {
@@ -6532,7 +7421,7 @@
 				"optional": false
 			},
 			"lastIndexOf": {
-				"type": "(searchElement: \"shard\" | \"soul\" | \"trait\" | \"level\", fromIndex?: number) => number",
+				"type": "(searchElement: \"shard\" | \"trait\" | \"soul\" | \"level\", fromIndex?: number) => number",
 				"optional": false
 			},
 			"length": {
@@ -6540,23 +7429,23 @@
 				"optional": false
 			},
 			"map": {
-				"type": "<U>(callbackfn: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => U, thisArg?: any) => U[]",
+				"type": "<U>(callbackfn: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => U, thisArg?: any) => U[]",
 				"optional": false
 			},
 			"reduce": {
-				"type": "{ (callbackfn: (previousValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => \"shard\" | \"soul\" | \"trait\" | \"level\"): \"shard\" | \"soul\" | \"trait\" | \"level\"; (callbackfn: (previousValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => \"shard\" | \"soul\" | \"trait\" | \"level\", initialValue: \"shard\" | \"soul\" | \"trait\" | \"level\"): \"shard\" | \"soul\" | \"trait\" | \"level\"; <U>(callbackfn: (previousValue: U, currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => U, initialValue: U): U; }",
+				"type": "{ (callbackfn: (previousValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => \"shard\" | \"trait\" | \"soul\" | \"level\"): \"shard\" | \"trait\" | \"soul\" | \"level\"; (callbackfn: (previousValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => \"shard\" | \"trait\" | \"soul\" | \"level\", initialValue: \"shard\" | \"trait\" | \"soul\" | \"level\"): \"shard\" | \"trait\" | \"soul\" | \"level\"; <U>(callbackfn: (previousValue: U, currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => U, initialValue: U): U; }",
 				"optional": false
 			},
 			"reduceRight": {
-				"type": "{ (callbackfn: (previousValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => \"shard\" | \"soul\" | \"trait\" | \"level\"): \"shard\" | \"soul\" | \"trait\" | \"level\"; (callbackfn: (previousValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => \"shard\" | \"soul\" | \"trait\" | \"level\", initialValue: \"shard\" | \"soul\" | \"trait\" | \"level\"): \"shard\" | \"soul\" | \"trait\" | \"level\"; <U>(callbackfn: (previousValue: U, currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => U, initialValue: U): U; }",
+				"type": "{ (callbackfn: (previousValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => \"shard\" | \"trait\" | \"soul\" | \"level\"): \"shard\" | \"trait\" | \"soul\" | \"level\"; (callbackfn: (previousValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => \"shard\" | \"trait\" | \"soul\" | \"level\", initialValue: \"shard\" | \"trait\" | \"soul\" | \"level\"): \"shard\" | \"trait\" | \"soul\" | \"level\"; <U>(callbackfn: (previousValue: U, currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => U, initialValue: U): U; }",
 				"optional": false
 			},
 			"slice": {
-				"type": "(start?: number, end?: number) => (\"shard\" | \"soul\" | \"trait\" | \"level\")[]",
+				"type": "(start?: number, end?: number) => (\"shard\" | \"trait\" | \"soul\" | \"level\")[]",
 				"optional": false
 			},
 			"some": {
-				"type": "(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any) => boolean",
+				"type": "(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any) => boolean",
 				"optional": false
 			},
 			"toLocaleString": {
@@ -6564,15 +7453,15 @@
 				"optional": false
 			},
 			"toReversed": {
-				"type": "() => (\"shard\" | \"soul\" | \"trait\" | \"level\")[]",
+				"type": "() => (\"shard\" | \"trait\" | \"soul\" | \"level\")[]",
 				"optional": false
 			},
 			"toSorted": {
-				"type": "(compareFn?: ((a: \"shard\" | \"soul\" | \"trait\" | \"level\", b: \"shard\" | \"soul\" | \"trait\" | \"level\") => number) | undefined) => (\"shard\" | \"soul\" | \"trait\" | \"level\")[]",
+				"type": "(compareFn?: ((a: \"shard\" | \"trait\" | \"soul\" | \"level\", b: \"shard\" | \"trait\" | \"soul\" | \"level\") => number) | undefined) => (\"shard\" | \"trait\" | \"soul\" | \"level\")[]",
 				"optional": false
 			},
 			"toSpliced": {
-				"type": "{ (start: number, deleteCount: number, ...items: (\"shard\" | \"soul\" | \"trait\" | \"level\")[]): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; (start: number, deleteCount?: number): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; }",
+				"type": "{ (start: number, deleteCount: number, ...items: (\"shard\" | \"trait\" | \"soul\" | \"level\")[]): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; (start: number, deleteCount?: number): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; }",
 				"optional": false
 			},
 			"toString": {
@@ -6580,11 +7469,11 @@
 				"optional": false
 			},
 			"values": {
-				"type": "() => ArrayIterator<\"shard\" | \"soul\" | \"trait\" | \"level\">",
+				"type": "() => ArrayIterator<\"shard\" | \"trait\" | \"soul\" | \"level\">",
 				"optional": false
 			},
 			"with": {
-				"type": "(index: number, value: \"shard\" | \"soul\" | \"trait\" | \"level\") => (\"shard\" | \"soul\" | \"trait\" | \"level\")[]",
+				"type": "(index: number, value: \"shard\" | \"trait\" | \"soul\" | \"level\") => (\"shard\" | \"trait\" | \"soul\" | \"level\")[]",
 				"optional": false
 			}
 		},
@@ -6616,7 +7505,7 @@
 		"kind": "type",
 		"type": "ToolErrorCode",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -6825,13 +7714,13 @@
 				"optional": false
 			}
 		},
-		"definition": "type ToolErrorCode = 'clarification_needed' | 'invalid_input' | 'invalid_state' | 'not_found' | 'system_error';"
+		"definition": "type ToolErrorCode = 'conflict' | 'clarification_needed' | 'invalid_input' | 'invalid_state' | 'not_found' | 'system_error';"
 	},
 	".:public.ToolErrorKind": {
 		"kind": "type",
 		"type": "ToolErrorKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -7200,7 +8089,7 @@
 		"kind": "type",
 		"type": "ToolNextStepHintKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -7428,7 +8317,7 @@
 		"kind": "type",
 		"type": "ToolOutcomeKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -7643,7 +8532,7 @@
 		"kind": "type",
 		"type": "string",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -7924,7 +8813,7 @@
 	},
 	".:public.tools.inspectSoulsItemTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ soulId: number; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData>"
+		"type": "SoulsToolDefinition<{ soulId: number; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData>"
 	},
 	".:public.tools.InspectSoulsItemToolData": {
 		"kind": "type",
@@ -7934,6 +8823,10 @@
 				"type": "EvidenceReport | undefined",
 				"optional": true
 			},
+			"history": {
+				"type": "RevisionRecord[] | undefined",
+				"optional": true
+			},
 			"profile": {
 				"type": "SoulProfile",
 				"optional": false
@@ -7941,6 +8834,10 @@
 			"renderedIdentity": {
 				"type": "string",
 				"optional": false
+			},
+			"reviews": {
+				"type": "Record<string, unknown>[] | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type index_InspectSoulsItemToolData = InspectSoulsItemToolData;",
@@ -7950,7 +8847,7 @@
 	},
 	".:public.tools.inspectSoulsItemToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { soulId: number; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }) => InspectSoulsItemToolResult"
+		"type": "(db: SoulsDb, input: { soulId: number; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }) => InspectSoulsItemToolResult"
 	},
 	".:public.tools.inspectSoulsItemToolName": {
 		"kind": "value",
@@ -8040,7 +8937,7 @@
 		"kind": "type",
 		"type": "JsonSchemaType",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -8256,12 +9153,17 @@
 	},
 	".:public.tools.levelUpSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData>"
+		"type": "SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData>"
 	},
 	".:public.tools.LevelUpSoulToolData": {
 		"kind": "type",
 		"type": "LevelUpSoulToolData",
-		"members": {},
+		"members": {
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
+			}
+		},
 		"definition": "type index_LevelUpSoulToolData = LevelUpSoulToolData;",
 		"references": {
 			"LevelUpSoulToolData": ".:public.LevelUpSoulToolData"
@@ -8269,7 +9171,7 @@
 	},
 	".:public.tools.levelUpSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { action: \"execute\" | \"revert\" | \"validate\"; soulId: number; plan?: LevelUpPlan | undefined; }) => LevelUpSoulToolResult"
+		"type": "(db: SoulsDb, input: { action: \"execute\" | \"revert\" | \"validate\"; soulId: number; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }) => LevelUpSoulToolResult"
 	},
 	".:public.tools.levelUpSoulToolName": {
 		"kind": "value",
@@ -8311,11 +9213,11 @@
 	},
 	".:public.tools.listSoulsToolDefinitions": {
 		"kind": "value",
-		"type": "() => (SoulsToolDefinition<{ soulId: number; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ action: \"create\" | \"update\" | \"retire\" | \"awaken\"; name?: string | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }, ManageSoulToolData> | SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ action: \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\"; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>)[]"
+		"type": "() => (SoulsToolDefinition<{ soulId: number; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>)[]"
 	},
 	".:public.tools.manageSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ action: \"create\" | \"update\" | \"retire\" | \"awaken\"; name?: string | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }, ManageSoulToolData>"
+		"type": "SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData>"
 	},
 	".:public.tools.ManageSoulToolData": {
 		"kind": "type",
@@ -8324,6 +9226,10 @@
 			"soul": {
 				"type": "SoulRecord",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type index_ManageSoulToolData = ManageSoulToolData;",
@@ -8333,7 +9239,7 @@
 	},
 	".:public.tools.manageSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { action: \"create\" | \"update\" | \"retire\" | \"awaken\"; name?: string | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }) => ManageSoulToolResult"
+		"type": "{ (db: SoulsDb, input: ManageSoulInput & { action: \"create\" | \"update\" | \"retire\" | \"awaken\"; }): ManageSoulToolResult; (db: SoulsDb, input: ManageSoulInput): ManageResult; }"
 	},
 	".:public.tools.manageSoulToolName": {
 		"kind": "value",
@@ -8391,7 +9297,7 @@
 	},
 	".:public.tools.observeSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData>"
+		"type": "SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData>"
 	},
 	".:public.tools.ObserveSoulToolData": {
 		"kind": "type",
@@ -8404,7 +9310,7 @@
 	},
 	".:public.tools.observeSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }) => ObserveSoulToolResult"
+		"type": "(db: SoulsDb, input: { action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }) => ObserveSoulToolResult"
 	},
 	".:public.tools.observeSoulToolName": {
 		"kind": "value",
@@ -8454,7 +9360,7 @@
 	},
 	".:public.tools.refineSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ action: \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; shardId?: number | undefined; }, RefineSoulToolData>"
+		"type": "SoulsToolDefinition<{ action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData>"
 	},
 	".:public.tools.RefineSoulToolData": {
 		"kind": "type",
@@ -8471,6 +9377,10 @@
 			"traitId": {
 				"type": "number | undefined",
 				"optional": true
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type index_RefineSoulToolData = RefineSoulToolData;",
@@ -8480,7 +9390,7 @@
 	},
 	".:public.tools.refineSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { action: \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; shardId?: number | undefined; }) => RefineSoulToolResult"
+		"type": "(db: SoulsDb, input: { action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }) => RefineSoulToolResult"
 	},
 	".:public.tools.refineSoulToolName": {
 		"kind": "value",
@@ -8572,7 +9482,7 @@
 	},
 	".:public.tools.reviewSoulsTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\"; }, ReviewSoulsToolData>"
+		"type": "SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData>"
 	},
 	".:public.tools.ReviewSoulsToolData": {
 		"kind": "type",
@@ -8585,7 +9495,7 @@
 	},
 	".:public.tools.reviewSoulsToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { view: \"list\" | \"maintenance\" | \"readiness\"; }) => ReviewSoulsToolResult"
+		"type": "(db: SoulsDb, input: { view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | undefined; noChange?: boolean | undefined; reason?: string | undefined; }) => ReviewSoulsToolResult"
 	},
 	".:public.tools.reviewSoulsToolName": {
 		"kind": "value",
@@ -8631,7 +9541,7 @@
 	},
 	".:public.tools.searchSoulsTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ query?: string | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>"
+		"type": "SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>"
 	},
 	".:public.tools.SearchSoulsToolData": {
 		"kind": "type",
@@ -8641,8 +9551,16 @@
 				"type": "number",
 				"optional": false
 			},
+			"hasMore": {
+				"type": "boolean",
+				"optional": false
+			},
 			"shards": {
 				"type": "ShardRecord[]",
+				"optional": false
+			},
+			"total": {
+				"type": "number",
 				"optional": false
 			}
 		},
@@ -8653,7 +9571,7 @@
 	},
 	".:public.tools.searchSoulsToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: { query?: string | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }) => SearchSoulsToolResult"
+		"type": "(db: SoulsDb, input: { query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }) => SearchSoulsToolResult"
 	},
 	".:public.tools.searchSoulsToolName": {
 		"kind": "value",
@@ -8797,7 +9715,7 @@
 	},
 	".:public.tools.soulsTools": {
 		"kind": "value",
-		"type": "(SoulsToolDefinition<{ soulId: number; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ action: \"create\" | \"update\" | \"retire\" | \"awaken\"; name?: string | undefined; essence?: string | undefined; description?: string | undefined; soulId?: number | undefined; }, ManageSoulToolData> | SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ action: \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\"; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>)[]"
+		"type": "(SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<{ soulId: number; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ action: \"execute\" | \"revert\" | \"validate\"; soulId: number; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: number[] | undefined; tags?: string[] | undefined; sealed?: boolean | undefined; shards?: DropShardInput[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData>)[]"
 	},
 	".:public.tools.stringArraySchema": {
 		"kind": "value",
@@ -8853,7 +9771,7 @@
 		"kind": "type",
 		"type": "ToolClarificationCode",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9071,11 +9989,11 @@
 		"kind": "type",
 		"type": "ToolDefinitionRegistry",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => ArrayIterator<SoulsToolDefinition<any, any>>",
 				"optional": false
 			},
-			"__@unscopables@818": {
+			"__@unscopables@898": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -9209,7 +10127,7 @@
 		"kind": "type",
 		"type": "ToolEntityKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9427,48 +10345,48 @@
 		"kind": "type",
 		"type": "ToolEntityKindSet",
 		"members": {
-			"__@iterator@798": {
-				"type": "() => ArrayIterator<\"shard\" | \"soul\" | \"trait\" | \"level\">",
+			"__@iterator@878": {
+				"type": "() => ArrayIterator<\"shard\" | \"trait\" | \"soul\" | \"level\">",
 				"optional": false
 			},
-			"__@unscopables@818": {
+			"__@unscopables@898": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
 			"at": {
-				"type": "(index: number) => \"shard\" | \"soul\" | \"trait\" | \"level\" | undefined",
+				"type": "(index: number) => \"shard\" | \"trait\" | \"soul\" | \"level\" | undefined",
 				"optional": false
 			},
 			"concat": {
-				"type": "{ (...items: ConcatArray<\"shard\" | \"soul\" | \"trait\" | \"level\">[]): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; (...items: (\"shard\" | \"soul\" | \"trait\" | \"level\" | ConcatArray<\"shard\" | \"soul\" | \"trait\" | \"level\">)[]): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; }",
+				"type": "{ (...items: ConcatArray<\"shard\" | \"trait\" | \"soul\" | \"level\">[]): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; (...items: (\"shard\" | \"trait\" | \"soul\" | \"level\" | ConcatArray<\"shard\" | \"trait\" | \"soul\" | \"level\">)[]): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; }",
 				"optional": false
 			},
 			"entries": {
-				"type": "() => ArrayIterator<[number, \"shard\" | \"soul\" | \"trait\" | \"level\"]>",
+				"type": "() => ArrayIterator<[number, \"shard\" | \"trait\" | \"soul\" | \"level\"]>",
 				"optional": false
 			},
 			"every": {
-				"type": "{ <S extends \"shard\" | \"soul\" | \"trait\" | \"level\">(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => value is S, thisArg?: any): this is readonly S[]; (predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any): boolean; }",
+				"type": "{ <S extends \"shard\" | \"trait\" | \"soul\" | \"level\">(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => value is S, thisArg?: any): this is readonly S[]; (predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any): boolean; }",
 				"optional": false
 			},
 			"filter": {
-				"type": "{ <S extends \"shard\" | \"soul\" | \"trait\" | \"level\">(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => value is S, thisArg?: any): S[]; (predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; }",
+				"type": "{ <S extends \"shard\" | \"trait\" | \"soul\" | \"level\">(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => value is S, thisArg?: any): S[]; (predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; }",
 				"optional": false
 			},
 			"find": {
-				"type": "{ <S extends \"shard\" | \"soul\" | \"trait\" | \"level\">(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, obj: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, obj: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any): \"shard\" | \"soul\" | \"trait\" | \"level\" | undefined; }",
+				"type": "{ <S extends \"shard\" | \"trait\" | \"soul\" | \"level\">(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, obj: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, obj: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any): \"shard\" | \"trait\" | \"soul\" | \"level\" | undefined; }",
 				"optional": false
 			},
 			"findIndex": {
-				"type": "(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, obj: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any) => number",
+				"type": "(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, obj: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any) => number",
 				"optional": false
 			},
 			"findLast": {
-				"type": "{ <S extends \"shard\" | \"soul\" | \"trait\" | \"level\">(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any): \"shard\" | \"soul\" | \"trait\" | \"level\" | undefined; }",
+				"type": "{ <S extends \"shard\" | \"trait\" | \"soul\" | \"level\">(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => value is S, thisArg?: any): S | undefined; (predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any): \"shard\" | \"trait\" | \"soul\" | \"level\" | undefined; }",
 				"optional": false
 			},
 			"findLastIndex": {
-				"type": "(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any) => number",
+				"type": "(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any) => number",
 				"optional": false
 			},
 			"flat": {
@@ -9476,19 +10394,19 @@
 				"optional": false
 			},
 			"flatMap": {
-				"type": "<U, This = undefined>(callback: (this: This, value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => U | readonly U[], thisArg?: This | undefined) => U[]",
+				"type": "<U, This = undefined>(callback: (this: This, value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => U | readonly U[], thisArg?: This | undefined) => U[]",
 				"optional": false
 			},
 			"forEach": {
-				"type": "(callbackfn: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => void, thisArg?: any) => void",
+				"type": "(callbackfn: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => void, thisArg?: any) => void",
 				"optional": false
 			},
 			"includes": {
-				"type": "(searchElement: \"shard\" | \"soul\" | \"trait\" | \"level\", fromIndex?: number) => boolean",
+				"type": "(searchElement: \"shard\" | \"trait\" | \"soul\" | \"level\", fromIndex?: number) => boolean",
 				"optional": false
 			},
 			"indexOf": {
-				"type": "(searchElement: \"shard\" | \"soul\" | \"trait\" | \"level\", fromIndex?: number) => number",
+				"type": "(searchElement: \"shard\" | \"trait\" | \"soul\" | \"level\", fromIndex?: number) => number",
 				"optional": false
 			},
 			"join": {
@@ -9500,7 +10418,7 @@
 				"optional": false
 			},
 			"lastIndexOf": {
-				"type": "(searchElement: \"shard\" | \"soul\" | \"trait\" | \"level\", fromIndex?: number) => number",
+				"type": "(searchElement: \"shard\" | \"trait\" | \"soul\" | \"level\", fromIndex?: number) => number",
 				"optional": false
 			},
 			"length": {
@@ -9508,23 +10426,23 @@
 				"optional": false
 			},
 			"map": {
-				"type": "<U>(callbackfn: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => U, thisArg?: any) => U[]",
+				"type": "<U>(callbackfn: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => U, thisArg?: any) => U[]",
 				"optional": false
 			},
 			"reduce": {
-				"type": "{ (callbackfn: (previousValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => \"shard\" | \"soul\" | \"trait\" | \"level\"): \"shard\" | \"soul\" | \"trait\" | \"level\"; (callbackfn: (previousValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => \"shard\" | \"soul\" | \"trait\" | \"level\", initialValue: \"shard\" | \"soul\" | \"trait\" | \"level\"): \"shard\" | \"soul\" | \"trait\" | \"level\"; <U>(callbackfn: (previousValue: U, currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => U, initialValue: U): U; }",
+				"type": "{ (callbackfn: (previousValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => \"shard\" | \"trait\" | \"soul\" | \"level\"): \"shard\" | \"trait\" | \"soul\" | \"level\"; (callbackfn: (previousValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => \"shard\" | \"trait\" | \"soul\" | \"level\", initialValue: \"shard\" | \"trait\" | \"soul\" | \"level\"): \"shard\" | \"trait\" | \"soul\" | \"level\"; <U>(callbackfn: (previousValue: U, currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => U, initialValue: U): U; }",
 				"optional": false
 			},
 			"reduceRight": {
-				"type": "{ (callbackfn: (previousValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => \"shard\" | \"soul\" | \"trait\" | \"level\"): \"shard\" | \"soul\" | \"trait\" | \"level\"; (callbackfn: (previousValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => \"shard\" | \"soul\" | \"trait\" | \"level\", initialValue: \"shard\" | \"soul\" | \"trait\" | \"level\"): \"shard\" | \"soul\" | \"trait\" | \"level\"; <U>(callbackfn: (previousValue: U, currentValue: \"shard\" | \"soul\" | \"trait\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => U, initialValue: U): U; }",
+				"type": "{ (callbackfn: (previousValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => \"shard\" | \"trait\" | \"soul\" | \"level\"): \"shard\" | \"trait\" | \"soul\" | \"level\"; (callbackfn: (previousValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => \"shard\" | \"trait\" | \"soul\" | \"level\", initialValue: \"shard\" | \"trait\" | \"soul\" | \"level\"): \"shard\" | \"trait\" | \"soul\" | \"level\"; <U>(callbackfn: (previousValue: U, currentValue: \"shard\" | \"trait\" | \"soul\" | \"level\", currentIndex: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => U, initialValue: U): U; }",
 				"optional": false
 			},
 			"slice": {
-				"type": "(start?: number, end?: number) => (\"shard\" | \"soul\" | \"trait\" | \"level\")[]",
+				"type": "(start?: number, end?: number) => (\"shard\" | \"trait\" | \"soul\" | \"level\")[]",
 				"optional": false
 			},
 			"some": {
-				"type": "(predicate: (value: \"shard\" | \"soul\" | \"trait\" | \"level\", index: number, array: readonly (\"shard\" | \"soul\" | \"trait\" | \"level\")[]) => unknown, thisArg?: any) => boolean",
+				"type": "(predicate: (value: \"shard\" | \"trait\" | \"soul\" | \"level\", index: number, array: readonly (\"shard\" | \"trait\" | \"soul\" | \"level\")[]) => unknown, thisArg?: any) => boolean",
 				"optional": false
 			},
 			"toLocaleString": {
@@ -9532,15 +10450,15 @@
 				"optional": false
 			},
 			"toReversed": {
-				"type": "() => (\"shard\" | \"soul\" | \"trait\" | \"level\")[]",
+				"type": "() => (\"shard\" | \"trait\" | \"soul\" | \"level\")[]",
 				"optional": false
 			},
 			"toSorted": {
-				"type": "(compareFn?: ((a: \"shard\" | \"soul\" | \"trait\" | \"level\", b: \"shard\" | \"soul\" | \"trait\" | \"level\") => number) | undefined) => (\"shard\" | \"soul\" | \"trait\" | \"level\")[]",
+				"type": "(compareFn?: ((a: \"shard\" | \"trait\" | \"soul\" | \"level\", b: \"shard\" | \"trait\" | \"soul\" | \"level\") => number) | undefined) => (\"shard\" | \"trait\" | \"soul\" | \"level\")[]",
 				"optional": false
 			},
 			"toSpliced": {
-				"type": "{ (start: number, deleteCount: number, ...items: (\"shard\" | \"soul\" | \"trait\" | \"level\")[]): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; (start: number, deleteCount?: number): (\"shard\" | \"soul\" | \"trait\" | \"level\")[]; }",
+				"type": "{ (start: number, deleteCount: number, ...items: (\"shard\" | \"trait\" | \"soul\" | \"level\")[]): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; (start: number, deleteCount?: number): (\"shard\" | \"trait\" | \"soul\" | \"level\")[]; }",
 				"optional": false
 			},
 			"toString": {
@@ -9548,11 +10466,11 @@
 				"optional": false
 			},
 			"values": {
-				"type": "() => ArrayIterator<\"shard\" | \"soul\" | \"trait\" | \"level\">",
+				"type": "() => ArrayIterator<\"shard\" | \"trait\" | \"soul\" | \"level\">",
 				"optional": false
 			},
 			"with": {
-				"type": "(index: number, value: \"shard\" | \"soul\" | \"trait\" | \"level\") => (\"shard\" | \"soul\" | \"trait\" | \"level\")[]",
+				"type": "(index: number, value: \"shard\" | \"trait\" | \"soul\" | \"level\") => (\"shard\" | \"trait\" | \"soul\" | \"level\")[]",
 				"optional": false
 			}
 		},
@@ -9587,7 +10505,7 @@
 		"kind": "type",
 		"type": "ToolErrorCode",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9805,7 +10723,7 @@
 		"kind": "type",
 		"type": "ToolErrorKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -10142,7 +11060,7 @@
 		"kind": "type",
 		"type": "ToolNextStepHintKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -10364,7 +11282,7 @@
 		"kind": "type",
 		"type": "ToolOutcomeKind",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -10582,7 +11500,7 @@
 		"kind": "type",
 		"type": "string",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -10839,7 +11757,7 @@
 		"kind": "type",
 		"type": "ToolSideEffects",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -11126,7 +12044,7 @@
 		"kind": "type",
 		"type": "ToolWarningCode",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -11376,7 +12294,7 @@
 		"kind": "type",
 		"type": "ToolSideEffects",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -11673,7 +12591,7 @@
 		"kind": "type",
 		"type": "ToolWarningCode",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -11979,9 +12897,13 @@
 			"updatedAt": {
 				"type": "number",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface TraitRecord { id: number; soulId: number; principle: string; provenance: string; generation: number; status: TraitStatus; mergedInto: number | null; createdAt: number; updatedAt: number; }",
+		"definition": "interface TraitRecord { warnings?: string[] | undefined; id: number; soulId: number; principle: string; provenance: string; generation: number; status: TraitStatus; mergedInto: number | null; createdAt: number; updatedAt: number; }",
 		"references": {
 			"TraitStatus": ".:public.TraitStatus"
 		}
@@ -12029,7 +12951,7 @@
 		"kind": "type",
 		"type": "\"active\" | \"consolidated\" | \"promoted\" | \"reverted\"",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12304,6 +13226,10 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"principle": {
 				"type": "string",
 				"optional": false
@@ -12311,6 +13237,18 @@
 			"provenance": {
 				"type": "string",
 				"optional": false
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
+			"strict": {
+				"type": "boolean | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type types_AddTraitInput = AddTraitInput;",
@@ -12391,6 +13329,10 @@
 			"essence": {
 				"type": "string",
 				"optional": false
+			},
+			"externalId": {
+				"type": "string | null | undefined",
+				"optional": true
 			},
 			"name": {
 				"type": "string",
@@ -12478,6 +13420,10 @@
 				"type": "boolean",
 				"optional": false
 			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"sourceDiversity": {
 				"type": "number",
 				"optional": false
@@ -12530,8 +13476,20 @@
 				"type": "string",
 				"optional": false
 			},
+			"idempotencyKey": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"now": {
 				"type": "number | undefined",
+				"optional": true
+			},
+			"occurredAt": {
+				"type": "string | number | undefined",
+				"optional": true
+			},
+			"ref": {
+				"type": "string | undefined",
 				"optional": true
 			},
 			"sealed": {
@@ -12564,6 +13522,10 @@
 				"type": "number[]",
 				"optional": false
 			},
+			"duplicate": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
 			"shard": {
 				"type": "ShardRecord",
 				"optional": false
@@ -12581,6 +13543,10 @@
 			"crystallizationTriggers": {
 				"type": "number[]",
 				"optional": false
+			},
+			"results": {
+				"type": "DropShardResult[] | undefined",
+				"optional": true
 			},
 			"shards": {
 				"type": "ShardRecord[]",
@@ -12616,6 +13582,10 @@
 				"type": "number",
 				"optional": false
 			},
+			"totalMembers": {
+				"type": "number | undefined",
+				"optional": true
+			},
 			"weight": {
 				"type": "number",
 				"optional": false
@@ -12624,6 +13594,36 @@
 		"definition": "type types_EvidenceCluster = EvidenceCluster;",
 		"references": {
 			"EvidenceCluster": ".:public.EvidenceCluster"
+		}
+	},
+	".:public.types.EvidenceGateOptions": {
+		"kind": "type",
+		"type": "EvidenceGateOptions",
+		"members": {
+			"now": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
+			"strict": {
+				"type": "boolean | undefined",
+				"optional": true
+			}
+		},
+		"definition": "type types_EvidenceGateOptions = EvidenceGateOptions;",
+		"references": {
+			"EvidenceGateOptions": ".:public.EvidenceGateOptions"
 		}
 	},
 	".:public.types.EvidenceReport": {
@@ -12682,6 +13682,18 @@
 		"members": {
 			"clusterThreshold": {
 				"type": "number | undefined",
+				"optional": true
+			},
+			"full": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
+			"maxMembersPerCluster": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"negationWords": {
+				"type": "string[] | undefined",
 				"optional": true
 			},
 			"now": {
@@ -12827,6 +13839,10 @@
 			"snapshot": {
 				"type": "LevelRecord",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type types_LevelUpResult = LevelUpResult;",
@@ -12966,6 +13982,94 @@
 			"PromotionCandidate": ".:public.PromotionCandidate"
 		}
 	},
+	".:public.types.RefineWithEvidenceInput": {
+		"kind": "type",
+		"type": "RefineWithEvidenceInput",
+		"members": {
+			"action": {
+				"type": "\"add\" | \"revise\"",
+				"optional": false
+			},
+			"expectedRevision": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"now": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"principle": {
+				"type": "string",
+				"optional": false
+			},
+			"provenance": {
+				"type": "string",
+				"optional": false
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[]",
+				"optional": false
+			},
+			"soulId": {
+				"type": "number",
+				"optional": false
+			},
+			"strict": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
+			"traitId": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"traitLimit": {
+				"type": "number | undefined",
+				"optional": true
+			}
+		},
+		"definition": "type types_RefineWithEvidenceInput = RefineWithEvidenceInput;",
+		"references": {
+			"RefineWithEvidenceInput": ".:public.RefineWithEvidenceInput"
+		}
+	},
+	".:public.types.RenderPublicationOptions": {
+		"kind": "type",
+		"type": "RenderPublicationOptions",
+		"members": {
+			"budget": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"expectHash": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"includeProvenance": {
+				"type": "boolean | undefined",
+				"optional": true
+			},
+			"into": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"marker": {
+				"type": "string | undefined",
+				"optional": true
+			}
+		},
+		"definition": "type types_RenderPublicationOptions = RenderPublicationOptions;",
+		"references": {
+			"RenderPublicationOptions": ".:public.RenderPublicationOptions"
+		}
+	},
 	".:public.types.RenderSoulOptions": {
 		"kind": "type",
 		"type": "RenderSoulOptions",
@@ -12988,6 +14092,10 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"principle": {
 				"type": "string | undefined",
 				"optional": true
@@ -12995,11 +14103,65 @@
 			"provenance": {
 				"type": "string | undefined",
 				"optional": true
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type types_ReviseTraitInput = ReviseTraitInput;",
 		"references": {
 			"ReviseTraitInput": ".:public.ReviseTraitInput"
+		}
+	},
+	".:public.types.RevisionRecord": {
+		"kind": "type",
+		"type": "RevisionRecord",
+		"members": {
+			"createdAt": {
+				"type": "number",
+				"optional": false
+			},
+			"entity": {
+				"type": "\"trait\" | \"essence\"",
+				"optional": false
+			},
+			"entityId": {
+				"type": "number",
+				"optional": false
+			},
+			"id": {
+				"type": "number",
+				"optional": false
+			},
+			"newText": {
+				"type": "string",
+				"optional": false
+			},
+			"oldText": {
+				"type": "string | null",
+				"optional": false
+			},
+			"operator": {
+				"type": "string | null",
+				"optional": false
+			},
+			"reason": {
+				"type": "string | null",
+				"optional": false
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
+			"soulId": {
+				"type": "number",
+				"optional": false
+			}
+		},
+		"definition": "type types_RevisionRecord = RevisionRecord;",
+		"references": {
+			"RevisionRecord": ".:public.RevisionRecord"
 		}
 	},
 	".:public.types.SearchShardsOptions": {
@@ -13014,12 +14176,28 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"offset": {
+				"type": "number | undefined",
+				"optional": true
+			},
 			"shardExpiryDays": {
 				"type": "number | undefined",
 				"optional": true
 			},
 			"soulId": {
 				"type": "number | undefined",
+				"optional": true
+			},
+			"source": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"status": {
+				"type": "ShardFilterStatus | undefined",
+				"optional": true
+			},
+			"tags": {
+				"type": "string[] | undefined",
 				"optional": true
 			}
 		},
@@ -13046,6 +14224,224 @@
 			"ShardCountRecord": ".:public.ShardCountRecord"
 		}
 	},
+	".:public.types.ShardFilterStatus": {
+		"kind": "type",
+		"type": "ShardFilterStatus",
+		"members": {
+			"__@iterator@878": {
+				"type": "() => StringIterator<string>",
+				"optional": false
+			},
+			"anchor": {
+				"type": "(name: string) => string",
+				"optional": false
+			},
+			"at": {
+				"type": "(index: number) => string | undefined",
+				"optional": false
+			},
+			"big": {
+				"type": "() => string",
+				"optional": false
+			},
+			"blink": {
+				"type": "() => string",
+				"optional": false
+			},
+			"bold": {
+				"type": "() => string",
+				"optional": false
+			},
+			"charAt": {
+				"type": "(pos: number) => string",
+				"optional": false
+			},
+			"charCodeAt": {
+				"type": "(index: number) => number",
+				"optional": false
+			},
+			"codePointAt": {
+				"type": "(pos: number) => number | undefined",
+				"optional": false
+			},
+			"concat": {
+				"type": "(...strings: string[]) => string",
+				"optional": false
+			},
+			"endsWith": {
+				"type": "(searchString: string, endPosition?: number) => boolean",
+				"optional": false
+			},
+			"fixed": {
+				"type": "() => string",
+				"optional": false
+			},
+			"fontcolor": {
+				"type": "(color: string) => string",
+				"optional": false
+			},
+			"fontsize": {
+				"type": "{ (size: number): string; (size: string): string; }",
+				"optional": false
+			},
+			"includes": {
+				"type": "(searchString: string, position?: number) => boolean",
+				"optional": false
+			},
+			"indexOf": {
+				"type": "(searchString: string, position?: number) => number",
+				"optional": false
+			},
+			"isWellFormed": {
+				"type": "() => boolean",
+				"optional": false
+			},
+			"italics": {
+				"type": "() => string",
+				"optional": false
+			},
+			"lastIndexOf": {
+				"type": "(searchString: string, position?: number) => number",
+				"optional": false
+			},
+			"length": {
+				"type": "number",
+				"optional": false
+			},
+			"link": {
+				"type": "(url: string) => string",
+				"optional": false
+			},
+			"localeCompare": {
+				"type": "{ (that: string): number; (that: string, locales?: string | string[], options?: Intl.CollatorOptions): number; (that: string, locales?: Intl.LocalesArgument, options?: Intl.CollatorOptions): number; }",
+				"optional": false
+			},
+			"match": {
+				"type": "{ (regexp: string | RegExp): RegExpMatchArray | null; (matcher: { [Symbol.match](string: string): RegExpMatchArray | null; }): RegExpMatchArray | null; }",
+				"optional": false
+			},
+			"matchAll": {
+				"type": "(regexp: RegExp) => RegExpStringIterator<RegExpExecArray>",
+				"optional": false
+			},
+			"normalize": {
+				"type": "{ (form: \"NFC\" | \"NFD\" | \"NFKC\" | \"NFKD\"): string; (form?: string): string; }",
+				"optional": false
+			},
+			"padEnd": {
+				"type": "(maxLength: number, fillString?: string) => string",
+				"optional": false
+			},
+			"padStart": {
+				"type": "(maxLength: number, fillString?: string) => string",
+				"optional": false
+			},
+			"repeat": {
+				"type": "(count: number) => string",
+				"optional": false
+			},
+			"replace": {
+				"type": "{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { [Symbol.replace](string: string, replaceValue: string): string; }, replaceValue: string): string; (searchValue: { [Symbol.replace](string: string, replacer: (substring: string, ...args: any[]) => string): string; }, replacer: (substring: string, ...args: any[]) => string): string; }",
+				"optional": false
+			},
+			"replaceAll": {
+				"type": "{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; }",
+				"optional": false
+			},
+			"search": {
+				"type": "{ (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }",
+				"optional": false
+			},
+			"slice": {
+				"type": "(start?: number, end?: number) => string",
+				"optional": false
+			},
+			"small": {
+				"type": "() => string",
+				"optional": false
+			},
+			"split": {
+				"type": "{ (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }",
+				"optional": false
+			},
+			"startsWith": {
+				"type": "(searchString: string, position?: number) => boolean",
+				"optional": false
+			},
+			"strike": {
+				"type": "() => string",
+				"optional": false
+			},
+			"sub": {
+				"type": "() => string",
+				"optional": false
+			},
+			"substr": {
+				"type": "(from: number, length?: number) => string",
+				"optional": false
+			},
+			"substring": {
+				"type": "(start: number, end?: number) => string",
+				"optional": false
+			},
+			"sup": {
+				"type": "() => string",
+				"optional": false
+			},
+			"toLocaleLowerCase": {
+				"type": "{ (locales?: string | string[]): string; (locales?: Intl.LocalesArgument): string; }",
+				"optional": false
+			},
+			"toLocaleUpperCase": {
+				"type": "{ (locales?: string | string[]): string; (locales?: Intl.LocalesArgument): string; }",
+				"optional": false
+			},
+			"toLowerCase": {
+				"type": "() => string",
+				"optional": false
+			},
+			"toString": {
+				"type": "() => string",
+				"optional": false
+			},
+			"toUpperCase": {
+				"type": "() => string",
+				"optional": false
+			},
+			"toWellFormed": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trim": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trimEnd": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trimLeft": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trimRight": {
+				"type": "() => string",
+				"optional": false
+			},
+			"trimStart": {
+				"type": "() => string",
+				"optional": false
+			},
+			"valueOf": {
+				"type": "() => string",
+				"optional": false
+			}
+		},
+		"definition": "type types_ShardFilterStatus = ShardFilterStatus;",
+		"references": {
+			"ShardFilterStatus": ".:public.ShardFilterStatus"
+		}
+	},
 	".:public.types.ShardListOptions": {
 		"kind": "type",
 		"type": "ShardListOptions",
@@ -13055,6 +14451,10 @@
 				"optional": true
 			},
 			"now": {
+				"type": "number | undefined",
+				"optional": true
+			},
+			"offset": {
 				"type": "number | undefined",
 				"optional": true
 			},
@@ -13070,6 +14470,10 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"status": {
+				"type": "ShardFilterStatus | undefined",
+				"optional": true
+			},
 			"tags": {
 				"type": "string[] | undefined",
 				"optional": true
@@ -13078,6 +14482,28 @@
 		"definition": "type types_ShardListOptions = ShardListOptions;",
 		"references": {
 			"ShardListOptions": ".:public.ShardListOptions"
+		}
+	},
+	".:public.types.ShardPage": {
+		"kind": "type",
+		"type": "ShardPage",
+		"members": {
+			"hasMore": {
+				"type": "boolean",
+				"optional": false
+			},
+			"items": {
+				"type": "ShardRecord[]",
+				"optional": false
+			},
+			"total": {
+				"type": "number",
+				"optional": false
+			}
+		},
+		"definition": "type types_ShardPage = ShardPage;",
+		"references": {
+			"ShardPage": ".:public.ShardPage"
 		}
 	},
 	".:public.types.ShardRecord": {
@@ -13095,6 +14521,22 @@
 			"id": {
 				"type": "number",
 				"optional": false
+			},
+			"idempotencyKey": {
+				"type": "string | null | undefined",
+				"optional": true
+			},
+			"insertedAt": {
+				"type": "number | null | undefined",
+				"optional": true
+			},
+			"occurredAt": {
+				"type": "number | null | undefined",
+				"optional": true
+			},
+			"ref": {
+				"type": "string | null | undefined",
+				"optional": true
 			},
 			"sealed": {
 				"type": "boolean",
@@ -13134,7 +14576,7 @@
 		"kind": "type",
 		"type": "\"pending\" | \"faded\"",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -13376,6 +14818,10 @@
 				"type": "number",
 				"optional": false
 			},
+			"readinessReason": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"soul": {
 				"type": "SoulRecord",
 				"optional": false
@@ -13410,6 +14856,10 @@
 				"type": "string",
 				"optional": false
 			},
+			"externalId": {
+				"type": "string | null | undefined",
+				"optional": true
+			},
 			"id": {
 				"type": "number",
 				"optional": false
@@ -13437,6 +14887,10 @@
 			"updatedAt": {
 				"type": "number",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type types_SoulRecord = SoulRecord;",
@@ -13533,6 +14987,10 @@
 			"updatedAt": {
 				"type": "number",
 				"optional": false
+			},
+			"warnings": {
+				"type": "string[] | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type types_TraitRecord = TraitRecord;",
@@ -13586,7 +15044,7 @@
 		"kind": "type",
 		"type": "\"active\" | \"consolidated\" | \"promoted\" | \"reverted\"",
 		"members": {
-			"__@iterator@798": {
+			"__@iterator@878": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -13842,6 +15300,10 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"externalId": {
+				"type": "string | null | undefined",
+				"optional": true
+			},
 			"name": {
 				"type": "string | undefined",
 				"optional": true
@@ -13850,8 +15312,24 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
 			"slug": {
 				"type": "string | null | undefined",
+				"optional": true
+			},
+			"strict": {
+				"type": "boolean | undefined",
 				"optional": true
 			}
 		},
@@ -13872,6 +15350,10 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"externalId": {
+				"type": "string | null | undefined",
+				"optional": true
+			},
 			"name": {
 				"type": "string | undefined",
 				"optional": true
@@ -13880,12 +15362,31 @@
 				"type": "number | undefined",
 				"optional": true
 			},
+			"operator": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"reason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"shardIds": {
+				"type": "number[] | undefined",
+				"optional": true
+			},
 			"slug": {
 				"type": "string | null | undefined",
 				"optional": true
+			},
+			"strict": {
+				"type": "boolean | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface UpdateSoulInput { name?: string | undefined; slug?: string | null | undefined; essence?: string | undefined; description?: string | undefined; now?: number | undefined; }"
+		"definition": "interface UpdateSoulInput extends EvidenceGateOptions { externalId?: string | null | undefined; name?: string | undefined; slug?: string | null | undefined; essence?: string | undefined; description?: string | undefined; now?: number | undefined; }",
+		"references": {
+			"EvidenceGateOptions": ".:public.EvidenceGateOptions"
+		}
 	},
 	".:public.useToolNext": {
 		"kind": "value",
@@ -13907,7 +15408,7 @@
 	},
 	".:public.write.citeShard": {
 		"kind": "value",
-		"type": "(db: SoulsDb, shardId: number, traitId: number) => ShardRecord"
+		"type": "(db: SoulsDb, shardId: number, traitId: number, options?: { now?: number | undefined; }) => ShardRecord"
 	},
 	".:public.write.createSoul": {
 		"kind": "value",
@@ -13915,7 +15416,7 @@
 	},
 	".:public.write.dropShard": {
 		"kind": "value",
-		"type": "(db: SoulsDb, input: DropShardInput, options?: CrystallizationCheckOptions) => DropShardResult"
+		"type": "(db: SoulsDb, input: DropShardInput, options?: CrystallizationCheckOptions & { insertedAt?: number; }) => DropShardResult"
 	},
 	".:public.write.dropShards": {
 		"kind": "value",
@@ -13927,11 +15428,19 @@
 	},
 	".:public.write.levelUp": {
 		"kind": "value",
-		"type": "(db: SoulsDb, soulId: number, plan: LevelUpPlan, options?: { now?: number; }) => LevelUpResult"
+		"type": "(db: SoulsDb, soulId: number, plan: LevelUpPlan, options?: { now?: number; strict?: boolean; traitLimit?: number; }) => LevelUpResult"
+	},
+	".:public.write.publishSoul": {
+		"kind": "value",
+		"type": "(db: SoulsDb, soulId: number, options: RenderPublicationOptions & { into: string; }) => { fileHash: string; blockHash: string; text: string; block: string; trimmed: { traitIds: number[]; essenceChars: number; }; current: string; exists: boolean; }"
 	},
 	".:public.write.reactivateTrait": {
 		"kind": "value",
-		"type": "(db: SoulsDb, id: number, options?: { now?: number; }) => TraitRecord"
+		"type": "(db: SoulsDb, id: number, options?: { now?: number; strict?: boolean; traitLimit?: number; }) => TraitRecord"
+	},
+	".:public.write.refineWithEvidence": {
+		"kind": "value",
+		"type": "(db: SoulsDb, input: RefineWithEvidenceInput) => { warnings?: string[] | undefined; id: number; soulId: number; principle: string; provenance: string; generation: number; status: TraitStatus; mergedInto: number | null; createdAt: number; updatedAt: number; }"
 	},
 	".:public.write.retireSoul": {
 		"kind": "value",
@@ -13943,15 +15452,23 @@
 	},
 	".:public.write.revertLevelUp": {
 		"kind": "value",
-		"type": "(db: SoulsDb, soulId: number, options?: { now?: number; }) => void"
+		"type": "(db: SoulsDb, soulId: number, options?: { now?: number; onWarning?: (warning: string) => void; }) => void"
 	},
 	".:public.write.revertTrait": {
 		"kind": "value",
 		"type": "(db: SoulsDb, id: number, options?: { now?: number; }) => TraitRecord"
 	},
+	".:public.write.reviewNoChange": {
+		"kind": "value",
+		"type": "(db: SoulsDb, soulId: number, options?: { reason?: string | undefined; now?: number | undefined; }) => { id: number; soulId: number; reason: string | null; createdAt: number; }"
+	},
 	".:public.write.reviseTrait": {
 		"kind": "value",
 		"type": "(db: SoulsDb, id: number, input: ReviseTraitInput) => TraitRecord"
+	},
+	".:public.write.setSoulsConfig": {
+		"kind": "value",
+		"type": "(db: SoulsDb, key: string, value: string) => void"
 	},
 	".:public.write.stampAttuned": {
 		"kind": "value",
@@ -14002,7 +15519,7 @@
 	},
 	"./mcp:exports.soulsMcpInstructions": {
 		"kind": "string",
-		"value": "Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous."
+		"value": "Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references accept ext:<externalId>. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different)."
 	},
 	"./mcp:public.createMcpServer": {
 		"kind": "value",
@@ -14279,14 +15796,14 @@
 	},
 	"./mcp:public.soulsMcpInstructions": {
 		"kind": "value",
-		"type": "\"Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous.\""
+		"type": "\"Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references accept ext:<externalId>. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).\""
 	},
 	"./mcp:public.SurfaceTool": {
 		"kind": "type",
 		"type": "SurfaceTool<TCtx>",
 		"members": {
 			"cli": {
-				"type": "{ noun?: string; verb: string; positionals?: string[]; fileArgs?: readonly string[]; action?: { property: string; verbs?: Record<string, string>; positionals?: Record<string, string[]>; }; } | undefined",
+				"type": "{ noun?: string; verb: string; positionals?: string[]; fileArgs?: readonly string[]; helpInputSchema?: JsonSchema; action?: { property: string; verbs?: Record<string, string>; positionals?: Record<string, string[]>; }; } | undefined",
 				"optional": true
 			},
 			"description": {
@@ -14326,7 +15843,7 @@
 				"optional": true
 			}
 		},
-		"definition": "interface SurfaceTool<TCtx> { name: string; cli?: { noun?: string; verb: string; positionals?: string[]; fileArgs?: readonly string[]; action?: { property: string; verbs?: Record<string, string>; positionals?: Record<string, string[]>; }; }; title?: string; description: string; inputSchema: JsonSchema & { type: 'object'; }; whenToUse?: string; whenNotToUse?: string; readOnly?: boolean; sideEffects?: string; handler(ctx: TCtx, input: Record<string, unknown>): unknown | Promise<unknown>; }",
+		"definition": "interface SurfaceTool<TCtx> { name: string; cli?: { noun?: string; verb: string; positionals?: string[]; fileArgs?: readonly string[]; helpInputSchema?: JsonSchema; action?: { property: string; verbs?: Record<string, string>; positionals?: Record<string, string[]>; }; }; title?: string; description: string; inputSchema: JsonSchema & { type: 'object'; }; whenToUse?: string; whenNotToUse?: string; readOnly?: boolean; sideEffects?: string; handler(ctx: TCtx, input: Record<string, unknown>): unknown | Promise<unknown>; }",
 		"references": {
 			"JsonSchema": "./mcp:public.JsonSchema",
 			"TCtx": "./mcp:public.SurfaceTool.types.TCtx"
