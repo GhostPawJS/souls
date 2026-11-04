@@ -117,8 +117,8 @@ export function observeSoulToolHandler(
 			}
 			return toolSuccess(
 				result.duplicate
-					? '0 shards deposited, 1 duplicate skipped.'
-					: `1 shard deposited, 0 duplicates skipped${result.crystallizationTriggers.length > 0 ? ' — crystallization threshold reached' : ''}.`,
+					? `Shard ${result.shard.id} already recorded (duplicate idempotency key).`
+					: `Shard ${result.shard.id} deposited${result.crystallizationTriggers.length > 0 ? ' — crystallization threshold reached' : ''}.`,
 				data,
 				{ entities: [toShardRef(result.shard)], next, warnings },
 			);
@@ -147,7 +147,9 @@ export function observeSoulToolHandler(
 				crystallizationTriggers: result.crystallizationTriggers,
 			};
 			return toolSuccess(
-				`${summarizeCount(result.shards.length - duplicates, 'shard')} deposited, ${summarizeCount(duplicates, 'duplicate')} skipped.`,
+				duplicates > 0
+					? `${summarizeCount(result.shards.length - duplicates, 'shard')} deposited, ${summarizeCount(duplicates, 'duplicate')} skipped.`
+					: `${summarizeCount(result.shards.length, 'shard')} deposited.`,
 				data,
 				{
 					entities: result.shards.map(toShardRef),

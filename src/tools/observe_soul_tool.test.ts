@@ -61,10 +61,14 @@ describe('idempotent observation summaries', () => {
 		};
 		const first = observeSoulToolHandler(db, { action: 'drop', ...item });
 		ok(first.ok);
-		strictEqual(first.summary, '1 shard deposited, 0 duplicates skipped.');
+		ok('shardId' in first.data);
+		strictEqual(first.summary, `Shard ${first.data.shardId} deposited.`);
 		const duplicate = observeSoulToolHandler(db, { action: 'drop', ...item });
 		ok(duplicate.ok);
-		strictEqual(duplicate.summary, '0 shards deposited, 1 duplicate skipped.');
+		strictEqual(
+			duplicate.summary,
+			`Shard ${first.data.shardId} already recorded (duplicate idempotency key).`,
+		);
 		const shards = [item, { ...item, idempotencyKey: 'two' }, { ...item, idempotencyKey: 'three' }];
 		for (const [summary, duplicates] of [
 			['2 shards deposited, 1 duplicate skipped.', 1],
@@ -77,6 +81,24 @@ describe('idempotent observation summaries', () => {
 			strictEqual(result.data.duplicates, duplicates);
 			strictEqual(result.data.shardCount, 3);
 			strictEqual(result.data.result.shards.length, 3);
+		}
+	});
+
+	it('preserves batch wording when no entries are duplicates', () => {
+		const soul = createSoul(db, { name: 'Batch', essence: 'E', description: 'D' });
+		for (const count of [1, 2]) {
+			const result = observeSoulToolHandler(db, {
+				action: 'drop_batch',
+				shards: Array.from({ length: count }, () => ({
+					content: 'Observation',
+					source: 'session',
+					soulIds: [soul.id],
+				})),
+			});
+			ok(result.ok);
+			strictEqual(result.summary, `${count} ${count === 1 ? 'shard' : 'shards'} deposited.`);
+			ok('duplicates' in result.data);
+			strictEqual(result.data.duplicates, 0);
 		}
 	});
 });
