@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-05
+
 All new checks are opt-in. Without strict mode, existing calls behave as in 0.4.5 and only add warnings.
 
 ### Added
@@ -154,7 +156,8 @@ All new checks are opt-in. Without strict mode, existing calls behave as in 0.4.
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/GhostPawJS/souls/compare/v0.4.5...v0.5.0
 [0.4.5]: https://github.com/GhostPawJS/souls/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/GhostPawJS/souls/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/GhostPawJS/souls/compare/v0.4.2...v0.4.3
