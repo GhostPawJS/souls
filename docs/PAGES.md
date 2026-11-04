@@ -96,10 +96,4 @@ npm run demo:ether     # Refresh the ether JSON dump from remote sources
 
 ## Deployment
 
-The demo auto-deploys to GitHub Pages on every push to `main` via
-`.github/workflows/pages.yml`. The workflow:
-
-1. Installs dependencies
-2. Runs `npm run demo:build`
-3. Uploads the `demo/` directory as a Pages artifact
-4. Deploys via `actions/deploy-pages@v4`
+The demo is built with `npm run demo:build` (output `demo/`) and published at https://souls.ghostpaw.dev/docs/. The landing page https://souls.ghostpaw.dev/ is maintained separately.
