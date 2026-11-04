@@ -2,6 +2,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { SoulsDb } from '../database.ts';
 import { initSoulsTables } from '../init_souls_tables.ts';
+import { CliUsageError } from '../surfaces/cli_args.ts';
 
 export async function openSoulsDb(path: string): Promise<SoulsDb> {
 	const original = process.emitWarning;
@@ -25,7 +26,23 @@ export async function openSoulsDb(path: string): Promise<SoulsDb> {
 	} finally {
 		process.emitWarning = original;
 	}
-	if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
+	if (path !== ':memory:') {
+		const directory = dirname(path);
+		try {
+			mkdirSync(directory, { recursive: true });
+		} catch (error) {
+			const code = (error as NodeJS.ErrnoException).code;
+			const reason =
+				code === 'ENOTDIR' || code === 'EEXIST'
+					? 'a path component is not a directory'
+					: code === 'EACCES' || code === 'EPERM'
+						? 'permission denied'
+						: code === 'EROFS'
+							? 'read-only file system'
+							: code;
+			throw new CliUsageError(`Cannot create database directory ${directory}: ${reason}`);
+		}
+	}
 	const db = new sqlite.DatabaseSync(path);
 	try {
 		db.exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;');

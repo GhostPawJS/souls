@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable, Writable } from 'node:stream';
@@ -76,5 +76,51 @@ test('souls command paths cover every tool and action uniquely without changing 
 				commands.filter((c) => c.tool.name === tool.name).map((c) => c.fixed.action),
 				actions,
 			);
+	}
+});
+
+test('CLI creates missing database parents and reports blocked parents as usage errors', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'souls-cli-db-'));
+	try {
+		const blocker = join(dir, 'file');
+		writeFileSync(blocker, '');
+		for (const command of [
+			['search', 'Reviewer'],
+			['call', 'search_souls', '{"query":"Reviewer"}'],
+		]) {
+			for (const blocked of [false, true]) {
+				const parent = join(dir, blocked ? 'file' : (command[0] as string), 'nested');
+				const path = join(parent, 'souls.db');
+				let stderr = '';
+				const code = await runToolCli([...command, '--db', path], {
+					...soulsCliOptions,
+					stdin: Readable.from([]),
+					stdout: new Writable({
+						write(_chunk, _encoding, cb) {
+							cb();
+						},
+					}),
+					stderr: new Writable({
+						write(chunk, _encoding, cb) {
+							stderr += String(chunk);
+							cb();
+						},
+					}),
+				});
+				assert.equal(code, blocked ? 2 : 0);
+				assert.equal(
+					stderr,
+					blocked
+						? `Cannot create database directory ${parent}: a path component is not a directory\n`
+						: '',
+				);
+				if (!blocked) {
+					assert.ok(statSync(parent).isDirectory());
+					assert.ok(statSync(path).isFile());
+				}
+			}
+		}
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
 	}
 });

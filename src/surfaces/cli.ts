@@ -1,4 +1,5 @@
 import { type Readable, Writable } from 'node:stream';
+import { CliUsageError } from './cli_args.ts';
 import { runCliCommand } from './cli_commands.ts';
 import { cliVersion } from './cli_version.ts';
 import { schemaExample } from './schema_example.ts';
@@ -220,7 +221,10 @@ export async function runToolCli<TCtx>(
 	try {
 		context = await options.openContext(ctxOptions);
 	} catch (cause) {
-		return fail(String(cause), 1);
+		return fail(
+			cause instanceof CliUsageError ? cause.message : String(cause),
+			cause instanceof CliUsageError ? 2 : 1,
+		);
 	}
 	try {
 		const result = await tool.handler(context, input as Record<string, unknown>);
