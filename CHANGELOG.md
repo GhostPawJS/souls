@@ -5,6 +5,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `-q` aliases `--quiet`; soul references accept slugs between external references and names in CLI and tool inputs. Array flags accept JSON arrays as well as repetition; shard-add help points to batch import.
+- Optional `order: 'citations' | 'density'` for rendering and publication (`--order`), preserving citation-count order by default. The built-in foundation can omit provenance with `includeProvenance: false`.
+- Configurable `minSourceDiversity` and `minSpreadDays` for crystallization checks, profiles, maintenance, observations, and evidence gates, with optional tool fields and CLI flags. Defaults remain two sources and one day.
+- Profile payloads expose `freshness`, `headroom`, and `evidenceRatio` alongside the unchanged health formula.
+
+### Changed
+
+- Document citation-count rendering defaults, health factors, reference precedence, repeated array flags, and essence evidence through `soul update --shard-ids`.
+
+### Fixed
+
+- Crystallization priority uses creation time for souls that have never been attuned.
+- Non-strict essence updates with an operator and reason no longer emit evidence-gate warnings; strict behavior is unchanged.
+- `level validate` without a plan returns readiness and blockers successfully; validation with a plan is unchanged.
+- Evidence alignment respects citations onto active traits. Suggestions distinguish uncited from semantically novel clusters and only suggest new traits for repeated evidence across sources.
+
 ## [0.5.0] - 2026-11-05
 
 All new checks are opt-in. Without strict mode, existing calls behave as in 0.4.5 and only add warnings.

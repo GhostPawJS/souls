@@ -43,7 +43,10 @@ export const soulsSoul: SoulsSoul = {
 	traits: soulsSoulTraits,
 };
 
-export function renderSoulsSoulPromptFoundation(soul: SoulsSoul = soulsSoul): string {
+export function renderSoulsSoulPromptFoundation(
+	soul: SoulsSoul = soulsSoul,
+	options?: { includeProvenance?: boolean | undefined },
+): string {
 	return [
 		`${soul.name} (${soul.slug})`,
 		soul.description,
@@ -52,6 +55,10 @@ export function renderSoulsSoulPromptFoundation(soul: SoulsSoul = soulsSoul): st
 		soul.essence,
 		'',
 		'Traits:',
-		...soul.traits.map((trait) => `- ${trait.principle} ${trait.provenance}`),
+		...soul.traits.map((trait) =>
+			options?.includeProvenance === false
+				? `- ${trait.principle}`
+				: `- ${trait.principle} ${trait.provenance}`,
+		),
 	].join('\n');
 }

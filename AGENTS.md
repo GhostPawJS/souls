@@ -42,7 +42,8 @@ Only the ether catalog fetch uses the network. Core identity operations are loca
 ## Contribute
 
 Use Node 24: `export PATH=/opt/node24/bin:$PATH` before commands.
-Run the complete gate: `npm run check`.
+Run `npm run lint && npm run typecheck && npm test && npm run build`.
+Run the extended gate with `npm run check`.
 Tests use `node:test` and `node:assert`, with `*.test.ts` beside the source.
 Assert behavior and preserve existing assertions; do not skip tests or exclude coverage.
 Use `npx biome check --write` on changed files when formatting is needed.

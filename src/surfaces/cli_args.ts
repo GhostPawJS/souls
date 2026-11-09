@@ -118,8 +118,23 @@ export function parseCliArgs(argv: string[], spec: CliSpec): Record<string, unkn
 		}
 		const key = keyOf(arg.name);
 		if (arg.type === 'array') {
-			const item = convert(raw, { ...arg, type: arg.itemType ?? 'string' });
-			values[key] = [...((values[key] as unknown[]) ?? []), item];
+			let items: unknown[] = [raw];
+			if (raw.startsWith('[')) {
+				try {
+					items = JSON.parse(raw);
+				} catch {
+					throw new CliUsageError(`Invalid JSON array for ${arg.name}`);
+				}
+			}
+			values[key] = [
+				...((values[key] as unknown[]) ?? []),
+				...items.map((item) =>
+					convert(typeof item === 'string' ? item : JSON.stringify(item), {
+						...arg,
+						type: arg.itemType ?? 'string',
+					}),
+				),
+			];
 		} else values[key] = convert(raw, arg);
 	}
 	let index = 0;
@@ -142,6 +157,6 @@ export function parseCliArgs(argv: string[], spec: CliSpec): Record<string, unkn
 }
 export function renderCliHelp(spec: CliSpec): string {
 	const describe = (arg: CliArgument) =>
-		`${arg.type}${arg.enum ? ` (${arg.enum.join('|')})` : ''}${arg.required ? ' required' : ''}${arg.file ? ' (@file, @- stdin, @@ literal @)' : ''}  ${arg.description ?? ''}`;
+		`${arg.type}${arg.type === 'array' ? ' (repeatable; JSON array accepted; commas are literal)' : ''}${arg.enum ? ` (${arg.enum.join('|')})` : ''}${arg.required ? ' required' : ''}${arg.file ? ' (@file, @- stdin, @@ literal @)' : ''}  ${arg.description ?? ''}`;
 	return `Usage: ${spec.command} ${(spec.positionals ?? []).map((arg) => `<${arg.name}${arg.variadic ? '...' : ''}>`).join(' ')} [flags]\n${spec.description ?? ''}\n\nPositionals:\n${(spec.positionals ?? []).map((arg) => `  ${arg.name}  ${describe(arg)}`).join('\n')}\nFlags:\n${(spec.flags ?? []).map((arg) => `  --${arg.name}${arg.short ? `, -${arg.short}` : ''}  ${describe(arg)}`).join('\n')}\n`;
 }

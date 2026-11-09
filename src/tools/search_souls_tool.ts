@@ -1,12 +1,14 @@
 import type { SoulsDb } from '../database.ts';
 import * as read from '../read.ts';
 import type { ShardRecord } from '../shards/types.ts';
+import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	defineSoulsTool,
 	enumSchema,
 	integerSchema,
 	objectSchema,
+	soulReferenceSchema,
 	stringArraySchema,
 	stringSchema,
 } from './tool_metadata.ts';
@@ -29,18 +31,19 @@ export type SearchSoulsToolResult = ToolResult<SearchSoulsToolData>;
 
 export function searchSoulsToolHandler(
 	db: SoulsDb,
-	input: {
+	rawInput: {
 		query?: string | undefined;
 		status?: import('../shards/types.ts').ShardFilterStatus | undefined;
 		offset?: number | undefined;
-		soulId?: number | undefined;
+		soulId?: number | string | undefined;
 		tags?: string[] | undefined;
 		limit?: number | undefined;
 	},
 ): SearchSoulsToolResult {
-	const invalid = validateToolInput(searchSoulsTool, input);
+	const invalid = validateToolInput(searchSoulsTool, rawInput);
 	if (invalid) return invalid;
 	try {
+		const input = resolveToolSoulReferences(db, rawInput);
 		const page = input.query
 			? read.searchShardsPage(db, input.query, input)
 			: read.listShardsPage(db, input);
@@ -95,7 +98,7 @@ export const searchSoulsTool = defineSoulsTool<
 			),
 			offset: integerSchema('Skip this many results.'),
 			query: stringSchema('FTS5 search query. Omit to list pending shards.'),
-			soulId: integerSchema('Filter by soul ID.'),
+			soulId: soulReferenceSchema('Filter by soul ID.'),
 			tags: stringArraySchema('Filter by all supplied topic tags.'),
 			limit: integerSchema('Maximum results.'),
 		},

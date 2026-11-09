@@ -2,15 +2,18 @@ import { getSoulsConfig, setSoulsConfig } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
 import type { SoulRecord } from '../souls/types.ts';
 import * as write from '../write.ts';
+import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	booleanSchema,
 	defineSoulsTool,
 	enumSchema,
 	integerArraySchema,
-	integerSchema,
+	numberSchema,
 	objectSchema,
+	soulReferenceSchema,
 	stringSchema,
+	integerSchema as thresholdIntegerSchema,
 } from './tool_metadata.ts';
 import { manageSoulToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
@@ -37,23 +40,26 @@ export interface ManageSoulInput {
 	value?: string | undefined;
 	name?: string | undefined;
 	slug?: string | undefined;
+	minSourceDiversity?: number | undefined;
+	minSpreadDays?: number | undefined;
 	strict?: boolean | undefined;
 	operator?: string | undefined;
 	reason?: string | undefined;
 	shardIds?: number[] | undefined;
 	essence?: string | undefined;
 	description?: string | undefined;
-	soulId?: number | undefined;
+	soulId?: number | string | undefined;
 }
 export function manageSoulToolHandler(
 	db: SoulsDb,
 	input: ManageSoulInput & { action: 'create' | 'update' | 'retire' | 'awaken' },
 ): ManageSoulToolResult;
 export function manageSoulToolHandler(db: SoulsDb, input: ManageSoulInput): ManageResult;
-export function manageSoulToolHandler(db: SoulsDb, input: ManageSoulInput): ManageResult {
-	const invalid = validateToolInput(manageSoulTool, input);
+export function manageSoulToolHandler(db: SoulsDb, rawInput: ManageSoulInput): ManageResult {
+	const invalid = validateToolInput(manageSoulTool, rawInput);
 	if (invalid) return invalid;
 	try {
+		const input = resolveToolSoulReferences(db, rawInput);
 		if (input.action.startsWith('config_')) {
 			if (input.action === 'config_set') setSoulsConfig(db, input.key ?? '', input.value ?? '');
 			const all = getSoulsConfig(db);
@@ -114,6 +120,8 @@ export function manageSoulToolHandler(db: SoulsDb, input: ManageSoulInput): Mana
 				operator: input.operator,
 				reason: input.reason,
 				shardIds: input.shardIds,
+				minSourceDiversity: input.minSourceDiversity,
+				minSpreadDays: input.minSpreadDays,
 				...(input.externalId === undefined ? {} : { externalId: input.externalId }),
 				name: input.name,
 				...(input.slug === undefined ? {} : { slug: input.slug }),
@@ -225,7 +233,9 @@ export const manageSoulTool = defineSoulsTool<
 			name: stringSchema('Soul name.'),
 			essence: stringSchema('Soul essence narrative.'),
 			description: stringSchema('Soul description.'),
-			soulId: integerSchema('Soul ID.'),
+			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
+			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			soulId: soulReferenceSchema('Soul ID.'),
 		},
 		['action'],
 		'Create or manage a soul lifecycle.',

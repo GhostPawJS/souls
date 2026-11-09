@@ -5,24 +5,16 @@ import { SoulsConflictError } from '../errors.ts';
 import { diffSoul, publishSoul, renderPublication } from '../publication.ts';
 import { reviewNoChange } from '../review.ts';
 import { getRevisionHistory } from '../revisions.ts';
-import { getSoulByExternalId } from '../souls/get_soul_by_external_id.ts';
-import { getSoulByName } from '../souls/get_soul_by_name.ts';
+import { resolveSoulReference } from '../souls/resolve_soul_reference.ts';
 import type { ToolCliOptions } from '../surfaces/cli.ts';
 import { type CliArgument, CliUsageError, parseCliArgs } from '../surfaces/cli_args.ts';
 
-export function resolveSoulReference(db: SoulsDb, ref: string): number {
-	const id = ref.startsWith('ext:')
-		? getSoulByExternalId(db, ref.slice(4))?.id
-		: /^\d+$/.test(ref)
-			? Number(ref)
-			: getSoulByName(db, ref)?.id;
-	if (id === undefined) throw new Error(`Soul not found: ${ref}`);
-	return id;
-}
+export { resolveSoulReference } from '../souls/resolve_soul_reference.ts';
 export async function runHostCommand(
 	argv: string[],
 	options: ToolCliOptions<SoulsDb>,
 ): Promise<number | undefined> {
+	argv = argv.map((arg) => (arg === '-q' ? '--quiet' : arg));
 	const args = argv.filter((a) => !['--json', '--quiet', '--no-color', '--compact'].includes(a));
 	let path: string | undefined;
 	for (let i = 0; i < args.length; i++) {
@@ -48,7 +40,7 @@ export async function runHostCommand(
 		err = options.stderr ?? process.stderr;
 	const json = argv.includes('--json'),
 		quiet = argv.includes('--quiet');
-	const help = `render <soul> [--budget chars] [--provenance] [--into file] [--marker souls] [--expect-hash sha256|none]\ndiff <soul> --against file|- [--marker souls] (exit 0 same, 1 different; without the requested marker block, compare the whole input minus one trailing newline)\nreview <soul> [--no-change] [--reason text]\nconfig set strict true|false | config get [key] | config list\nreport --expect-ids @file|@- (exit 0 matching, 1 different)\nUse --json for structured output. Soul references accept IDs, names, and ext:<id>.\n`;
+	const help = `render <soul> [--budget chars] [--provenance|--no-provenance] [--order citations|density] [--into file] [--marker souls] [--expect-hash sha256|none]\ndiff <soul> --against file|- [--marker souls] (exit 0 same, 1 different; without the requested marker block, compare the whole input minus one trailing newline)\nreview <soul> [--no-change] [--reason text]\nconfig set strict true|false | config get [key] | config list\nreport --expect-ids @file|@- (exit 0 matching, 1 different)\nUse --json for structured output. Soul references accept IDs, ext:<id>, slugs, and names (in that order). -q, --quiet suppresses stdout.\n`;
 	if (args.includes('--help') || args.includes('-h')) {
 		if (!quiet) out.write(help);
 		return 0;
@@ -91,6 +83,7 @@ export async function runHostCommand(
 			{ name: 'marker', type: 'string' },
 			{ name: 'budget', type: 'integer' },
 			{ name: 'provenance', type: 'boolean' },
+			{ name: 'order', type: 'string', enum: ['citations', 'density'] },
 			{ name: 'into', type: 'string' },
 			{ name: 'expect-hash', type: 'string' },
 			{ name: 'against', type: 'string' },
@@ -192,6 +185,7 @@ export async function runHostCommand(
 		}
 		const opts = {
 			budget: input.budget as number | undefined,
+			order: input.order as 'citations' | 'density' | undefined,
 			includeProvenance: input.provenance as boolean | undefined,
 			marker: input.marker as string | undefined,
 			expectHash: input.expectHash as string | undefined,

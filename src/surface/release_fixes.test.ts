@@ -84,10 +84,13 @@ test('host flags work in every position and review help preserves generated help
 				actual.out,
 				`Usage: ghostpaw-souls review <view> [flags]
 List all active souls, run the maintenance cycle, or check crystallization readiness.
+Global flags: --json, -q, --quiet. Array flags can be repeated or accept a JSON array; commas are literal.
 
 Positionals:
   view  string (list|maintenance|readiness)  list: all active souls, maintenance: run fade + readiness cycle, readiness: crystallization status only.
 Flags:
+  --min-source-diversity  integer  Minimum source diversity (default 2).
+  --min-spread-days  number  Minimum occurrence spread in days (default 1).
   --view  string (list|maintenance|readiness)  list: all active souls, maintenance: run fade + readiness cycle, readiness: crystallization status only. (required)
 `,
 			);
@@ -549,5 +552,122 @@ test('marker-free diffs compare whole files and stdin, trimming only one trailin
 	} finally {
 		db.close();
 		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test('0.5.1 quiet alias works globally, on commands, on hosts and legacy calls', async () => {
+	const { db, invoke } = await fixture();
+	try {
+		for (const args of [
+			['-q', 'soul', 'show', '1'],
+			['soul', 'show', '1', '-q'],
+			['render', '1', '-q'],
+			['tools', '-q'],
+			['-q', '--version'],
+		]) {
+			const result = await invoke(['--db', 'x', ...args]);
+			equal(result.code, 0, JSON.stringify({ args, result }));
+			equal(result.out, '');
+			equal(result.err, '');
+		}
+		match((await invoke(['--help'])).out, /-q, --quiet/);
+		match((await invoke(['soul', 'update', '--help'])).out, /--shard-ids/);
+		match((await invoke(['shard', 'add', '--help'])).out, /shard add --batch @file/);
+	} finally {
+		db.close();
+	}
+});
+
+test('0.5.1 CLI renders and inspects slugs, supports order and negated provenance, and validates without plan', async () => {
+	const { db, soul, invoke } = await fixture();
+	try {
+		updateSoul(db, soul.id, { slug: 'mentor' });
+		addTrait(db, soul.id, { principle: 'Read intent', provenance: 'Provenance here' });
+		const rendered = await invoke([
+			'--db=x',
+			'render',
+			'mentor',
+			'--order',
+			'density',
+			'--provenance',
+		]);
+		equal(rendered.code, 0);
+		match(rendered.out, /Provenance here/);
+		const lean = await invoke([
+			'--db=x',
+			'render',
+			'mentor',
+			'--order',
+			'citations',
+			'--no-provenance',
+		]);
+		equal(lean.code, 0);
+		ok(!lean.out.includes('Provenance here'));
+		const shown = await invoke(['--db=x', 'soul', 'show', 'mentor', '--json']);
+		equal(shown.code, 0);
+		equal(JSON.parse(shown.out).data.profile.soul.id, soul.id);
+		const validation = await invoke(['--db=x', 'level', 'validate', 'mentor', '--json']);
+		equal(validation.code, 0);
+		ok(JSON.parse(validation.out).data.blockers.length);
+		const correction = await invoke([
+			'--db=x',
+			'soul',
+			'update',
+			'mentor',
+			'--essence',
+			'Corrected',
+			'--operator',
+			'Owner',
+			'--reason',
+			'Typo',
+			'--no-strict',
+		]);
+		equal(correction.code, 0);
+		equal(correction.err, '');
+		const missing = await invoke(['--db=x', 'render', 'missing']);
+		equal(missing.code, 1);
+		match(missing.err, /tried slug, name/);
+	} finally {
+		db.close();
+	}
+});
+
+test('0.5.1 array flags accept JSON arrays and repetition without comma splitting', async () => {
+	const { db, invoke } = await fixture();
+	try {
+		const added = await invoke([
+			'--db=x',
+			'shard',
+			'add',
+			'--content',
+			'Observation',
+			'--source',
+			's',
+			'--soul-ids',
+			'[1]',
+			'--tags',
+			'["one","two,three"]',
+			'--tags',
+			'four',
+			'--json',
+		]);
+		equal(added.code, 0);
+		deepEqual(JSON.parse(added.out).data.shard.tags, ['four', 'one', 'two,three']);
+		match((await invoke(['shard', 'add', '--help'])).out, /repeated.*JSON array/);
+		const bad = await invoke([
+			'--db=x',
+			'shard',
+			'add',
+			'--content',
+			'Observation',
+			'--source',
+			's',
+			'--soul-ids',
+			'[broken',
+		]);
+		equal(bad.code, 2);
+		match(bad.err, /Invalid JSON array/);
+	} finally {
+		db.close();
 	}
 });

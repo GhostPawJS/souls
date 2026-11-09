@@ -41,6 +41,8 @@ export function markerParts(
 	return { before: text.slice(0, start), block: text.slice(start, b), after: text.slice(b) };
 }
 export interface RenderPublicationOptions {
+	order?: 'citations' | 'density' | undefined;
+	now?: number | undefined;
 	includeProvenance?: boolean | undefined;
 	budget?: number | undefined;
 	into?: string | undefined;
@@ -74,9 +76,12 @@ export function renderPublication(
 		: { before: '', block: '', after: '' };
 	const traits = db
 		.prepare(
-			`SELECT t.id,t.principle,t.provenance,COUNT(DISTINCT c.shard_id) AS citations FROM soul_traits t LEFT JOIN shard_citations c ON c.trait_id=t.id WHERE t.soul_id=? AND t.status='active' GROUP BY t.id ORDER BY citations DESC,t.created_at ASC`,
+			`SELECT t.id,t.principle,t.provenance,COUNT(DISTINCT c.shard_id) AS citations FROM soul_traits t LEFT JOIN shard_citations c ON c.trait_id=t.id WHERE t.soul_id=? AND t.status='active' GROUP BY t.id ORDER BY ${options?.order === 'density' ? 'citations * 1.0 / MAX(1, (? - t.created_at) / 86400000.0)' : 'citations'} DESC,t.created_at ASC`,
 		)
-		.all<{ id: number; principle: string; provenance: string }>(soulId);
+		.all<{ id: number; principle: string; provenance: string }>(
+			soulId,
+			...(options?.order === 'density' ? [options?.now ?? Date.now()] : []),
+		);
 	const trimmed = { traitIds: [] as number[], essenceChars: 0 };
 	let essence = soul.essence;
 	let header = `# ${soul.name}\n*${soul.description}*\n\n`;

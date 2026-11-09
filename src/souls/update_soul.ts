@@ -1,3 +1,4 @@
+import { resolveStrict } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
 import { evidenceGate } from '../evidence_gate.ts';
 import { resolveNow } from '../resolve_now.ts';
@@ -26,7 +27,11 @@ export function updateSoul(db: SoulsDb, id: number, input: UpdateSoulInput): Sou
 		assertSoulNameFree(db, input, soul.id);
 		const now = resolveNow(input.now);
 		const changed = input.essence !== undefined && input.essence !== soul.essence;
-		const warnings = changed ? evidenceGate(db, id, input) : [];
+		const warnings =
+			changed &&
+			!(input.operator?.trim() && input.reason?.trim() && !resolveStrict(db, input.strict))
+				? evidenceGate(db, id, input)
+				: [];
 		if (changed) {
 			for (const shardId of input.shardIds ?? []) getShardOrThrow(db, shardId);
 			const revisionId = recordRevision(

@@ -6,13 +6,16 @@ import { reviewNoChange } from '../review.ts';
 import { getRevisionHistory } from '../revisions.ts';
 import type { CrystallizationRecord } from '../shards/types.ts';
 import type { SoulRecord } from '../souls/types.ts';
+import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	booleanSchema,
 	defineSoulsTool,
 	enumSchema,
 	integerSchema,
+	numberSchema,
 	objectSchema,
+	soulReferenceSchema,
 	stringSchema,
 } from './tool_metadata.ts';
 import { reviewSoulsToolName } from './tool_names.ts';
@@ -49,16 +52,19 @@ export type ReviewSoulsToolResult = ToolResult<ReviewSoulsToolData>;
 
 export function reviewSoulsToolHandler(
 	db: SoulsDb,
-	input: {
+	rawInput: {
+		minSourceDiversity?: number | undefined;
+		minSpreadDays?: number | undefined;
 		view: 'list' | 'maintenance' | 'readiness' | 'history';
-		soulId?: number | undefined;
+		soulId?: number | string | undefined;
 		noChange?: boolean | undefined;
 		reason?: string | undefined;
 	},
 ): ReviewSoulsToolResult {
-	const invalid = validateToolInput(reviewSoulsTool, input);
+	const invalid = validateToolInput(reviewSoulsTool, rawInput);
 	if (invalid) return invalid;
 	try {
+		const input = resolveToolSoulReferences(db, rawInput);
 		if (input.noChange || input.view === 'history') {
 			if (!input.soulId) throw new Error('soulId is required.');
 			if (input.noChange) reviewNoChange(db, input.soulId, { reason: input.reason });
@@ -78,7 +84,7 @@ export function reviewSoulsToolHandler(
 		}
 
 		if (input.view === 'maintenance') {
-			const maintenance = runMaintenance(db);
+			const maintenance = runMaintenance(db, input);
 			const data: ReviewSoulsMaintenanceData = { maintenance };
 			const next = maintenance.readySouls.slice(0, 3).map((r) => inspectSoulsItemNext(r.soulId));
 			const warnings =
@@ -98,7 +104,7 @@ export function reviewSoulsToolHandler(
 		}
 
 		if (input.view === 'readiness') {
-			const readySouls = read.crystallizationReadiness(db);
+			const readySouls = read.crystallizationReadiness(db, input);
 			const data: ReviewSoulsReadinessData = { readySouls };
 			const next = readySouls.slice(0, 5).map((r) => inspectSoulsItemNext(r.soulId));
 			return toolSuccess(
@@ -137,7 +143,9 @@ export const reviewSoulsTool = defineSoulsTool<
 	outputDescription: 'Depends on view: soul list, maintenance result, or readiness records.',
 	inputSchema: objectSchema(
 		{
-			soulId: integerSchema('Soul to review.'),
+			minSourceDiversity: integerSchema('Minimum source diversity (default 2).'),
+			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			soulId: soulReferenceSchema('Soul to review.'),
 			noChange: booleanSchema('Record a review without edits and stamp attuned.'),
 			reason: stringSchema('Review reason.'),
 			view: enumSchema(

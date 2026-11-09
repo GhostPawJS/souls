@@ -115,7 +115,7 @@ A 10-trait soul costs ~100 tokens for the trait section.
 **Full mode** (`includeProvenance: true`): essence + traits with provenance.
 For human inspection, evidence reports, and debug views.
 
-Traits are ordered by citation density descending — the most-evidenced traits
+Traits are ordered by citation count descending (creation time ascending for ties) — the most-evidenced traits
 occupy the primary position where primacy bias maximizes adherence. Research
 shows constraint compliance varies with position, and primacy/recency effects
 are 2.9x larger than semantic effects
@@ -161,6 +161,26 @@ are 2.9x larger than semantic effects
 - `read.listSouls(db)`: all active souls ordered by name.
 - `read.listDormantSouls(db)`: all retired souls.
 - `read.renderSoul(db, id, options?)`: markdown identity block with traits
-  ordered by citation density.
+  ordered by citation count by default. Pass `order: 'density'` for citations per day of trait age (minimum one day).
 - `read.getSoulProfile(db, id, options?)`: full state picture — record, active
   traits, capacity, health, crystallization readiness — in one call.
+
+### Rendering and health options
+
+`read.renderSoul(db, soulId, { order: 'density', includeProvenance: false })`
+selects density order. The default order is `citations`, with older traits first
+when counts tie. Density divides each count by its age in days, floored at one;
+`now` can fix the reference time. `renderPublication` accepts the same order and
+trims the lowest-ranked traits first when a budget is supplied. CLI equivalents
+are `render <soul> --order density` and `--provenance` or `--no-provenance`.
+Stored souls omit provenance by default. The built-in foundation includes it by
+default; `renderSoulsSoulPromptFoundation(soulsSoul, { includeProvenance: false })`
+omits it. The CLI render command renders stored souls, not the foundation.
+
+Profile payloads expose `freshness`, `headroom`, and `evidenceRatio` alongside
+`health`. Freshness is one minus the fraction of active traits whose latest
+creation or update time is more than 90 days old (one with no active traits).
+Headroom is `max(0, 1 - activeTraitCount / traitLimit)`. Evidence ratio is
+`min(1, pendingShardCount / max(1, crystallizationThreshold))` (threshold default
+three). Health is their product, clamped to 0–1. Thus capacity or no pending
+evidence makes health zero even when the other components are high.

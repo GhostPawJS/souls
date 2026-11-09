@@ -1,6 +1,7 @@
 import type { SoulsDb } from '../database.ts';
 import type { DropShardInput, DropShardsResult, ShardRecord } from '../shards/types.ts';
 import * as write from '../write.ts';
+import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	arraySchema,
@@ -8,9 +9,12 @@ import {
 	defineSoulsTool,
 	integerArraySchema,
 	integerSchema,
+	numberSchema,
 	objectSchema,
+	soulReferenceSchema,
 	stringArraySchema,
 	stringSchema,
+	integerSchema as thresholdIntegerSchema,
 } from './tool_metadata.ts';
 import { observeSoulToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
@@ -47,7 +51,9 @@ export type ObserveSoulToolResult = ToolResult<ObserveSoulToolData>;
 
 export function observeSoulToolHandler(
 	db: SoulsDb,
-	input: {
+	rawInput: {
+		minSourceDiversity?: number | undefined;
+		minSpreadDays?: number | undefined;
 		action: 'drop' | 'drop_batch' | 'reveal';
 		content?: string | undefined;
 		occurredAt?: number | string | undefined;
@@ -55,16 +61,17 @@ export function observeSoulToolHandler(
 		ref?: string | undefined;
 		now?: number | undefined;
 		source?: string | undefined;
-		soulIds?: number[] | undefined;
+		soulIds?: (number | string)[] | undefined;
 		tags?: string[] | undefined;
 		sealed?: boolean | undefined;
-		shards?: DropShardInput[] | undefined;
+		shards?: (Omit<DropShardInput, 'soulIds'> & { soulIds: (number | string)[] })[] | undefined;
 		shardIds?: number[] | undefined;
 	},
 ): ObserveSoulToolResult {
-	const invalid = validateToolInput(observeSoulTool, input);
+	const invalid = validateToolInput(observeSoulTool, rawInput);
 	if (invalid) return invalid;
 	try {
+		const input = resolveToolSoulReferences(db, rawInput);
 		if (input.action === 'drop') {
 			if (!input.content || !input.source || !input.soulIds) {
 				return {
@@ -94,7 +101,11 @@ export function observeSoulToolHandler(
 					idempotencyKey: input.idempotencyKey,
 					ref: input.ref,
 				},
-				{ insertedAt: input.now ?? Date.now() },
+				{
+					insertedAt: input.now ?? Date.now(),
+					minSourceDiversity: input.minSourceDiversity,
+					minSpreadDays: input.minSpreadDays,
+				},
 			);
 			const data: ObserveSoulDropData = {
 				shardId: result.shard.id,
@@ -138,7 +149,7 @@ export function observeSoulToolHandler(
 					},
 				};
 			}
-			const result = write.dropShards(db, input.shards);
+			const result = write.dropShards(db, input.shards, input);
 			const duplicates = result.results?.filter((item) => item.duplicate).length ?? 0;
 			const data: ObserveSoulBatchData = {
 				duplicates,
@@ -222,9 +233,14 @@ export const observeSoulTool = defineSoulsTool<
 			idempotencyKey: stringSchema('Unique ingestion key.'),
 			ref: stringSchema('External evidence reference.'),
 			now: integerSchema('Timestamp in epoch milliseconds; occurredAt takes precedence.'),
+			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
+			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
 			content: stringSchema('Behavioral observation text.'),
 			source: stringSchema('Evidence channel origin label.'),
-			soulIds: integerArraySchema('Soul IDs to attribute this observation to.'),
+			soulIds: arraySchema(
+				soulReferenceSchema('Soul IDs to attribute this observation to.'),
+				'Soul IDs to attribute this observation to.',
+			),
 			tags: stringArraySchema('Optional topic tags.'),
 			sealed: booleanSchema('If true, shard is deferred until revealed.'),
 			shards: arraySchema(
@@ -232,7 +248,7 @@ export const observeSoulTool = defineSoulsTool<
 					{
 						content: stringSchema('Observation text.'),
 						source: stringSchema('Evidence source.'),
-						soulIds: integerArraySchema('Attributed souls.'),
+						soulIds: arraySchema(soulReferenceSchema('Attributed souls.'), 'Attributed souls.'),
 						tags: stringArraySchema('Topic tags.'),
 						sealed: booleanSchema('Defer until revealed.'),
 						occurredAt: { oneOf: [{ type: 'integer' }, { type: 'string' }] },

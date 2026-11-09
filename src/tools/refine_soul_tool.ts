@@ -3,6 +3,7 @@ import { SoulsValidationError } from '../errors.ts';
 import * as read from '../read.ts';
 import type { TraitRecord } from '../traits/types.ts';
 import * as write from '../write.ts';
+import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	booleanSchema,
@@ -10,8 +11,11 @@ import {
 	enumSchema,
 	integerArraySchema,
 	integerSchema,
+	numberSchema,
 	objectSchema,
+	soulReferenceSchema,
 	stringSchema,
+	integerSchema as thresholdIntegerSchema,
 } from './tool_metadata.ts';
 import { refineSoulToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
@@ -31,7 +35,9 @@ export type RefineSoulToolResult = ToolResult<RefineSoulToolData>;
 
 export function refineSoulToolHandler(
 	db: SoulsDb,
-	input: {
+	rawInput: {
+		minSourceDiversity?: number | undefined;
+		minSpreadDays?: number | undefined;
 		action:
 			| 'refine_with_evidence'
 			| 'add_trait'
@@ -40,7 +46,7 @@ export function refineSoulToolHandler(
 			| 'reactivate_trait'
 			| 'cite_shard'
 			| 'stamp_attuned';
-		soulId?: number | undefined;
+		soulId?: number | string | undefined;
 		traitId?: number | undefined;
 		principle?: string | undefined;
 		provenance?: string | undefined;
@@ -54,9 +60,10 @@ export function refineSoulToolHandler(
 		shardId?: number | undefined;
 	},
 ): RefineSoulToolResult {
-	const invalid = validateToolInput(refineSoulTool, input);
+	const invalid = validateToolInput(refineSoulTool, rawInput);
 	if (invalid) return invalid;
 	try {
+		const input = resolveToolSoulReferences(db, rawInput);
 		if (input.action === 'refine_with_evidence') {
 			if (!input.soulId || !input.principle || !input.provenance || !input.shardIds)
 				throw new SoulsValidationError('soulId, principle, provenance, and shardIds are required.');
@@ -66,6 +73,8 @@ export function refineSoulToolHandler(
 				principle: input.principle,
 				provenance: input.provenance,
 				shardIds: input.shardIds,
+				minSourceDiversity: input.minSourceDiversity,
+				minSpreadDays: input.minSpreadDays,
 				action: input.refineAction ?? (input.traitId ? 'revise' : 'add'),
 			});
 			return toolSuccess(
@@ -100,6 +109,8 @@ export function refineSoulToolHandler(
 					operator: input.operator,
 					reason: input.reason,
 					shardIds: input.shardIds,
+					minSourceDiversity: input.minSourceDiversity,
+					minSpreadDays: input.minSpreadDays,
 				},
 				input.traitLimit === undefined ? undefined : { traitLimit: input.traitLimit },
 			);
@@ -297,7 +308,9 @@ export const refineSoulTool = defineSoulsTool<
 				],
 				'The refinement action to perform.',
 			),
-			soulId: integerSchema('Soul ID (required for add_trait, stamp_attuned).'),
+			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
+			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			soulId: soulReferenceSchema('Soul ID (required for add_trait, stamp_attuned).'),
 			traitId: integerSchema(
 				'Trait ID (required for revise_trait, revert_trait, reactivate_trait, cite_shard).',
 			),

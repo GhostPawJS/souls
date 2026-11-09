@@ -53,5 +53,7 @@ export interface AwakenSoulOptions {
 }
 
 export interface RenderSoulOptions {
+	order?: 'citations' | 'density' | undefined;
+	now?: number | undefined;
 	includeProvenance?: boolean | undefined;
 }

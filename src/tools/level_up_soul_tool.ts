@@ -3,6 +3,7 @@ import type { LevelUpPlan, LevelUpResult } from '../levels/types.ts';
 import type { ValidationFailure, ValidationResult } from '../levels/validate_level_up_plan.ts';
 import * as read from '../read.ts';
 import * as write from '../write.ts';
+import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	arraySchema,
@@ -11,7 +12,9 @@ import {
 	enumSchema,
 	integerArraySchema,
 	integerSchema,
+	numberSchema,
 	objectSchema,
+	soulReferenceSchema,
 	stringSchema,
 } from './tool_metadata.ts';
 import { levelUpSoulToolName } from './tool_names.ts';
@@ -34,39 +37,57 @@ export interface LevelUpSoulRevertData {
 
 export type LevelUpValidationData = ValidationResult | ValidationFailure;
 
+export interface LevelUpReadinessData {
+	warnings?: string[];
+	ready: boolean;
+	blockers: string[];
+	profile: ReturnType<typeof read.getSoulProfile>;
+}
+
 export type LevelUpSoulToolData =
 	| LevelUpSoulExecuteData
 	| LevelUpSoulRevertData
-	| LevelUpValidationData;
+	| LevelUpValidationData
+	| LevelUpReadinessData;
 
 export type LevelUpSoulToolResult = ToolResult<LevelUpSoulToolData>;
 
 export function levelUpSoulToolHandler(
 	db: SoulsDb,
-	input: {
+	rawInput: {
+		minSourceDiversity?: number | undefined;
+		minSpreadDays?: number | undefined;
 		action: 'execute' | 'revert' | 'validate';
-		soulId: number;
+		soulId: number | string;
 		strict?: boolean | undefined;
 		traitLimit?: number | undefined;
 		plan?: LevelUpPlan | undefined;
 	},
 ): LevelUpSoulToolResult {
-	const invalid = validateToolInput(levelUpSoulTool, input);
+	const invalid = validateToolInput(levelUpSoulTool, rawInput);
 	if (invalid) return invalid;
 	try {
+		const input = resolveToolSoulReferences(db, rawInput);
 		if (input.action === 'validate') {
 			if (!input.plan) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'plan is required for validate.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a LevelUpPlan to validate.',
-						missing: ['plan'],
-					},
-				};
+				const profile = read.getSoulProfile(db, input.soulId, input);
+				const blockers: string[] = [];
+				if (!profile.crystallizationReady)
+					blockers.push(
+						profile.readinessReason ??
+							'Soul is not crystallization-ready: check pending count, source diversity, occurrence spread, recency and cluster diversity.',
+					);
+				if (!profile.atCapacity)
+					blockers.push(
+						`Soul has ${profile.activeTraitCount}/${profile.traitLimit} active traits; consolidation is normally performed near capacity.`,
+					);
+				return toolSuccess(
+					blockers.length
+						? `Level-up readiness: ${blockers.join(' ')}`
+						: 'Soul is ready for a level-up plan.',
+					{ ready: blockers.length === 0, blockers, profile },
+					{ entities: [toSoulIdRef(input.soulId)] },
+				);
 			}
 			const validation = read.validateLevelUpPlan(db, input.soulId, input.plan, {
 				...(input.strict === undefined ? {} : { strict: input.strict }),
@@ -137,7 +158,7 @@ export const levelUpSoulTool = defineSoulsTool<
 	description:
 		'Validate, execute, or revert a level-up plan for a soul — consolidating traits, promoting knowledge into essence, and incrementing the generation.',
 	whenToUse:
-		'Use validate to check a plan before executing it. Use execute when the plan is validated and the soul is ready for restructuring. Use revert to undo the last level-up if the outcome was wrong.',
+		'Use validate without a plan to check readiness and blockers, or with a plan to check it before executing it. Use execute when the plan is validated and the soul is ready for restructuring. Use revert to undo the last level-up if the outcome was wrong.',
 	whenNotToUse:
 		'Do not use this for targeted trait mutations — use refine_soul. Do not use this unless the soul is at or near trait capacity and crystallization is ready.',
 	sideEffects: 'writes_state',
@@ -148,15 +169,21 @@ export const levelUpSoulTool = defineSoulsTool<
 		action:
 			'validate: check plan completeness, execute: apply the plan, revert: undo last level-up.',
 		soulId: 'The soul to level up.',
-		plan: 'The level-up plan (required for validate and execute).',
+		plan: 'The level-up plan (required for execute; omit for a readiness and blockers check with validate).',
 	},
 	outputDescription: 'Validation result, level-up result with snapshot, or revert confirmation.',
 	inputSchema: objectSchema(
 		{
 			action: enumSchema(['validate', 'execute', 'revert'], 'The operation to perform.'),
+			minSourceDiversity: integerSchema(
+				'Minimum source diversity for planless readiness (default 2).',
+			),
+			minSpreadDays: numberSchema(
+				'Minimum occurrence spread in days for planless readiness (default 1).',
+			),
 			traitLimit: integerSchema('Override active trait capacity.'),
 			strict: booleanSchema('Reject new validation errors instead of warning.'),
-			soulId: integerSchema('The soul ID.'),
+			soulId: soulReferenceSchema('The soul ID.'),
 			plan: objectSchema(
 				{
 					newEssence: stringSchema('The new essence narrative after level-up.'),
@@ -175,7 +202,7 @@ export const levelUpSoulTool = defineSoulsTool<
 					carriedTraitIds: integerArraySchema('Trait IDs to carry unchanged.'),
 				},
 				['newEssence', 'consolidations', 'promotedTraitIds', 'carriedTraitIds'],
-				'The level-up plan.',
+				'The level-up plan; omit with validate to report readiness and blockers.',
 			),
 		},
 		['action', 'soulId'],

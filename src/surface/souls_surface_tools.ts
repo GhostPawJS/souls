@@ -22,6 +22,14 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 			type: 'object',
 			required: ['view'],
 			properties: {
+				minSourceDiversity: {
+					type: 'integer',
+					description: 'Minimum source diversity (default 2).',
+				},
+				minSpreadDays: {
+					type: 'number',
+					description: 'Minimum occurrence spread in days (default 1).',
+				},
 				view: {
 					type: 'string',
 					enum: ['list', 'maintenance', 'readiness'],

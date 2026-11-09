@@ -31,6 +31,7 @@ export async function runToolCli<TCtx>(
 	argv: string[],
 	options: ToolCliOptions<TCtx>,
 ): Promise<number> {
+	argv = argv.map((arg) => (arg === '-q' ? '--quiet' : arg));
 	if (process.env.GHOSTPAW_OUTPUT === 'json' && !argv.includes('--json'))
 		argv = [...argv, '--json'];
 	const originalOptions = options;
@@ -326,7 +327,7 @@ function renderShortSkill<TCtx>(options: ToolCliOptions<TCtx>): string {
 		`${bin} skill --short`,
 		'',
 		`Select a database: ${bin} --db ./souls.db tools`,
-		'Use --json for structured output; --quiet suppresses stdout.',
+		'Use --json for structured output; -q, --quiet suppresses stdout.',
 		'',
 	].join('\n');
 }

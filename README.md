@@ -598,3 +598,46 @@ CLI batch ingestion accepts `shard drop-batch --shards @file` and
 Set `GHOSTPAW_OUTPUT=json` for JSON output. Default database opens print
 `using default db <path>` on stderr; suppress with `--quiet` or
 `GHOSTPAW_QUIET=1`, or select `--db` / `GHOSTPAW_SOULS_DB`.
+
+### Reference, render, and readiness options
+
+Soul references resolve in this order: numeric ID, `ext:<externalId>`, slug,
+then name. For example, after `soul create Reviewer --slug mentor --essence E
+--description D`, use `render mentor` or `soul show mentor`. Tool `soulId` and
+`soulIds` inputs also accept these references, including shard batch entries.
+Unresolved or ambiguous references report what was tried.
+
+`-q, --quiet` suppresses stdout wherever quiet output is supported. Array flags
+can be repeated or receive a JSON array, for example `--tags one --tags two` or
+`--tags '["one","two"]'`. Commas stay literal. Batch shard import uses
+`shard add --batch @file` or `shard drop-batch --shards @file` (JSON array or
+JSON Lines; `@-` reads stdin).
+
+Rendering defaults to citation count descending, then creation time ascending.
+Use `render <soul> --order density` for citations per day of trait age (minimum
+one day). `--provenance` includes trait provenance; `--no-provenance` omits it
+(the stored-soul default). Library options are `order: 'citations' | 'density'`
+and `includeProvenance`. The built-in foundation keeps provenance by default;
+pass `{ includeProvenance: false }` as its second argument to omit it.
+
+Readiness and maintenance options accept `minSourceDiversity` (positive integer,
+default 2) and `minSpreadDays` (non-negative number, default 1). These propagate
+through profile, shard-drop, and evidence-gated mutation options. Tools expose
+the same optional fields; corresponding CLI flags are `--min-source-diversity`
+and `--min-spread-days` on review, inspection, observation, and refinement
+commands, plus `level validate` without a plan. Occurrence-time spread, recency, pending count, and cluster diversity
+still apply; backfilled observations must span sources when native spread is
+insufficient.
+
+`soul update <soul> --essence E --shard-ids 1 --shard-ids 2 --reason text` cites
+shards for an essence change. A named `--operator` with a `--reason` suppresses
+evidence warnings when strict mode is off; strict behavior stays unchanged.
+`level validate <soul>` reports readiness and blockers with exit 0 when the
+check runs. Supply a plan as inline JSON, for example `--plan '{"newEssence":"E","consolidations":[],"promotedTraitIds":[],"carriedTraitIds":[]}'`.
+With a plan, validation behavior is unchanged.
+
+Profiles include `freshness`, `headroom`, and `evidenceRatio`; `health` is their
+product, clamped to 0–1. See [soul rendering and health](docs/entities/SOULS.md)
+for the component formulas. Evidence suggestions count uncited clusters
+separately from semantically novel ones. Citations onto active traits count as
+alignment; singleton and single-source clusters do not prompt a new trait.

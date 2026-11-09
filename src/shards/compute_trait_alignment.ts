@@ -27,7 +27,23 @@ export function computeTraitAlignment(
 		.prepare(`SELECT id, principle FROM soul_traits WHERE soul_id = ? AND status = 'active'`)
 		.all<ActiveTrait>(soulId);
 
+	const citations = db
+		.prepare(
+			`SELECT sc.shard_id, sc.trait_id FROM shard_citations sc JOIN soul_traits t ON t.id = sc.trait_id WHERE t.soul_id = ? AND t.status = 'active' ORDER BY sc.trait_id`,
+		)
+		.all<{ shard_id: number; trait_id: number }>(soulId);
 	return clusters.map((cluster) => {
+		const cited = citations.find((c) => cluster.members.some((m) => m.id === c.shard_id));
+		if (cited)
+			return {
+				kind: 'reinforcing',
+				traitId: cited.trait_id,
+				similarity: Math.max(
+					...cluster.members.map((m) =>
+						trigramJaccard(m.content, traits.find((t) => t.id === cited.trait_id)?.principle ?? ''),
+					),
+				),
+			};
 		if (cluster.members.length === 0) {
 			return { kind: 'novel' };
 		}

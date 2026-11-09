@@ -18,6 +18,9 @@ export interface SoulProfile {
 	crystallizationReady: boolean;
 	readinessReason?: string;
 	health: number;
+	freshness: number;
+	headroom: number;
+	evidenceRatio: number;
 }
 
 export interface GetSoulProfileOptions extends CrystallizationCheckOptions {
@@ -60,10 +63,10 @@ export function getSoulProfile(
 		avgStaleness = stalenessValues.reduce((s, v) => s + v, 0) / activeTraits.length;
 	}
 	const threshold = options?.crystallizationThreshold ?? 3;
-	const health =
-		(1 - avgStaleness) *
-		(1 - activeTraitCount / traitLimit) *
-		Math.min(1, pending / Math.max(1, threshold));
+	const freshness = 1 - avgStaleness;
+	const headroom = Math.max(0, 1 - activeTraitCount / traitLimit);
+	const evidenceRatio = Math.min(1, pending / Math.max(1, threshold));
+	const health = freshness * headroom * evidenceRatio;
 
 	return {
 		soul,
@@ -74,6 +77,9 @@ export function getSoulProfile(
 		pendingShardCount: pending,
 		crystallizationReady,
 		...(check?.reason ? { readinessReason: check.reason } : {}),
+		freshness,
+		headroom,
+		evidenceRatio,
 		health: Math.max(0, Math.min(1, health)),
 	};
 }

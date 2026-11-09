@@ -51,16 +51,21 @@ export function computeSuggestedActions(input: SuggestedActionsInput): string[] 
 		);
 	}
 
-	// Unaligned (novel) clusters
-	const novelCount = clusters.filter((c) => c.alignment.kind === 'novel').length;
-	if (novelCount > 0) {
-		const totalMembers = clusters
-			.filter((c) => c.alignment.kind === 'novel')
-			.reduce((sum, c) => sum + c.members.length, 0);
+	// Citation links to active traits count as alignment independently of wording.
+	const activeIds = new Set(traitSignals.map((t) => t.traitId));
+	const uncited = clusters.filter(
+		(c) => !c.members.some((m) => m.traitIds.some((id) => activeIds.has(id))),
+	);
+	const novel = uncited.filter((c) => c.alignment.kind === 'novel');
+	if (uncited.length)
 		actions.push(
-			`${novelCount} cluster${novelCount === 1 ? '' : 's'} (${totalMembers} shard${totalMembers === 1 ? '' : 's'}) not aligned with any trait — consider adding a new trait`,
+			`${uncited.length} uncited cluster${uncited.length === 1 ? '' : 's'}; ${novel.length} semantically novel (not aligned with any trait)`,
 		);
-	}
+	const readyNovel = novel.filter((c) => c.members.length >= 2 && c.sourceDiversity >= 2);
+	if (readyNovel.length)
+		actions.push(
+			`${readyNovel.length} semantically novel cluster${readyNovel.length === 1 ? '' : 's'} with repeated evidence across sources — consider adding a new trait`,
+		);
 
 	// At capacity
 	const activeCount = traitSignals.length;

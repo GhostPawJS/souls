@@ -81,3 +81,10 @@ export function integerArraySchema(description: string): JsonSchema {
 export function stringArraySchema(description: string): JsonSchema {
 	return { type: 'array', items: { type: 'string' }, description };
 }
+
+export function soulReferenceSchema(description: string): JsonSchema {
+	return {
+		oneOf: [integerSchema(description), stringSchema(description)],
+		description: `${description} Accepts numeric id, ext: reference, slug, or name.`,
+	};
+}

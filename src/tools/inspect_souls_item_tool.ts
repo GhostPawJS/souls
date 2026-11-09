@@ -2,8 +2,16 @@ import type { SoulsDb } from '../database.ts';
 import * as read from '../read.ts';
 import type { EvidenceReport } from '../shards/types.ts';
 import type { SoulProfile } from '../souls/get_soul_profile.ts';
+import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
-import { booleanSchema, defineSoulsTool, integerSchema, objectSchema } from './tool_metadata.ts';
+import {
+	booleanSchema,
+	defineSoulsTool,
+	integerSchema,
+	numberSchema,
+	objectSchema,
+	soulReferenceSchema,
+} from './tool_metadata.ts';
 import { inspectSoulsItemToolName } from './tool_names.ts';
 import { refineSoulNext, searchSoulsNext } from './tool_next.ts';
 import { toSoulRef } from './tool_ref.ts';
@@ -23,21 +31,26 @@ export type InspectSoulsItemToolResult = ToolResult<InspectSoulsItemToolData>;
 
 export function inspectSoulsItemToolHandler(
 	db: SoulsDb,
-	input: {
-		soulId: number;
+	rawInput: {
+		minSourceDiversity?: number | undefined;
+		minSpreadDays?: number | undefined;
+		soulId: number | string;
 		history?: boolean | undefined;
 		full?: boolean | undefined;
 		maxMembersPerCluster?: number | undefined;
 		includeEvidence?: boolean | undefined;
 		includeProvenance?: boolean | undefined;
+		order?: 'citations' | 'density' | undefined;
 	},
 ): InspectSoulsItemToolResult {
-	const invalid = validateToolInput(inspectSoulsItemTool, input);
+	const invalid = validateToolInput(inspectSoulsItemTool, rawInput);
 	if (invalid) return invalid;
 	try {
-		const profile = read.getSoulProfile(db, input.soulId);
+		const input = resolveToolSoulReferences(db, rawInput);
+		const profile = read.getSoulProfile(db, input.soulId, input);
 		const renderedIdentity = read.renderSoul(db, input.soulId, {
 			includeProvenance: input.includeProvenance ?? false,
+			order: input.order,
 		});
 
 		const data: InspectSoulsItemToolData = { profile, renderedIdentity };
@@ -110,10 +123,17 @@ export const inspectSoulsItemTool = defineSoulsTool<
 		'Soul profile with traits and health, rendered identity block markdown, and optionally the evidence report.',
 	inputSchema: objectSchema(
 		{
+			order: {
+				type: 'string',
+				enum: ['citations', 'density'],
+				description: 'Render order (default citations).',
+			},
 			full: booleanSchema('Retain all selected cluster members in evidence payloads.'),
 			maxMembersPerCluster: integerSchema('Maximum cluster members rendered (default 5).'),
 			history: booleanSchema('Include wording revision history.'),
-			soulId: integerSchema('The soul ID to inspect.'),
+			minSourceDiversity: integerSchema('Minimum source diversity (default 2).'),
+			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			soulId: soulReferenceSchema('The soul ID to inspect.'),
 			includeEvidence: booleanSchema(
 				'Include evidence report with clusters and signals. Default false.',
 			),

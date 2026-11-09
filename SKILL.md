@@ -23,7 +23,7 @@ irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
 
 Run tools as `ghostpaw-souls ...`; use `~/.local/bin/ghostpaw-souls` if it is not on PATH.
 
-Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references accept ext:<externalId>. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).
+Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).
 
 ## Calling tools
 
@@ -50,7 +50,7 @@ Read-only.
 | status | string | no | pending, sealed, faded, all. Filter status; defaults to pending for list and all for search. |
 | offset | integer | no | Skip this many results. |
 | query | string | no | FTS5 search query. Omit to list pending shards. |
-| soulId | integer | no | Filter by soul ID. |
+| soulId | integer / string | no | Filter by soul ID. Accepts numeric id, ext: reference, slug, or name. |
 | tags | array | no | Filter by all supplied topic tags. |
 | limit | integer | no | Maximum results. |
 
@@ -70,7 +70,9 @@ Writes: writes_state.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
-| soulId | integer | no | Soul to review. |
+| minSourceDiversity | integer | no | Minimum source diversity (default 2). |
+| minSpreadDays | number | no | Minimum occurrence spread in days (default 1). |
+| soulId | integer / string | no | Soul to review. Accepts numeric id, ext: reference, slug, or name. |
 | noChange | boolean | no | Record a review without edits and stamp attuned. |
 | reason | string | no | Review reason. |
 | view | string | yes | list, maintenance, readiness, history. The operation to perform. |
@@ -91,10 +93,13 @@ Read-only.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
+| order | string | no | citations, density. Render order (default citations). |
 | full | boolean | no | Retain all selected cluster members in evidence payloads. |
 | maxMembersPerCluster | integer | no | Maximum cluster members rendered (default 5). |
 | history | boolean | no | Include wording revision history. |
-| soulId | integer | yes | The soul ID to inspect. |
+| minSourceDiversity | integer | no | Minimum source diversity (default 2). |
+| minSpreadDays | number | no | Minimum occurrence spread in days (default 1). |
+| soulId | integer / string | yes | The soul ID to inspect. Accepts numeric id, ext: reference, slug, or name. |
 | includeEvidence | boolean | no | Include evidence report with clusters and signals. Default false. |
 | includeProvenance | boolean | no | Include provenance in rendered identity. Default false. |
 
@@ -119,6 +124,8 @@ Writes: writes_state.
 | idempotencyKey | string | no | Unique ingestion key. |
 | ref | string | no | External evidence reference. |
 | now | integer | no | Timestamp in epoch milliseconds; occurredAt takes precedence. |
+| minSourceDiversity | integer | no | Minimum source diversity (default 2). |
+| minSpreadDays | number | no | Minimum occurrence spread in days (default 1). |
 | content | string | no | Behavioral observation text. |
 | source | string | no | Evidence channel origin label. |
 | soulIds | array | no | Soul IDs to attribute this observation to. |
@@ -161,7 +168,9 @@ Writes: writes_state.
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
 | action | string | yes | refine_with_evidence, add_trait, revise_trait, revert_trait, reactivate_trait, cite_shard, stamp_attuned. The refinement action to perform. |
-| soulId | integer | no | Soul ID (required for add_trait, stamp_attuned). |
+| minSourceDiversity | integer | no | Minimum source diversity (default 2). |
+| minSpreadDays | number | no | Minimum occurrence spread in days (default 1). |
+| soulId | integer / string | no | Soul ID (required for add_trait, stamp_attuned). Accepts numeric id, ext: reference, slug, or name. |
 | traitId | integer | no | Trait ID (required for revise_trait, revert_trait, reactivate_trait, cite_shard). |
 | principle | string | no | The cognitive rule text. |
 | provenance | string | no | Evidence chain justifying the trait. |
@@ -190,7 +199,7 @@ ghostpaw-souls call refine_soul '{"action":"revise_trait","traitId":1,"principle
 
 Validate, execute, or revert a level-up plan for a soul — consolidating traits, promoting knowledge into essence, and incrementing the generation.
 
-Use when: Use validate to check a plan before executing it. Use execute when the plan is validated and the soul is ready for restructuring. Use revert to undo the last level-up if the outcome was wrong.
+Use when: Use validate without a plan to check readiness and blockers, or with a plan to check it before executing it. Use execute when the plan is validated and the soul is ready for restructuring. Use revert to undo the last level-up if the outcome was wrong.
 
 Not for: Do not use this for targeted trait mutations — use refine_soul. Do not use this unless the soul is at or near trait capacity and crystallization is ready.
 
@@ -199,10 +208,12 @@ Writes: writes_state.
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
 | action | string | yes | validate, execute, revert. The operation to perform. |
+| minSourceDiversity | integer | no | Minimum source diversity for planless readiness (default 2). |
+| minSpreadDays | number | no | Minimum occurrence spread in days for planless readiness (default 1). |
 | traitLimit | integer | no | Override active trait capacity. |
 | strict | boolean | no | Reject new validation errors instead of warning. |
-| soulId | integer | yes | The soul ID. |
-| plan | object | no | The level-up plan. |
+| soulId | integer / string | yes | The soul ID. Accepts numeric id, ext: reference, slug, or name. |
+| plan | object | no | The level-up plan; omit with validate to report readiness and blockers. |
 | plan.newEssence | string | yes | The new essence narrative after level-up. |
 | plan.consolidations | array | yes | Consolidation groups. |
 | plan.consolidations[].sourceTraitIds | array | yes | Trait IDs to merge. |
@@ -247,7 +258,9 @@ Writes: writes_state.
 | name | string | no | Soul name. |
 | essence | string | no | Soul essence narrative. |
 | description | string | no | Soul description. |
-| soulId | integer | no | Soul ID. |
+| minSourceDiversity | integer | no | Minimum source diversity (default 2). |
+| minSpreadDays | number | no | Minimum occurrence spread in days (default 1). |
+| soulId | integer / string | no | Soul ID. Accepts numeric id, ext: reference, slug, or name. |
 
 ```sh
 ghostpaw-souls call manage_soul '{"action":"create","name":"Reviewer","essence":"Read intent before details.","description":"Code review identity"}'
