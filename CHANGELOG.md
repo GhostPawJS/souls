@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-09
+
 ### Added
 
 - `-q` aliases `--quiet`; soul references accept slugs between external references and names in CLI and tool inputs. Array flags accept JSON arrays as well as repetition; shard-add help points to batch import.
@@ -174,7 +176,8 @@ All new checks are opt-in. Without strict mode, existing calls behave as in 0.4.
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/GhostPawJS/souls/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/GhostPawJS/souls/compare/v0.4.5...v0.5.0
 [0.4.5]: https://github.com/GhostPawJS/souls/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/GhostPawJS/souls/compare/v0.4.3...v0.4.4
