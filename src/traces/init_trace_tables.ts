@@ -13,7 +13,7 @@ export function initTraceTables(db: SoulsDb): void {
   supersedes   INTEGER REFERENCES soul_traces(id),
   revision     INTEGER NOT NULL DEFAULT 1,
   CHECK ((state = 0 AND settled_at IS NULL AND settle_reason IS NULL)
-      OR (state IN (1, 2) AND settled_at IS NOT NULL AND length(trim(settle_reason)) > 0))
+      OR (state IN (1, 2) AND settled_at IS NOT NULL AND settle_reason IS NOT NULL AND length(trim(settle_reason)) > 0))
 ) STRICT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_trace_supersedes ON soul_traces(supersedes) WHERE supersedes IS NOT NULL;
 

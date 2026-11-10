@@ -8,6 +8,7 @@ import {
 } from './cli_args.ts';
 import { cliVersion } from './cli_version.ts';
 import type { JsonSchema, SurfaceTool } from './surface_types.ts';
+import { traceCliHelp } from './trace_cli_help.ts';
 import { validateInput } from './validate_input.ts';
 
 export function cliCommands<T>(tools: readonly SurfaceTool<T>[]) {
@@ -175,6 +176,12 @@ export async function runCliCommand<T>(
 					})),
 			};
 		};
+		if (help && args[0] === 'trace') {
+			const text = traceCliHelp(options.bin, args[1]);
+			if (!text) throw new CliUsageError(`Unknown trace verb: ${args[1]}`);
+			if (!quiet) stdout.write(text);
+			return 0;
+		}
 		if (help) {
 			const matches = tree.filter((command) => command.path.startsWith(args.join(' ')));
 			if (!matches.length) throw new CliUsageError(`Unknown command: ${args.join(' ')}`);
@@ -289,7 +296,16 @@ export async function runCliCommand<T>(
 				if (Array.isArray(input.soulIds)) input.soulIds = input.soulIds.map(convert);
 			}
 			const errors = validateInput(entry.tool.inputSchema, input);
-			if (errors.length) throw new CliUsageError(errors.join('\n'));
+			if (errors.length) {
+				let recovery = '';
+				if (entry.path.startsWith('trace ')) {
+					const invalid = (await entry.tool.handler(context, input)) as {
+						error?: { recovery?: string };
+					};
+					recovery = invalid.error?.recovery ?? '';
+				}
+				throw new CliUsageError([...errors, ...(recovery ? [recovery] : [])].join('\n'));
+			}
 			const result = await entry.tool.handler(context, input);
 			const record = result as {
 				ok?: boolean;

@@ -32,11 +32,19 @@ export function getTrace(db: SoulsDb, id: number): Trace | null {
 		revision: row.revision,
 		souls: db
 			.prepare(
-				'SELECT soul_id,role,created_at FROM soul_trace_souls WHERE trace_id=? ORDER BY soul_id,role',
+				'SELECT l.soul_id,l.role,l.created_at,s.name,s.slug FROM soul_trace_souls l JOIN souls s ON s.id=l.soul_id WHERE trace_id=? ORDER BY soul_id,role',
 			)
-			.all<{ soul_id: number; role: number; created_at: number }>(id)
+			.all<{
+				soul_id: number;
+				role: number;
+				created_at: number;
+				name: string;
+				slug: string | null;
+			}>(id)
 			.map((r) => ({
 				soulId: r.soul_id,
+				name: r.name,
+				...(r.slug ? { slug: r.slug } : {}),
 				role: roles[r.role] as TraceRole,
 				createdAt: r.created_at,
 			})),

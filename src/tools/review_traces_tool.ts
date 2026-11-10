@@ -16,9 +16,12 @@ import {
 	stringSchema,
 } from './tool_metadata.ts';
 import { reviewTracesToolName } from './tool_names.ts';
+import { summarizeCount } from './tool_summary.ts';
 import { type ToolResult, toolNeedsClarification, toolSuccess } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
 export interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> {
+	soul?: number | string;
+	withSoul?: number | string;
 	view: 'list' | 'due' | 'show' | 'history' | 'chain' | 'changed' | 'stats';
 	id?: number;
 	soulId?: number | string;
@@ -27,14 +30,28 @@ export interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> {
 	within?: string | number;
 	halfLifeDays?: number;
 }
-const example = '{"view":"list","soulId":"mentor","state":"open","limit":20}';
 export function reviewTracesToolHandler(db: SoulsDb, input: ReviewTracesInput): ToolResult {
+	const example =
+		input?.view === 'stats'
+			? '{"view":"stats","soul":"mentor","withSoul":"fox","halfLifeDays":30}'
+			: input?.view === 'changed'
+				? '{"view":"changed","since":"yesterday"}'
+				: ['show', 'history', 'chain'].includes(input?.view)
+					? JSON.stringify({ view: input.view, id: 4 })
+					: JSON.stringify({ view: input?.view ?? 'list', soul: 'mentor' });
 	const invalid = validateToolInput(reviewTracesTool, input);
 	if (invalid) {
 		invalid.error.recovery = `Example input: ${example}`;
 		return invalid;
 	}
 	try {
+		input = {
+			...input,
+			...(input.soulId === undefined && input.soul !== undefined ? { soulId: input.soul } : {}),
+			...(input.withSoulId === undefined && input.withSoul !== undefined
+				? { withSoulId: input.withSoul }
+				: {}),
+		};
 		const options = {
 			...input,
 			...(input.soulId === undefined
@@ -87,6 +104,7 @@ export function reviewTracesToolHandler(db: SoulsDb, input: ReviewTracesInput): 
 						`Provide id. Example input: {"view":"${input.view}","id":1}`,
 						['id'],
 					);
+				requireTrace(read.getTrace(db, input.id), input.id);
 				if (input.view === 'history') data = read.traceHistory(db, input.id);
 				else if (input.view === 'chain') data = read.traceChain(db, input.id);
 				else {
@@ -107,7 +125,26 @@ export function reviewTracesToolHandler(db: SoulsDb, input: ReviewTracesInput): 
 			default:
 				throw new SoulsValidationError('Unknown trace view');
 		}
-		return toolSuccess(`Trace ${input.view}.`, data);
+		const report = data as { traces?: unknown[]; total?: number; since?: number };
+		const summary =
+			input.view === 'list'
+				? `${summarizeCount(report.total ?? 0, 'trace')}.`
+				: input.view === 'due'
+					? `${summarizeCount((data as unknown[]).length, 'due or overdue trace')}.`
+					: input.view === 'changed'
+						? `${summarizeCount(
+								Object.values(data as object).reduce(
+									(n: number, value) => n + (Array.isArray(value) ? value.length : 0),
+									0,
+								),
+								'change',
+							)} since ${new Date(report.since as number).toISOString()}.`
+						: input.view === 'history'
+							? `${summarizeCount((data as unknown[]).length, 'revision')} for trace #${input.id}.`
+							: input.view === 'stats'
+								? 'Trace statistics.'
+								: `${input.view === 'chain' ? 'Chain for trace' : 'Trace'} #${input.id}.`;
+		return toolSuccess(summary, data);
 	} catch (error) {
 		return translateToolError(error, {
 			summary: `Could not review traces. Example input: ${example}`,
@@ -134,6 +171,8 @@ export const reviewTracesTool = defineSoulsTool<ReviewTracesInput, unknown>({
 				enum: ['list', 'due', 'show', 'history', 'chain', 'changed', 'stats'],
 			},
 			id: integerSchema('Trace id.'),
+			soul: soulReferenceSchema('Linked soul.'),
+			withSoul: soulReferenceSchema('Other soul.'),
 			soulId: soulReferenceSchema('Linked soul.'),
 			withSoulId: soulReferenceSchema('Other soul for settle rate.'),
 			role: {

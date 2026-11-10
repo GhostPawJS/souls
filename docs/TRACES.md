@@ -6,7 +6,7 @@ approval. Shards stay what they always were, short behavioral observations
 that crystallize into traits. Traces are the record that shards can point at
 as evidence. Traces persist; shards interpret them.
 
-Traces are additive in 0.6.0. Databases, commands, tools and outputs from
+Traces are an additive, unreleased feature. Databases, commands, tools and outputs from
 0.5.x keep working unchanged, and nothing about traces takes effect until the
 first trace is written.
 
@@ -96,7 +96,7 @@ record ──► open (0) ──settle --as done    --reason ──► done (1)
                     └─settle --as dropped --reason ──► dropped (2)
 ```
 
-- `record` creates an open trace. It needs `text` and at least one soul link.
+- `record` needs `text` and at least one soul link. It creates an open trace by default. For an event that already happened, supply `settle: { as: "done", reason: "Delivered", at: "yesterday" }` (or `--settled done --reason "Delivered" --at yesterday`). This atomically writes revision 1 (record) and revision 2 (settle). Only settle closes an existing trace.
 - `settle` is the one verb that closes a trace. `as` is `done` or `dropped`;
   `reason` is required for both. Settling sets `settled_at` (default now, or
   `at`). Settling a settled trace is a conflict (exit 4), not a silent no-op.
@@ -132,7 +132,7 @@ unless `includeSuperseded` is set.
 | 1    | counterpart | the other party (promisee, approver, counterparty)   |
 | 2    | subject     | the soul the trace is about                          |
 
-Inputs accept the name or the code; outputs carry the name.
+Inputs accept the name or the code; outputs carry the role name, soulId, soul name and slug when set. Unlink requires a reason and rejects removal of the final soul link. An owner is optional, so subject-only traces remain valid.
 
 ## Query surface
 
@@ -141,7 +141,7 @@ CLI noun `trace`:
 
 | view      | CLI                                   | returns |
 | --------- | ------------------------------------- | ------- |
-| `list`    | `trace list [--soul s] [--role r] [--state open] [--tag t] [--due-before d] [--query q]` | traces with links and tags; heads only by default |
+| `list`    | `trace list [--soul s] [--role r] [--state open] [--tag t] [--due-before d] [--query q]` | all states, newest updated first; links and tags; heads only by default |
 | `due`     | `trace due [--soul s] [--within 3d]`  | open traces due within the window or overdue, overdue first |
 | `show`    | `trace show <id>`                     | one trace with links, tags, chain and citing shards |
 | `history` | `trace history <id>`                  | append-only revisions |
@@ -151,16 +151,16 @@ CLI noun `trace`:
 
 `changed` covers traces (created, revised, settled), shards dropped or faded,
 trait and essence revisions, level-ups and attunements since T, plus open traces
-that became due or overdue. It never writes; callers keep the returned `cursor`.
+that became due or overdue. It never writes; callers keep the returned `cursor`. Keys are `traces`, `shards`, `revisions`, `levelUps`, `attunements`, `newlyDue`, `cursor`, and `since`. Items use camelCase timestamps: updatedAt for traces/shards, createdAt for revisions/level-ups, lastAttunedAt for attunements, and dueAt for newly due traces.
 
 Numbers in `stats`, all computed in SQL:
 
 - **overdue per soul**: open traces with `due_at < now`, grouped by owner soul.
 - **promise settle rate between two souls**: over traces with `due_at` linked to
   both souls, `done / (done + dropped + open and overdue)`; `null` when the
-  denominator is zero.
+  denominator is zero. The existing numeric `promiseSettleRate` is accompanied by `promiseSettleRateDetails: { done, dropped, overdueOpen, rate }`. This legacy calculation includes all dated traces linking the selected pair, not only those tagged promise. Broken and cancelled promises both count as dropped and therefore not kept.
 - **weighted certainty along a chain**: `Σ weight_i · 0.5^depth_i / Σ 0.5^depth_i`,
-  depth 0 at the head; a NULL weight counts as 1.
+  reported only for chain heads, depth 0 at the head; a NULL weight counts as 1.
 - **recency-decayed weight**: `weight · 0.5^(age_days / half_life_days)`, age
   from `created_at`, half life 30 days by default.
 
@@ -184,16 +184,22 @@ top-level `id`.
 
 ## Mapping
 
-| from                    | as a trace |
-| ----------------------- | ---------- |
-| quest (questlog)        | tag `quest`, `due_at` optional, owner = the working soul; finish = settle done, abandon = settle dropped |
-| promise (affinity)      | tag `promise`, `due_at` set, owner = promiser, counterpart = promisee, weight = importance |
-| event (affinity)        | tag `event`, no `due_at`, `created_at` = when it happened, subject/counterpart links as needed; recorded open, then optionally settled `done` |
-| belief (codex)          | tag `belief`, weight = certainty, corrections via `supersedes` |
-| rule or decision by Fox | tag `rule` or `decision`, owner = Fox's soul |
-| approval                | tag `approval`, owner = the approver (Fox), counterpart = the approved soul; one trace, two links |
+| Usage | Mapping |
+| --- | --- |
+| Flat work list | Open trace tagged `quest`, owner = working soul. Due is optional: a parking lot needs no due date. Settle done with the honest outcome as the reason; abandon with dropped. Group a questline using `questline` plus a tag named for the line. Prerequisites/unlocks, repeatables, rewards, and due-claim delivery are not modeled; keep using questlog for scheduling and recurrence. |
+| Promises | Tag `promise`, due set, owner = promiser, counterpart = promisee. Kept = settle done; broken and cancelled = settle dropped, with the reason saying which. The settle rate counts both broken and cancelled as not kept; it cannot distinguish cancellation from a broken promise. |
+| Interaction or relationship journal | Event trace tagged `event`, optionally `note`, recorded with `--settled done` and an honest reason. Owner = writer, subject = the other soul. Long running relationship prose belongs in a series of event traces, not one ever-edited text field. |
+| Beliefs | Tag `belief`, weight = certainty, source kind as a category tag (`explicit`, `observed`, `inferred`, `distilled`). Correct with a new trace using supersedes; forget with settle dropped and a reason. To merge two beliefs, the new trace supersedes one and the other is settled dropped with reason "merged into #N". Append-only logs map to recording without supersedes. |
+| Approvals | One trace tagged `approval`, owner = Fox (approver), counterpart = approved soul. Settle done when granted, dropped when declined. This replaces keeping an approval in two stores. |
+| Rules and decisions | Tag `rule` or `decision` on Fox's soul. |
 
-Every participant is represented by a soul, so traces link to participants the same way.
+### What traces do not replace
+
+- Recurring dates.
+- Scheduling and recurrence; keep using questlog.
+- Due-claim delivery.
+- Contact identities and channels.
+- Procedures and skills.
 
 ## Reconciliation audit
 
@@ -214,6 +220,6 @@ Every participant is represented by a soul, so traces link to participants the s
 
 Citation writes use revision kind `cite` so the every-change history guarantee
 also covers evidence edges. SQLite math functions compute recency decay when
-available; builds without `pow` use the same formula in JavaScript. Existing
+available, in one pass joined to the filtered trace ids; builds without `pow` use the same formula in JavaScript. Existing
 Souls databases retain their journal mode on open to preserve file bytes during
 read-only use; newly created databases use WAL.

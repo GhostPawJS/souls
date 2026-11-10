@@ -37,11 +37,25 @@ export interface TraceSoulInput {
 	weight?: number | null;
 	supersedes?: number | null;
 	as?: 'done' | 'dropped';
+	settle?: RecordTraceInput['settle'];
 }
 export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolResult<Trace> {
+	const example =
+		(
+			{
+				settle: '{"action":"settle","id":4,"as":"dropped","reason":"replaced by #9"}',
+				link: '{"action":"link","id":4,"souls":[{"soul":"fox","role":"counterpart"}]}',
+				unlink:
+					'{"action":"unlink","id":4,"souls":[{"soul":"fox","role":"counterpart"}],"reason":"wrong party"}',
+				cite: '{"action":"cite","shardId":12,"traceId":4}',
+				revise: '{"action":"revise","id":4,"reason":"date moved","dueAt":"+3d"}',
+				tag: '{"action":"tag","id":4,"tags":["promise"]}',
+				untag: '{"action":"untag","id":4,"tags":["promise"],"reason":"wrong category"}',
+			} as Record<string, string>
+		)[input?.action] ?? traceExample;
 	const invalid = validateToolInput(traceSoulTool, input);
 	if (invalid) {
-		invalid.error.recovery = `Example input: ${traceExample}`;
+		invalid.error.recovery = `Example input: ${example}`;
 		return invalid;
 	}
 	try {
@@ -52,7 +66,7 @@ export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolRe
 		const need = (fields: string[]) =>
 			toolNeedsClarification(
 				'missing_required_choice',
-				`Provide ${fields.join(', ')}. Example input: ${traceExample}`,
+				`Provide ${fields.join(', ')}. Example input: ${example}`,
 				fields,
 			);
 		let trace: Trace;
@@ -110,20 +124,24 @@ export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolRe
 					throw new SoulsValidationError('Unknown trace action');
 			}
 		}
-		return toolSuccess(`Trace #${trace.id} ${input.action}.`, trace, {
-			entities: [toTraceRef(trace)],
-			next: [
-				{
-					kind: 'use_tool',
-					message: 'Review this trace.',
-					tool: 'review_traces',
-					suggestedInput: { view: 'show', id: trace.id },
-				},
-			],
-		});
+		return toolSuccess(
+			`${{ record: 'Recorded', revise: 'Revised', settle: 'Settled', link: 'Linked', unlink: 'Unlinked', tag: 'Tagged', untag: 'Untagged', cite: 'Cited' }[input.action]} trace #${trace.id}${input.action === 'settle' ? ` as ${input.as}` : ''}.`,
+			trace,
+			{
+				entities: [toTraceRef(trace)],
+				next: [
+					{
+						kind: 'use_tool',
+						message: 'Review this trace.',
+						tool: 'review_traces',
+						suggestedInput: { view: 'show', id: trace.id },
+					},
+				],
+			},
+		);
 	} catch (error) {
 		const result = translateToolError(error, { summary: 'Could not change trace.' });
-		if (result.outcome === 'error') result.error.recovery = `Example input: ${traceExample}`;
+		if (result.outcome === 'error') result.error.recovery = `Example input: ${example}`;
 		return result;
 	}
 }
@@ -175,6 +193,14 @@ export const traceSoulTool = defineSoulsTool<TraceSoulInput, Trace>({
 			weight: { oneOf: [numberSchema('Weight between 0 and 1; null clears.'), { type: 'null' }] },
 			supersedes: { oneOf: [integerSchema('Trace being corrected.'), { type: 'null' }] },
 			as: { type: 'string', enum: ['done', 'dropped'] },
+			settle: objectSchema(
+				{
+					as: { type: 'string', enum: ['done', 'dropped'] },
+					reason: stringSchema('Honest outcome.'),
+					at: dateSchema,
+				},
+				['as', 'reason'],
+			),
 		},
 		['action'],
 	),

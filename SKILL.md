@@ -356,9 +356,14 @@ Writes: writes_state.
 | weight | number / string / null | no | number / string / null value. |
 | supersedes | integer / null | no | integer / null value. |
 | as | string | no | done, dropped. string value. |
+| settle | object | no | Object: as (required), reason (required), at |
+| settle.as | string | yes | done, dropped. string value. |
+| settle.reason | string | yes | Honest outcome. |
+| settle.at | integer / string | no | integer / string value. |
 | soul | array | no | Linked soul[:owner\|counterpart\|subject]; repeat for more links. |
 | tag | array | no | array value. |
 | due | string | no | Due date or none. |
+| settled | string | no | done, dropped. Record an already settled trace. |
 
 ```sh
 ghostpaw-souls call trace_soul '{"action":"record"}'
@@ -386,6 +391,8 @@ Read-only.
 | --- | --- | --- | --- |
 | view | string | yes | list, due, show, history, chain, changed, stats. string value. |
 | id | integer | no | Trace id. |
+| soul | string | no | string value. |
+| withSoul | integer / string | no | Other soul. Accepts numeric id, ext: reference, slug, or name. |
 | soulId | integer / string | no | Linked soul. Accepts numeric id, ext: reference, slug, or name. |
 | withSoulId | integer / string | no | Other soul for settle rate. Accepts numeric id, ext: reference, slug, or name. |
 | role | string / integer | no | string / integer value. |
@@ -402,7 +409,6 @@ Read-only.
 | limit | integer | no | Page size. |
 | offset | integer | no | Page offset. |
 | halfLifeDays | number | no | Decay half life, default 30 days. |
-| soul | string | no | string value. |
 | with | string | no | string value. |
 
 ```sh

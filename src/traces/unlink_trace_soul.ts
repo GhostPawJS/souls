@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { SoulsValidationError } from '../errors.ts';
 import { getSoulOrThrow } from '../souls/get_soul_or_throw.ts';
 import { safeText } from './assert_trace_text.ts';
 import { changeTrace } from './change_trace.ts';
@@ -19,5 +20,7 @@ export function unlinkTraceSoul(
 			soulId,
 			roleCode(role),
 		);
+		if (!db.prepare('SELECT 1 FROM soul_trace_souls WHERE trace_id=?').get(id))
+			throw new SoulsValidationError('Cannot remove the last soul link');
 	});
 }

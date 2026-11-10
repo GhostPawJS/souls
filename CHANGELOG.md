@@ -7,19 +7,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Persistent traces with lazy SQLite schema, append-only revision history, soul roles, category tags, shard citations, supersedes chains, date parsing, credential checks, read APIs, MCP tools, and trace CLI commands.
-- Trace migration fixture tests and an explicit-path migration smoke script for operators.
-- Optional open-commitments rendering and trace evidence references.
+- Traces: persistent, dated facts and commitments linked to souls with numeric roles (owner, counterpart, subject), category tags, a weight, an optional due date and a supersedes chain. See `docs/TRACES.md`.
+- One closing verb: `trace settle <id> --as done|dropped --reason text`. `trace record --settled done --reason text` records something that already happened. Settled traces are final; corrections supersede them.
+- Append-only trace revisions with a JSON snapshot per change; database triggers reject edits and deletes of revisions and deletes of traces.
+- Read-only trace queries: `trace list`, `due`, `show`, `history`, `chain`, `changed --since` (traces, shards, revisions, level-ups and attunements since a date, with a cursor) and `stats` (overdue per soul, promise settle rate between two souls, weighted chain certainty, recency-decayed weight).
+- MCP tools `trace_soul` and `review_traces`, the `record-and-settle-traces` skill, and `--trace-ids` on shard drops so shards cite traces as evidence.
+- Date inputs accept epoch milliseconds, ISO 8601, `YYYY-MM-DD`, `DD.MM.YYYY`, `today`, `tomorrow`, `yesterday`, `+Nd` and `+Nh`, with `--tz`; storage stays integer epoch milliseconds.
+- Opt-in `render --traces open|due` appends open commitments after the identity block; default render output is unchanged.
+- Trace text and reasons that look like credentials are rejected; shard drops with such content succeed with a warning.
+- `scripts/trace-migration-smoke.mjs <db copy>` checks an existing database copy for read-only opens and an additive first trace write.
 
 ### Changed
 
-- Readiness defaults to converged evidence clusters; callers can select legacy readiness through options, environment, or database configuration.
-- Existing database opens preserve journal mode for byte-stable reads. Citation changes use revision kind `cite` to cover every evidence change in history; recency decay falls back to JavaScript only when SQLite omits `pow`.
-
-
-### Changed
-
+- Readiness requires at least one converged cluster: `minClusterSize` shards (default 3) from at least two sources. Shards citing the same live trace join one cluster, and trace weight raises priority. `--readiness legacy`, `GHOSTPAW_SOULS_READINESS=legacy` or `config set readiness legacy` restores the 0.5.1 gate.
+- Trace tables are created by the first trace write. Opening, rendering and reviewing a 0.5.x database leave the file unchanged.
 - Document writable database roots for sandboxed agent harnesses in the README and generated agent skill. Clarify which GhostPaw store owns identity, beliefs, relationships, work, procedures, and stable operational facts.
+
+### Fixed
+
+- CLI output to a closed pipe exits quietly instead of raising an unhandled EPIPE.
+- The README names `~/.codex/config.toml` for Codex CLI MCP setup.
 
 ## [0.5.1] - 2026-11-09
 

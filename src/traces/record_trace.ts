@@ -8,6 +8,7 @@ import { safeText } from './assert_trace_text.ts';
 import { getTrace } from './get_trace.ts';
 import { initTraceTables } from './init_trace_tables.ts';
 import { roleCode } from './role_code.ts';
+import { settleTrace } from './settle_trace.ts';
 import { clock } from './trace_clock.ts';
 import { time } from './trace_time.ts';
 import { weight } from './trace_weight.ts';
@@ -51,6 +52,6 @@ export function recordTrace(db: SoulsDb, input: RecordTraceInput): Trace {
 			db.prepare('INSERT INTO soul_trace_tags VALUES (?,?)').run(id, tag);
 		const trace = getTrace(db, id) as Trace;
 		snapshot(db, trace, 'record', reason, now);
-		return trace;
+		return input.settle ? settleTrace(db, id, { ...input, ...input.settle }) : trace;
 	});
 }

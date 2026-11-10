@@ -57,7 +57,7 @@ export function listTraces(
 	const sql = `FROM soul_traces t ${where.length ? `WHERE ${where.join(' AND ')}` : ''}`;
 	const total = db.prepare(`SELECT count(*) AS n ${sql}`).get<{ n: number }>(...args)?.n ?? 0;
 	const traces = db
-		.prepare(`SELECT t.id ${sql} ORDER BY t.created_at DESC,t.id DESC LIMIT ? OFFSET ?`)
+		.prepare(`SELECT t.id ${sql} ORDER BY t.updated_at DESC,t.id DESC LIMIT ? OFFSET ?`)
 		.all<{ id: number }>(...args, limit, offset)
 		.map((r) => getTrace(db, r.id) as Trace);
 	return { traces, total };

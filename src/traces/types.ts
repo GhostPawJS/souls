@@ -6,6 +6,8 @@ export interface TraceLinkInput {
 	role: TraceRole | 0 | 1 | 2;
 }
 export interface TraceLink {
+	name?: string;
+	slug?: string;
 	soulId: number;
 	role: TraceRole;
 	createdAt: number;
@@ -30,6 +32,7 @@ export interface TraceOptions {
 	tz?: string | undefined;
 }
 export interface RecordTraceInput extends TraceOptions {
+	settle?: { as: 'done' | 'dropped'; reason: string; at?: TraceTime };
 	text: string;
 	souls: TraceLinkInput[];
 	tags?: string[];

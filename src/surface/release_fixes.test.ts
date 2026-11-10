@@ -91,6 +91,8 @@ Positionals:
 Flags:
   --min-source-diversity  integer  Minimum source diversity (default 2).
   --min-spread-days  number  Minimum occurrence spread in days (default 1).
+  --readiness  string (converged|legacy)  converged (default): ready needs a cluster of minClusterSize shards from two or more sources; legacy: the 0.5.1 gate.
+  --min-cluster-size  integer  Shards a converged cluster needs (default 3).
   --view  string (list|maintenance|readiness)  list: all active souls, maintenance: run fade + readiness cycle, readiness: crystallization status only. (required)
 `,
 			);

@@ -27,6 +27,14 @@ export const soulsCliOptions: ToolCliOptions<SoulsDb> = {
 			if (input.weight === 'none') input.weight = null;
 			else if (typeof input.weight === 'string') input.weight = Number(input.weight);
 			if (input.action === 'record' && input.at !== undefined) input.createdAt = input.at;
+			if (input.settled !== undefined) {
+				input.settle = {
+					as: input.settled,
+					reason: input.reason,
+					...(input.at === undefined ? {} : { at: input.at }),
+				};
+				delete input.settled;
+			}
 			delete input.soul;
 			delete input.tag;
 			delete input.due;

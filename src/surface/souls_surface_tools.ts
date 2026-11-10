@@ -65,6 +65,16 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 					type: 'number',
 					description: 'Minimum occurrence spread in days (default 1).',
 				},
+				readiness: {
+					type: 'string',
+					enum: ['converged', 'legacy'],
+					description:
+						'converged (default): ready needs a cluster of minClusterSize shards from two or more sources; legacy: the 0.5.1 gate.',
+				},
+				minClusterSize: {
+					type: 'integer',
+					description: 'Shards a converged cluster needs (default 3).',
+				},
 				view: {
 					type: 'string',
 					enum: ['list', 'maintenance', 'readiness'],
@@ -158,6 +168,11 @@ const soulsCliSurfaceTools: readonly SurfaceTool<SoulsDb>[] = /* @__PURE__ */ so
 							},
 							tag: { type: 'array', items: { type: 'string' } },
 							due: { type: 'string', description: 'Due date or none.' },
+							settled: {
+								type: 'string',
+								enum: ['done', 'dropped'],
+								description: 'Record an already settled trace.',
+							},
 							weight: { oneOf: [{ type: 'number' }, { type: 'string' }, { type: 'null' }] },
 						},
 					},

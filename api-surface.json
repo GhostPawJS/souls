@@ -372,7 +372,7 @@
 	},
 	".:exports.skills.recordAndSettleTracesSkill.content": {
 		"kind": "string",
-		"value": "# Record and Settle Traces\n\nRecord a trace for a dated fact, promise, belief, rule, decision, approval, or quest. Drop a shard for a behavioral observation interpreting what happened. A shard may cite traces through traceIds; this does not replace shard-to-trait citations.\n\n| Record | Category | Links |\n| --- | --- | --- |\n| Quest | quest | owner holds the work |\n| Promise | promise | owner promises, counterpart receives |\n| Event | event | subject and counterpart as appropriate |\n| Belief | belief | owner believes; weight is certainty |\n| Rule or decision | rule or decision | owner holds the decision |\n| Approval | approval | owner approves, counterpart receives |\n\n1. Search review_traces before recording duplicate facts.\n2. Use trace_soul record with text and at least one souls link. Set a category tag, optional dueAt, and optional weight between 0 and 1. Never include credentials.\n3. Review due work with review_traces due. Use list, show, history, chain, changed, and stats for context. Keep the cursor returned by changed for the next read.\n4. Close work using settle, as done or dropped, with a required reason. A second settlement conflicts. There is one closing verb.\n5. Revise text, dates, weight, tags, or links with a reason; every change keeps an immutable snapshot. Unlink and untag require reasons.\n6. Correct a settled fact by recording a new trace with supersedes pointing to the old one. Chains have one successor per trace and no cycles. List and readiness use heads by default.\n7. Cite facts from behavioral shards with observe_soul traceIds or trace_soul cite. Only open or done chain heads strengthen readiness. Readiness needs a converged cluster of at least three shards across two sources; readiness legacy restores the earlier gate.\n\nExample input:\n```json\n{\"action\":\"record\",\"text\":\"Review the draft\",\"souls\":[{\"soul\":\"mentor\",\"role\":\"owner\"}],\"dueAt\":\"2026-11-12\",\"tags\":[\"promise\"],\"weight\":0.8}\n```\n\nCLI: ghostpaw-souls trace record \"Review the draft\" --soul mentor:owner --tag promise --due +3d --json\nCLI: ghostpaw-souls trace settle 1 --as done --reason \"Reviewed and delivered\" --json\n"
+		"value": "# Record and Settle Traces\n\nRecord a trace for a dated fact, promise, belief, rule, decision, approval, or quest. Drop a shard for a behavioral observation interpreting what happened. A shard may cite traces through traceIds; this does not replace shard-to-trait citations.\n\n| Usage | Mapping |\n| --- | --- |\n| Flat work list | Open trace tagged `quest`, owner = working soul. Due is optional: a parking lot needs no due date. Settle done with the honest outcome as the reason; abandon with dropped. Group a questline using `questline` plus a tag named for the line. Prerequisites/unlocks, repeatables, rewards, and due-claim delivery are not modeled; keep using questlog for scheduling and recurrence. |\n| Promises | Tag `promise`, due set, owner = promiser, counterpart = promisee. Kept = settle done; broken and cancelled = settle dropped, with the reason saying which. The settle rate counts both broken and cancelled as not kept; it cannot distinguish cancellation from a broken promise. |\n| Interaction or relationship journal | Event trace tagged `event`, optionally `note`, recorded with `--settled done` and an honest reason. Owner = writer, subject = the other soul. Long running relationship prose belongs in a series of event traces, not one ever-edited text field. |\n| Beliefs | Tag `belief`, weight = certainty, source kind as a category tag (`explicit`, `observed`, `inferred`, `distilled`). Correct with a new trace using supersedes; forget with settle dropped and a reason. To merge two beliefs, the new trace supersedes one and the other is settled dropped with reason \"merged into #N\". Append-only logs map to recording without supersedes. |\n| Approvals | One trace tagged `approval`, owner = Fox (approver), counterpart = approved soul. Settle done when granted, dropped when declined. This replaces keeping an approval in two stores. |\n| Rules and decisions | Tag `rule` or `decision` on Fox's soul. |\n\n### What traces do not replace\n\n- Recurring dates.\n- Scheduling and recurrence; keep using questlog.\n- Due-claim delivery.\n- Contact identities and channels.\n- Procedures and skills.\n\n1. Search review_traces before recording duplicate facts.\n2. Use trace_soul record with text and at least one souls link. Use settle: { as: \"done\", reason: \"Delivered\" } or CLI --settled done --reason \"Delivered\" to record a past event with record and settle revisions atomically. Set a category tag, optional dueAt, and optional weight between 0 and 1. Never include credentials.\n3. Review due work with review_traces due. Use list, show, history, chain, changed, and stats for context. Keep the cursor returned by changed for the next read.\n4. Close work using settle, as done or dropped, with a required reason. A second settlement conflicts. There is one closing verb.\n5. Revise text, dates, weight, tags, or links with a reason; every change keeps an immutable snapshot. Unlink and untag require reasons. The final soul link cannot be removed; an owner is optional.\n6. Correct a settled fact by recording a new trace with supersedes pointing to the old one. Chains have one successor per trace and no cycles. List and readiness use heads by default.\n7. Cite facts from behavioral shards with observe_soul traceIds or trace_soul cite. Only open or done chain heads strengthen readiness. Readiness needs a converged cluster of at least three shards across two sources; readiness legacy restores the earlier gate.\n\nExample input:\n```json\n{\"action\":\"record\",\"text\":\"Review the draft\",\"souls\":[{\"soul\":\"mentor\",\"role\":\"owner\"}],\"dueAt\":\"2026-11-12\",\"tags\":[\"promise\"],\"weight\":0.8}\n```\n\nCLI: ghostpaw-souls trace record \"Review the draft\" --soul mentor:owner --tag promise --due +3d --json\nCLI: ghostpaw-souls trace settle 1 --as done --reason \"Reviewed and delivered\" --json\n"
 	},
 	".:exports.skills.recordAndSettleTracesSkill.description": {
 		"kind": "string",
@@ -4958,7 +4958,7 @@
 	},
 	".:public.read.changedSince": {
 		"kind": "value",
-		"type": "(db: SoulsDb, since: TraceTime, options?: TraceOptions) => { attunements: Record<string, unknown>[]; newlyDue: Trace[]; cursor: number; traces: Trace[]; shards: Record<string, unknown>[]; }"
+		"type": "(db: SoulsDb, since: TraceTime, options?: TraceOptions) => { traces: Trace[]; shards: { [k: string]: unknown; }[]; revisions: unknown[]; levelUps: unknown[]; attunements: { [k: string]: unknown; }[]; newlyDue: Trace[]; cursor: number; since: number; }"
 	},
 	".:public.read.countActiveTraits": {
 		"kind": "value",
@@ -5094,7 +5094,7 @@
 	},
 	".:public.read.traceStats": {
 		"kind": "value",
-		"type": "(db: SoulsDb, options?: TraceOptions & { soulId?: number; withSoulId?: number; halfLifeDays?: number; }) => { overdue: { soulId: number; count: number; }[]; promiseSettleRate: number | null; chains: { id: number; certainty: number | null; }[]; weights: { id: number; weight: number; }[]; }"
+		"type": "(db: SoulsDb, options?: TraceOptions & { soulId?: number; withSoulId?: number; halfLifeDays?: number; includeRetired?: boolean; }) => { overdue: { soulId: number; count: number; }[]; promiseSettleRate: number | null; promiseSettleRateDetails: { done: number; dropped: number; overdueOpen: number; rate: number | null; }; chains: { id: number; certainty: number | null; }[]; weights: { id: number; weight: number; }[]; }"
 	},
 	".:public.read.traceTablesExist": {
 		"kind": "value",
@@ -5128,6 +5128,10 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"settle": {
+				"type": "{ as: \"done\" | \"dropped\"; reason: string; at?: TraceTime; } | undefined",
+				"optional": true
+			},
 			"souls": {
 				"type": "TraceLinkInput[]",
 				"optional": false
@@ -5153,7 +5157,7 @@
 				"optional": true
 			}
 		},
-		"definition": "interface RecordTraceInput extends TraceOptions { text: string; souls: TraceLinkInput[]; tags?: string[]; weight?: number | null; createdAt?: TraceTime; dueAt?: TraceTime | null; supersedes?: number | null; reason?: string; }",
+		"definition": "interface RecordTraceInput extends TraceOptions { settle?: { as: 'done' | 'dropped'; reason: string; at?: TraceTime; }; text: string; souls: TraceLinkInput[]; tags?: string[]; weight?: number | null; createdAt?: TraceTime; dueAt?: TraceTime | null; supersedes?: number | null; reason?: string; }",
 		"references": {
 			"TraceLinkInput": ".:public.TraceLinkInput",
 			"TraceOptions": ".:public.TraceOptions",
@@ -5600,6 +5604,10 @@
 				"type": "TraceTime | undefined",
 				"optional": true
 			},
+			"soul": {
+				"type": "string | number | undefined",
+				"optional": true
+			},
 			"soulId": {
 				"type": "string | number | undefined",
 				"optional": true
@@ -5624,12 +5632,16 @@
 				"type": "string | number | undefined",
 				"optional": true
 			},
+			"withSoul": {
+				"type": "string | number | undefined",
+				"optional": true
+			},
 			"withSoulId": {
 				"type": "string | number | undefined",
 				"optional": true
 			}
 		},
-		"definition": "interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> { view: 'list' | 'due' | 'show' | 'history' | 'chain' | 'changed' | 'stats'; id?: number; soulId?: number | string; withSoulId?: number | string; since?: TraceTime; within?: string | number; halfLifeDays?: number; }",
+		"definition": "interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> { soul?: number | string; withSoul?: number | string; view: 'list' | 'due' | 'show' | 'history' | 'chain' | 'changed' | 'stats'; id?: number; soulId?: number | string; withSoulId?: number | string; since?: TraceTime; within?: string | number; halfLifeDays?: number; }",
 		"references": {
 			"ListTracesOptions": ".:public.ListTracesOptions",
 			"TraceTime": ".:public.TraceTime"
@@ -10356,6 +10368,10 @@
 				"type": "TraceTime | undefined",
 				"optional": true
 			},
+			"soul": {
+				"type": "string | number | undefined",
+				"optional": true
+			},
 			"soulId": {
 				"type": "string | number | undefined",
 				"optional": true
@@ -10377,6 +10393,10 @@
 				"optional": false
 			},
 			"within": {
+				"type": "string | number | undefined",
+				"optional": true
+			},
+			"withSoul": {
 				"type": "string | number | undefined",
 				"optional": true
 			},
@@ -13189,6 +13209,10 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"settle": {
+				"type": "{ as: \"done\" | \"dropped\"; reason: string; at?: TraceTime; } | undefined",
+				"optional": true
+			},
 			"shardId": {
 				"type": "number | undefined",
 				"optional": true
@@ -13882,16 +13906,24 @@
 				"type": "number",
 				"optional": false
 			},
+			"name": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"role": {
 				"type": "TraceRole",
 				"optional": false
+			},
+			"slug": {
+				"type": "string | undefined",
+				"optional": true
 			},
 			"soulId": {
 				"type": "number",
 				"optional": false
 			}
 		},
-		"definition": "interface TraceLink { soulId: number; role: TraceRole; createdAt: number; }",
+		"definition": "interface TraceLink { name?: string; slug?: string; soulId: number; role: TraceRole; createdAt: number; }",
 		"references": {
 			"TraceRole": ".:public.TraceRole"
 		}
@@ -14183,6 +14215,10 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"settle": {
+				"type": "{ as: \"done\" | \"dropped\"; reason: string; at?: TraceTime; } | undefined",
+				"optional": true
+			},
 			"shardId": {
 				"type": "number | undefined",
 				"optional": true
@@ -14216,8 +14252,9 @@
 				"optional": true
 			}
 		},
-		"definition": "interface TraceSoulInput { action: 'record' | 'revise' | 'settle' | 'link' | 'unlink' | 'tag' | 'untag' | 'cite'; id?: number; traceId?: number; shardId?: number; text?: string; reason?: string; souls?: { soul: number | string; role: TraceRole | 0 | 1 | 2; }[]; tags?: string[]; dueAt?: TraceTime | null; createdAt?: TraceTime; at?: TraceTime; now?: TraceTime; tz?: string; weight?: number | null; supersedes?: number | null; as?: 'done' | 'dropped'; }",
+		"definition": "interface TraceSoulInput { action: 'record' | 'revise' | 'settle' | 'link' | 'unlink' | 'tag' | 'untag' | 'cite'; id?: number; traceId?: number; shardId?: number; text?: string; reason?: string; souls?: { soul: number | string; role: TraceRole | 0 | 1 | 2; }[]; tags?: string[]; dueAt?: TraceTime | null; createdAt?: TraceTime; at?: TraceTime; now?: TraceTime; tz?: string; weight?: number | null; supersedes?: number | null; as?: 'done' | 'dropped'; settle?: RecordTraceInput['settle']; }",
 		"references": {
+			"RecordTraceInput": ".:public.RecordTraceInput",
 			"TraceRole": ".:public.TraceRole",
 			"TraceTime": ".:public.TraceTime"
 		}
@@ -15831,6 +15868,10 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"settle": {
+				"type": "{ as: \"done\" | \"dropped\"; reason: string; at?: TraceTime; } | undefined",
+				"optional": true
+			},
 			"souls": {
 				"type": "TraceLinkInput[]",
 				"optional": false
@@ -17009,9 +17050,17 @@
 				"type": "number",
 				"optional": false
 			},
+			"name": {
+				"type": "string | undefined",
+				"optional": true
+			},
 			"role": {
 				"type": "TraceRole",
 				"optional": false
+			},
+			"slug": {
+				"type": "string | undefined",
+				"optional": true
 			},
 			"soulId": {
 				"type": "number",

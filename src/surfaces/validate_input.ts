@@ -30,7 +30,9 @@ export function validateInput(schema: JsonSchema, input: unknown, path = '$'): s
 		schema.oneOf &&
 		!schema.oneOf.some((branch) => validateInput(branch, input, path).length === 0)
 	)
-		errors.push(`${path}: must match at least one schema branch`);
+		errors.push(
+			`${path}: expected ${schema.oneOf.map((branch) => branch.type ?? 'valid value').join(' or ')}`,
+		);
 	if (typeof input === 'object' && input !== null && !Array.isArray(input)) {
 		const record = input as Record<string, unknown>;
 		for (const name of schema.required ?? [])
