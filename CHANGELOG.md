@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-10
+
 ### Added
 
 - `trace roll <id> --next-due <date> [--as done|dropped] [--reason]` (tool action `roll`): settles a trace and records the next open one in one transaction, carrying text, tags, soul links and weight, with `supersedes` set to the old id.
@@ -220,7 +222,8 @@ All new checks are opt-in. Without strict mode, existing calls behave as in 0.4.
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/GhostPawJS/souls/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/GhostPawJS/souls/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/GhostPawJS/souls/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/GhostPawJS/souls/compare/v0.4.5...v0.5.0
