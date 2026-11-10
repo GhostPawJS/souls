@@ -7,17 +7,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Ranked trace text search through the read library, review_traces search view, and trace search CLI, with a read-only substring fallback.
-- Trace pagination notices, category exclusions and prefixes, bounded head statistics,
-  role-aware overdue counts, and tagged promise settlement rates.
-- Atomic trace roll and JSONL batch recording, merge parents, historical imports,
-  revision text deduplication and explicit compaction, and call command help.
-- Consistent additive data envelopes for trace writes.
+- `trace roll <id> --next-due <date> [--as done|dropped] [--reason]` (tool action `roll`): settles a trace and records the next open one in one transaction, carrying text, tags, soul links and weight, with `supersedes` set to the old id.
+- `trace record --batch file.jsonl` and `--batch -` (tool action `record_batch` with `items`, library `write.recordTraceBatch`): all lines are written in one transaction or none are, and errors name the line.
+- `trace search <query>` (view `search`, `read.searchTraces`): FTS5 search over trace text and settle reasons ranked by bm25, with soul, role, state, tag, exclude-tag and tag-prefix filters. The index is created and backfilled by the first trace write and kept in sync by triggers; without it, search falls back to substring matching and reports `mode: 'substring'`.
+- `--exclude-tag` (repeatable, `excludeTags`) and `--tag-prefix` (`tagPrefix`, or `--tag 'series:*'`) on `trace list`, `due`, `stats` and `search`, so `trace list --state open --exclude-tag belief` lists commitments only.
+- `--limit`, `--offset` and `--all` on `trace list`, `due`, `changed` and `search`. JSON adds `total`, `truncated` and `next`; truncated results print a notice on stderr.
+- `trace stats`: `chains` and `weights` default to 20 entries (`--limit`, `--all`) with `headsTotal`, `headsTruncated`, `weightsTotal` and `weightsTruncated`; `overdueBySoul` counts overdue traces for every linked soul with owner, counterpart and subject counts; `promiseSettleRateTagged` and its details count only traces tagged `promise`. Existing `overdue`, `promiseSettleRate` and `promiseSettleRateDetails` keep their 0.6.0 meaning.
+- Multi-parent supersedes: `--supersedes` repeats (tool input accepts a number or an array). The first id stays in `supersedes`; the others are stored in `soul_trace_merges` and returned as `mergedFrom`.
+- `--import` (tool input `import: true`) and `--updated-at` keep historical `updatedAt` values, so `trace changed` after a bulk import reports only later changes.
+- Revision text of 256 characters or more is stored once per content hash in `soul_trace_texts`; `trace compact [--dry-run] [--vacuum]` (library `write.compactTraces`) rewrites older revisions the same way. History output is unchanged: on a copy of a 1,545-trace store, all 1,545 histories were byte-identical after compaction, snapshot bytes fell from 2,214,369 to 1,283,380 and the file from 4,968,448 to 4,235,264 bytes. 365 daily rolls of a 2 KB text store 287,873 instead of 1,793,781 bytes.
+- Trace write results also carry the trace under `data`, next to the existing top-level fields.
+- `souls call --help`, `call -h` and `call <tool> --help` print usage and exit 0.
 
 ### Fixed
 
-- Independent trace creation and settlement dates, and local midnight resolution
-  for trace calendar dates across CLI and tool inputs.
+- `trace record --at` no longer overwrites `--created-at`; the CLI now matches the `trace_soul` tool.
+- Bare dates (`YYYY-MM-DD`, `DD.MM.YYYY`, `today`, `+Nd`) resolve in the `--tz`, `TZ` or host zone instead of UTC. A bare due date means 23:59:59.999 of that local day, as in 0.6.0 for UTC.
 
 ## [0.6.0] - 2026-11-10
 
