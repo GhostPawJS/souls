@@ -91,7 +91,7 @@ describe('dropShard', () => {
 					soulIds: [soul.id],
 					now: (i + 2) * DAY,
 				},
-				{ crystallizationThreshold: 3, now: 10 * DAY },
+				{ readiness: 'legacy', crystallizationThreshold: 3, now: 10 * DAY },
 			);
 		}
 		ok(result.crystallizationTriggers.includes(soul.id));

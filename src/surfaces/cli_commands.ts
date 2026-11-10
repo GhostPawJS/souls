@@ -43,7 +43,10 @@ export async function runCliCommand<T>(
 	const args = [...argv];
 	const tree = cliCommands(options.tools);
 	const drop = tree.find((entry) => entry.path === 'shard drop');
-	if (drop) tree.push({ ...drop, path: 'shard add' });
+	if (drop) {
+		tree.push({ ...drop, path: 'shard add' });
+		tree.push({ ...drop, path: 'shard observe' });
+	}
 	let json = argv.includes('--json'),
 		quiet = argv.includes('--quiet'),
 		compact = false,
@@ -144,6 +147,9 @@ export async function runCliCommand<T>(
 				command: `${options.bin} ${command.path}`,
 				description:
 					command.tool.description +
+					(command.path.startsWith('trace ')
+						? `\nExample: ${options.bin} ${command.path} ${command.positionals.map((n) => (n === 'text' ? '"Review the draft"' : '1')).join(' ')}${command.path === 'trace record' ? ' --soul mentor:owner --tag promise --due +3d' : command.path === 'trace settle' ? ' --as done --reason completed' : command.path === 'trace changed' ? ' --since yesterday' : (({ 'trace revise': ' --text "Clarified fact" --reason clarification', 'trace link': ' --soul mentor:subject', 'trace unlink': ' --soul mentor:subject --reason correction', 'trace tag': ' --tag promise', 'trace untag': ' --tag promise --reason correction' } as Record<string, string>)[command.path] ?? '')} --json`
+						: '') +
 					(command.path === 'shard add'
 						? '\nBatch import: shard add --batch @file (JSON array or JSON Lines); or shard drop-batch --shards @file.'
 						: '') +
@@ -321,7 +327,7 @@ export async function runCliCommand<T>(
 			if (!quiet)
 				stdout.write(
 					json || !(stdout as { isTTY?: boolean }).isTTY
-						? `${JSON.stringify(result, null, compact ? undefined : 2)}\n`
+						? `${JSON.stringify(entry.tool.name === 'trace_soul' && record.ok && record.data && typeof record.data === 'object' ? { ...(result as object), id: (record.data as { id: number }).id, ...('shardId' in record.data ? { shardId: record.data.shardId } : {}) } : result, null, compact ? undefined : 2)}\n`
 						: `${record.summary ?? ''}\n${JSON.stringify(record.data ?? {}, null, 2)}\n`,
 				);
 			return code;

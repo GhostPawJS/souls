@@ -25,4 +25,12 @@ export {
 	listSouls,
 	renderSoul,
 } from './souls/index.ts';
+export { changedSince } from './traces/changed_since.ts';
+export { dueTraces } from './traces/due_traces.ts';
+export { getTrace } from './traces/get_trace.ts';
+export { listTraces } from './traces/list_traces.ts';
+export { traceChain } from './traces/trace_chain.ts';
+export { traceHistory } from './traces/trace_history.ts';
+export { traceStats } from './traces/trace_stats.ts';
+export { traceTablesExist } from './traces/trace_tables_exist.ts';
 export { countActiveTraits, getTrait, getTraitLimit, listTraits } from './traits/index.ts';

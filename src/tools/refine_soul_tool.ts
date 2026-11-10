@@ -37,6 +37,8 @@ export function refineSoulToolHandler(
 	db: SoulsDb,
 	rawInput: {
 		minSourceDiversity?: number | undefined;
+		readiness?: 'converged' | 'legacy' | undefined;
+		minClusterSize?: number | undefined;
 		minSpreadDays?: number | undefined;
 		action:
 			| 'refine_with_evidence'
@@ -74,6 +76,8 @@ export function refineSoulToolHandler(
 				provenance: input.provenance,
 				shardIds: input.shardIds,
 				minSourceDiversity: input.minSourceDiversity,
+				readiness: input.readiness,
+				minClusterSize: input.minClusterSize,
 				minSpreadDays: input.minSpreadDays,
 				action: input.refineAction ?? (input.traitId ? 'revise' : 'add'),
 			});
@@ -110,6 +114,8 @@ export function refineSoulToolHandler(
 					reason: input.reason,
 					shardIds: input.shardIds,
 					minSourceDiversity: input.minSourceDiversity,
+					readiness: input.readiness,
+					minClusterSize: input.minClusterSize,
 					minSpreadDays: input.minSpreadDays,
 				},
 				input.traitLimit === undefined ? undefined : { traitLimit: input.traitLimit },
@@ -310,6 +316,11 @@ export const refineSoulTool = defineSoulsTool<
 			),
 			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
 			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			readiness: { type: 'string', enum: ['converged', 'legacy'] },
+			minClusterSize: {
+				type: 'integer',
+				description: 'Minimum converged cluster size, default 3.',
+			},
 			soulId: soulReferenceSchema('Soul ID (required for add_trait, stamp_attuned).'),
 			traitId: integerSchema(
 				'Trait ID (required for revise_trait, revert_trait, reactivate_trait, cite_shard).',

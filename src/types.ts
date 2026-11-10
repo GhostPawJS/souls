@@ -47,6 +47,7 @@ export type {
 	SoulRecord,
 	UpdateSoulInput,
 } from './souls/types.ts';
+export type * from './traces/types.ts';
 export type {
 	AddTraitInput,
 	ListTraitsOptions,

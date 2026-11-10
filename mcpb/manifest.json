@@ -97,6 +97,14 @@
     {
       "name": "manage_soul",
       "description": "Create, update, retire, or awaken a soul; read or set database configuration."
+    },
+    {
+      "name": "trace_soul",
+      "description": "Record persistent facts and commitments, revise, settle, link, tag, or cite traces."
+    },
+    {
+      "name": "review_traces",
+      "description": "Read traces, due commitments, revision history, chains, store changes, and statistics."
     }
   ],
   "compatibility": {

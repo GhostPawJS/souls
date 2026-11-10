@@ -64,21 +64,28 @@ test('occurrence age spread requires distant different sources or a live spread,
 		try {
 			const soul = createSoul(db, { name: 'Test', essence: 'Read', description: 'Test' });
 			for (let i = 0; i < 3; i++) {
-				const shard = dropShard(db, {
-					content: ['Read user intent', 'Test database rollback', 'Document public interfaces'][
-						i
-					] as string,
-					source: entry.sources[i] as string,
-					soulIds: [soul.id],
-					occurredAt: entry.times[i] as number,
-					now: entry.inserts[i] as number,
-				}).shard;
+				const shard = dropShard(
+					db,
+					{
+						content: ['Read user intent', 'Test database rollback', 'Document public interfaces'][
+							i
+						] as string,
+						source: entry.sources[i] as string,
+						soulIds: [soul.id],
+						occurredAt: entry.times[i] as number,
+						now: entry.inserts[i] as number,
+					},
+					{ readiness: 'legacy' },
+				).shard;
 				if (entry.legacy)
 					db.prepare('UPDATE soul_shards SET occurred_at=NULL, inserted_at=NULL WHERE id=?').run(
 						shard.id,
 					);
 			}
-			const result = checkCrystallizationForSoul(db, soul.id, { now: day * 10 });
+			const result = checkCrystallizationForSoul(db, soul.id, {
+				readiness: 'legacy',
+				now: day * 10,
+			});
 			equal(result?.ready, entry.ready, entry.name);
 			if (!entry.ready)
 				equal(result?.reason, 'Age spread must span at least two sources by occurrence time.');

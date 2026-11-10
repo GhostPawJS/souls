@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { detectCredential } from '../lib/detect_credential.ts';
 import type { DropShardInput, DropShardsResult, ShardRecord } from '../shards/types.ts';
 import * as write from '../write.ts';
 import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
@@ -53,6 +54,8 @@ export function observeSoulToolHandler(
 	db: SoulsDb,
 	rawInput: {
 		minSourceDiversity?: number | undefined;
+		readiness?: 'converged' | 'legacy' | undefined;
+		minClusterSize?: number | undefined;
 		minSpreadDays?: number | undefined;
 		action: 'drop' | 'drop_batch' | 'reveal';
 		content?: string | undefined;
@@ -63,6 +66,7 @@ export function observeSoulToolHandler(
 		source?: string | undefined;
 		soulIds?: (number | string)[] | undefined;
 		tags?: string[] | undefined;
+		traceIds?: number[] | undefined;
 		sealed?: boolean | undefined;
 		shards?: (Omit<DropShardInput, 'soulIds'> & { soulIds: (number | string)[] })[] | undefined;
 		shardIds?: number[] | undefined;
@@ -92,6 +96,7 @@ export function observeSoulToolHandler(
 				db,
 				{
 					content: input.content,
+					traceIds: input.traceIds,
 					source: input.source,
 					soulIds: input.soulIds,
 					tags: input.tags,
@@ -104,6 +109,8 @@ export function observeSoulToolHandler(
 				{
 					insertedAt: input.now ?? Date.now(),
 					minSourceDiversity: input.minSourceDiversity,
+					readiness: input.readiness,
+					minClusterSize: input.minClusterSize,
 					minSpreadDays: input.minSpreadDays,
 				},
 			);
@@ -113,7 +120,7 @@ export function observeSoulToolHandler(
 				shard: result.shard,
 				crystallizationTriggers: result.crystallizationTriggers,
 			};
-			const warnings =
+			let warnings =
 				result.crystallizationTriggers.length > 0
 					? [
 							toolWarning(
@@ -122,6 +129,14 @@ export function observeSoulToolHandler(
 							),
 						]
 					: undefined;
+			if (detectCredential(input.content))
+				warnings = [
+					...(warnings ?? []),
+					toolWarning(
+						'partial_match',
+						'Observation resembles a credential; evidence should not store secrets.',
+					),
+				];
 			const next = result.crystallizationTriggers.map((id) => inspectSoulsItemNext(id));
 			for (const soulId of input.soulIds) {
 				next.push(inspectSoulsItemNext(soulId));
@@ -149,7 +164,11 @@ export function observeSoulToolHandler(
 					},
 				};
 			}
-			const result = write.dropShards(db, input.shards, input);
+			const result = write.dropShards(
+				db,
+				input.shards.map((shard) => ({ ...shard, traceIds: shard.traceIds ?? input.traceIds })),
+				input,
+			);
 			const duplicates = result.results?.filter((item) => item.duplicate).length ?? 0;
 			const data: ObserveSoulBatchData = {
 				duplicates,
@@ -164,6 +183,14 @@ export function observeSoulToolHandler(
 				data,
 				{
 					entities: result.shards.map(toShardRef),
+					warnings: input.shards.some((s) => detectCredential(s.content))
+						? [
+								toolWarning(
+									'partial_match',
+									'Observation resembles a credential; evidence should not store secrets.',
+								),
+							]
+						: undefined,
 				},
 			);
 		}
@@ -235,6 +262,8 @@ export const observeSoulTool = defineSoulsTool<
 			now: integerSchema('Timestamp in epoch milliseconds; occurredAt takes precedence.'),
 			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
 			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			readiness: { type: 'string', enum: ['converged', 'legacy'] },
+			minClusterSize: integerSchema('Minimum converged cluster size, default 3.'),
 			content: stringSchema('Behavioral observation text.'),
 			source: stringSchema('Evidence channel origin label.'),
 			soulIds: arraySchema(
@@ -242,6 +271,7 @@ export const observeSoulTool = defineSoulsTool<
 				'Soul IDs to attribute this observation to.',
 			),
 			tags: stringArraySchema('Optional topic tags.'),
+			traceIds: integerArraySchema('Trace citations.'),
 			sealed: booleanSchema('If true, shard is deferred until revealed.'),
 			shards: arraySchema(
 				objectSchema(
@@ -250,6 +280,7 @@ export const observeSoulTool = defineSoulsTool<
 						source: stringSchema('Evidence source.'),
 						soulIds: arraySchema(soulReferenceSchema('Attributed souls.'), 'Attributed souls.'),
 						tags: stringArraySchema('Topic tags.'),
+						traceIds: integerArraySchema('Trace citations.'),
 						sealed: booleanSchema('Defer until revealed.'),
 						occurredAt: { oneOf: [{ type: 'integer' }, { type: 'string' }] },
 						idempotencyKey: stringSchema('Unique ingestion key.'),

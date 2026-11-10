@@ -5,6 +5,7 @@ import type { SoulsDb } from './database.ts';
 import { SoulsConflictError, SoulsValidationError } from './errors.ts';
 import { getSoulOrThrow } from './souls/get_soul_or_throw.ts';
 import { CliUsageError } from './surfaces/cli_args.ts';
+import { renderOpenCommitments } from './traces/render_open_commitments.ts';
 
 export const sha256 = (text: string): string => createHash('sha256').update(text).digest('hex');
 export function initPublicationTables(db: SoulsDb): void {
@@ -41,6 +42,7 @@ export function markerParts(
 	return { before: text.slice(0, start), block: text.slice(start, b), after: text.slice(b) };
 }
 export interface RenderPublicationOptions {
+	traces?: 'open' | 'due' | undefined;
 	order?: 'citations' | 'density' | undefined;
 	now?: number | undefined;
 	includeProvenance?: boolean | undefined;
@@ -90,7 +92,8 @@ export function renderPublication(
 		essence +
 		(traits.length
 			? `\n\n## Traits\n${traits.map((t) => (options.includeProvenance ? `- **${t.principle}** — ${t.provenance}` : `- ${t.principle}`)).join('\n')}`
-			: '');
+			: '') +
+		(options.traces ? renderOpenCommitments(db, soulId, options.traces, options.now) : '');
 	const available =
 		options.budget === undefined
 			? Infinity
@@ -108,6 +111,8 @@ export function renderPublication(
 		essence = essence.slice(0, length);
 		if (header.length > contentAvailable) header = '';
 	}
+	if (options.traces && compose().length > contentAvailable)
+		throw new SoulsValidationError('Budget cannot fit open commitments.');
 	const block = compose(),
 		text = parts.before + (options.into && available >= 2 ? `\n${block}\n` : block) + parts.after;
 	return { text, block, trimmed, current, exists };

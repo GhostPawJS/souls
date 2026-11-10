@@ -52,6 +52,8 @@ export function renderEvidenceMarkdown(
 				Math.max(0, options?.maxMembersPerCluster ?? 5),
 			)) {
 				lines.push(`- ${shard.content} *(${shard.source})*`);
+				for (const trace of shard.traces ?? [])
+					lines.push(`  backs: trace #${trace.id} (${trace.state})`);
 			}
 			const remaining =
 				(cluster.totalMembers ?? cluster.members.length) -

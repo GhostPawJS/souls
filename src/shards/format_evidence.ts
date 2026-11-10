@@ -1,6 +1,7 @@
 import type { SoulsDb } from '../database.ts';
 import { resolveNow } from '../resolve_now.ts';
 import { getSoulOrThrow } from '../souls/get_soul_or_throw.ts';
+import { shardTraceRefs } from '../traces/shard_trace_refs.ts';
 import { clusterShards } from './cluster_shards.ts';
 import { computeCrossSoulOverlap } from './compute_cross_soul_overlap.ts';
 import { computePromotionCandidates } from './compute_promotion_candidates.ts';
@@ -40,6 +41,10 @@ export function formatEvidence(
 				now,
 			});
 
+	for (const shard of shards) {
+		const traces = shardTraceRefs(db, shard.id);
+		if (traces.length) shard.traces = traces;
+	}
 	const pendingCount = shards.length;
 
 	const clusterOpts: { threshold?: number; now?: number } = { now };

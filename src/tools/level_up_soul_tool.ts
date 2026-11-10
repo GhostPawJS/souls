@@ -56,6 +56,8 @@ export function levelUpSoulToolHandler(
 	db: SoulsDb,
 	rawInput: {
 		minSourceDiversity?: number | undefined;
+		readiness?: 'converged' | 'legacy' | undefined;
+		minClusterSize?: number | undefined;
 		minSpreadDays?: number | undefined;
 		action: 'execute' | 'revert' | 'validate';
 		soulId: number | string;
@@ -115,6 +117,10 @@ export function levelUpSoulToolHandler(
 				};
 			}
 			const result = write.levelUp(db, input.soulId, input.plan, {
+				readiness: input.readiness,
+				minClusterSize: input.minClusterSize,
+				minSourceDiversity: input.minSourceDiversity,
+				minSpreadDays: input.minSpreadDays,
 				...(input.strict === undefined ? {} : { strict: input.strict }),
 				...(input.traitLimit === undefined ? {} : { traitLimit: input.traitLimit }),
 			});
@@ -175,6 +181,11 @@ export const levelUpSoulTool = defineSoulsTool<
 	inputSchema: objectSchema(
 		{
 			action: enumSchema(['validate', 'execute', 'revert'], 'The operation to perform.'),
+			readiness: { type: 'string', enum: ['converged', 'legacy'] },
+			minClusterSize: {
+				type: 'integer',
+				description: 'Minimum converged cluster size, default 3.',
+			},
 			minSourceDiversity: integerSchema(
 				'Minimum source diversity for planless readiness (default 2).',
 			),

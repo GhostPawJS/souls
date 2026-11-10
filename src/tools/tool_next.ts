@@ -68,3 +68,12 @@ export function useToolNext(
 ): ToolNextStepHint {
 	return { kind: 'use_tool', message, tool, suggestedInput };
 }
+
+export function reviewTracesNext(id: number): ToolNextStepHint {
+	return {
+		kind: 'use_tool',
+		message: 'Review this trace.',
+		tool: 'review_traces',
+		suggestedInput: { view: 'show', id },
+	};
+}

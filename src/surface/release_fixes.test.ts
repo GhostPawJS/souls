@@ -398,7 +398,7 @@ test('strict flag environment and config each require readiness and citations fo
 		for (const mode of ['flag', 'environment', 'config']) {
 			const { db, invoke } = await fixture();
 			try {
-				const extra = mode === 'flag' ? ['--strict'] : [];
+				const extra = ['--readiness', 'legacy', ...(mode === 'flag' ? ['--strict'] : [])];
 				if (mode === 'environment') process.env.GHOSTPAW_SOULS_STRICT = '1';
 				if (mode === 'config')
 					equal((await invoke(['--db=x', 'config', 'set', 'strict', 'true'])).code, 0);

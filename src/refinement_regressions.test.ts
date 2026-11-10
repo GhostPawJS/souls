@@ -119,10 +119,18 @@ test('strict readiness and cited evidence are both required; operator correction
 	shard('Document design assumptions', { source: 'feedback', now: now - day });
 	const cited = shard('Test reported failures', { source: 'execution', now });
 	throws(
-		() => addTrait(db, soulId, { principle: 'Rule', provenance: 'Evidence', strict: true, now }),
+		() =>
+			addTrait(db, soulId, {
+				readiness: 'legacy',
+				principle: 'Rule',
+				provenance: 'Evidence',
+				strict: true,
+				now,
+			}),
 		/cited shard/,
 	);
 	const added = addTrait(db, soulId, {
+		readiness: 'legacy',
 		principle: 'Rule',
 		provenance: 'Evidence',
 		strict: true,
@@ -136,9 +144,16 @@ test('strict readiness and cited evidence are both required; operator correction
 			.get<{ n: number }>(added.id)?.n,
 		1,
 	);
-	updateSoul(db, soulId, { essence: 'Evidence essence', strict: true, shardIds: [cited.id], now });
+	updateSoul(db, soulId, {
+		readiness: 'legacy',
+		essence: 'Evidence essence',
+		strict: true,
+		shardIds: [cited.id],
+		now,
+	});
 	equal(db.prepare('SELECT COUNT(*) AS n FROM soul_revision_shards').get<{ n: number }>()?.n, 1);
 	const corrected = addTrait(db, soulId, {
+		readiness: 'legacy',
 		principle: 'Correction',
 		provenance: 'Operator',
 		strict: true,

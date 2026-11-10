@@ -6,7 +6,7 @@ import { soulsSurfaceTools } from './souls_surface_tools.ts';
 export const soulsSkillSpec = {
 	name: 'souls',
 	description:
-		'Store and refine cognitive identities, traits, and behavioral evidence. Use when recording observations, reviewing soul health, or consolidating traits.',
+		'Store and refine cognitive identities, traits, behavioral evidence, and persistent traces. Use when recording observations, reviewing soul health, or consolidating traits.',
 	license: 'MIT',
 	compatibility:
 		'Release binary ghostpaw-souls (no runtime needed); MCP stdio via ghostpaw-souls mcp.',

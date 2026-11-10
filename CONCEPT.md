@@ -1194,3 +1194,11 @@ optima where fixed approaches get stuck
 ([Promptbreeder](https://proceedings.mlr.press/v235/fernando24a.html),
 ICML 2024). This recursive self-improvement, bounded by the same provenance
 gates and crystallization thresholds, is what closes the compounding loop.
+
+## Persistent traces
+
+Traces preserve dated facts and commitments; shards interpret their behavioral
+meaning. Trace history is append-only, corrections form linear supersedes chains,
+and settlement records done or dropped with a reason. Open and done chain heads
+can join cited shards into converged evidence clusters. Identity rendering remains
+unchanged unless callers opt into an open-commitments block.

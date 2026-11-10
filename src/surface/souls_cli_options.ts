@@ -12,6 +12,35 @@ export const soulsCliOptions: ToolCliOptions<SoulsDb> = {
 	customCommand: runHostCommand,
 	resolveReference: resolveSoulReference,
 	prepareInput: (input, toolName) => {
+		if (toolName === 'trace_soul') {
+			if (Array.isArray(input.soul))
+				input.souls = input.soul.map((value) => {
+					const text = String(value);
+					const match = /^(.*):(owner|counterpart|subject|[012])$/.exec(text);
+					return {
+						soul: match?.[1] ?? text,
+						role: match ? (/[012]/.test(match[2] ?? '') ? Number(match[2]) : match[2]) : 'owner',
+					};
+				});
+			if (input.tag !== undefined) input.tags = input.tag;
+			if (input.due !== undefined) input.dueAt = input.due === 'none' ? null : input.due;
+			if (input.weight === 'none') input.weight = null;
+			else if (typeof input.weight === 'string') input.weight = Number(input.weight);
+			if (input.action === 'record' && input.at !== undefined) input.createdAt = input.at;
+			delete input.soul;
+			delete input.tag;
+			delete input.due;
+		}
+		if (toolName === 'review_traces') {
+			if (typeof input.role === 'string' && /^[012]$/.test(input.role))
+				input.role = Number(input.role);
+			if (input.soul !== undefined) input.soulId = input.soul;
+			if (input.with !== undefined) input.withSoulId = input.with;
+			delete input.soul;
+			delete input.with;
+		}
+		if (toolName === 'observe_soul' && Array.isArray(input.traceIds))
+			input.traceIds = input.traceIds.flatMap((value) => String(value).split(',').map(Number));
 		if (
 			toolName === 'observe_soul' &&
 			typeof input.occurredAt === 'string' &&

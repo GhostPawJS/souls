@@ -3,13 +3,13 @@ import { describe, it } from 'node:test';
 import { getSoulsSkillByName, listSoulsSkills, soulsSkills } from './skill_registry.ts';
 
 describe('skill_registry', () => {
-	it('soulsSkills contains all 8 skills', () => {
-		strictEqual(soulsSkills.length, 8);
+	it('soulsSkills contains all 9 skills', () => {
+		strictEqual(soulsSkills.length, 9);
 	});
 
 	it('each skill has a unique name', () => {
 		const names = new Set(soulsSkills.map((s) => s.name));
-		strictEqual(names.size, 8);
+		strictEqual(names.size, 9);
 	});
 
 	it('all expected skill names are present', () => {
@@ -22,6 +22,7 @@ describe('skill_registry', () => {
 		ok(names.has('bootstrap-new-soul'));
 		ok(names.has('detect-and-fix-regression'));
 		ok(names.has('review-soul-health'));
+		ok(names.has('record-and-settle-traces'));
 	});
 
 	it('getSoulsSkillByName returns skill for known name', () => {
@@ -34,8 +35,8 @@ describe('skill_registry', () => {
 		strictEqual(getSoulsSkillByName('no_such_skill'), null);
 	});
 
-	it('listSoulsSkills returns all 8 skills', () => {
-		strictEqual(listSoulsSkills().length, 8);
+	it('listSoulsSkills returns all 9 skills', () => {
+		strictEqual(listSoulsSkills().length, 9);
 	});
 
 	it('every skill has non-empty content', () => {

@@ -4,12 +4,14 @@ import { executeLevelUpPlanSkill } from './execute-level-up-plan.ts';
 import { judgeConsolidationVersusPromotionSkill } from './judge-consolidation-versus-promotion.ts';
 import { observeBehaviorWellSkill } from './observe-behavior-well.ts';
 import { produceTraitProposalsFromEvidenceSkill } from './produce-trait-proposals-from-evidence.ts';
+import { recordAndSettleTracesSkill } from './record-and-settle-traces.ts';
 import { reviewSoulHealthSkill } from './review-soul-health.ts';
 import { runMaintenancePassSkill } from './run-maintenance-pass.ts';
 import type { SoulsSkillRegistry } from './skill_types.ts';
 
 export const soulsSkills = [
 	observeBehaviorWellSkill,
+	recordAndSettleTracesSkill,
 	runMaintenancePassSkill,
 	produceTraitProposalsFromEvidenceSkill,
 	judgeConsolidationVersusPromotionSkill,

@@ -9,6 +9,9 @@ import { getSoulOrThrow } from './get_soul_or_throw.ts';
 import type { SoulRecord } from './types.ts';
 
 export interface SoulProfile {
+	convergedClusterCount?: number;
+	largestClusterSize?: number;
+	traceBackedCount?: number;
 	soul: SoulRecord;
 	activeTraits: TraitRecord[];
 	activeTraitCount: number;
@@ -76,6 +79,13 @@ export function getSoulProfile(
 		atCapacity,
 		pendingShardCount: pending,
 		crystallizationReady,
+		...(check?.convergedClusterCount === undefined
+			? {}
+			: {
+					convergedClusterCount: check.convergedClusterCount,
+					largestClusterSize: check.largestClusterSize as number,
+					traceBackedCount: check.traceBackedCount as number,
+				}),
 		...(check?.reason ? { readinessReason: check.reason } : {}),
 		freshness,
 		headroom,

@@ -5,6 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Persistent traces with lazy SQLite schema, append-only revision history, soul roles, category tags, shard citations, supersedes chains, date parsing, credential checks, read APIs, MCP tools, and trace CLI commands.
+- Trace migration fixture tests and an explicit-path migration smoke script for operators.
+- Optional open-commitments rendering and trace evidence references.
+
+### Changed
+
+- Readiness defaults to converged evidence clusters; callers can select legacy readiness through options, environment, or database configuration.
+- Existing database opens preserve journal mode for byte-stable reads. Citation changes use revision kind `cite` to cover every evidence change in history; recency decay falls back to JavaScript only when SQLite omits `pow`.
+
+
 ### Changed
 
 - Document writable database roots for sandboxed agent harnesses in the README and generated agent skill. Clarify which GhostPaw store owns identity, beliefs, relationships, work, procedures, and stable operational facts.

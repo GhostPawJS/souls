@@ -54,6 +54,8 @@ export function reviewSoulsToolHandler(
 	db: SoulsDb,
 	rawInput: {
 		minSourceDiversity?: number | undefined;
+		readiness?: 'converged' | 'legacy' | undefined;
+		minClusterSize?: number | undefined;
 		minSpreadDays?: number | undefined;
 		view: 'list' | 'maintenance' | 'readiness' | 'history';
 		soulId?: number | string | undefined;
@@ -145,6 +147,8 @@ export const reviewSoulsTool = defineSoulsTool<
 		{
 			minSourceDiversity: integerSchema('Minimum source diversity (default 2).'),
 			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			readiness: { type: 'string', enum: ['converged', 'legacy'] },
+			minClusterSize: integerSchema('Minimum converged cluster size, default 3.'),
 			soulId: soulReferenceSchema('Soul to review.'),
 			noChange: booleanSchema('Record a review without edits and stamp attuned.'),
 			reason: stringSchema('Review reason.'),

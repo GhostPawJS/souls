@@ -104,26 +104,39 @@ describe('review-soul-health workflow', () => {
 			now: now - 3 * MS_PER_DAY,
 		});
 
-		dropShard(db, {
-			content: 'Observed careful error recovery with clear diagnostic messages.',
-			source: 'session',
-			soulIds: [soul.id],
-			now: now - 2 * MS_PER_DAY,
-		});
-		dropShard(db, {
-			content: 'Delegation outputs used structured Docker container orchestration.',
-			source: 'delegation',
-			soulIds: [soul.id],
-			now: now - 1 * MS_PER_DAY,
-		});
-		dropShard(db, {
-			content: 'Manual review shows high quality communication with the user.',
-			source: 'manual_review',
-			soulIds: [soul.id],
-			now,
-		});
+		dropShard(
+			db,
+			{
+				content: 'Observed careful error recovery with clear diagnostic messages.',
+				source: 'session',
+				soulIds: [soul.id],
+				now: now - 2 * MS_PER_DAY,
+			},
+			{ readiness: 'legacy' },
+		);
+		dropShard(
+			db,
+			{
+				content: 'Delegation outputs used structured Docker container orchestration.',
+				source: 'delegation',
+				soulIds: [soul.id],
+				now: now - 1 * MS_PER_DAY,
+			},
+			{ readiness: 'legacy' },
+		);
+		dropShard(
+			db,
+			{
+				content: 'Manual review shows high quality communication with the user.',
+				source: 'manual_review',
+				soulIds: [soul.id],
+				now,
+			},
+			{ readiness: 'legacy' },
+		);
 
 		const profile = getSoulProfile(db, soul.id, {
+			readiness: 'legacy',
 			crystallizationThreshold: 3,
 			now,
 		});

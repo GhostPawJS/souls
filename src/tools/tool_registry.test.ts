@@ -7,18 +7,20 @@ import {
 	observeSoulToolName,
 	refineSoulToolName,
 	reviewSoulsToolName,
+	reviewTracesToolName,
 	searchSoulsToolName,
+	traceSoulToolName,
 } from './tool_names.ts';
 import { getSoulsToolByName, listSoulsToolDefinitions, soulsTools } from './tool_registry.ts';
 
 describe('tool_registry', () => {
-	it('soulsTools contains all 7 tools', () => {
-		strictEqual(soulsTools.length, 7);
+	it('soulsTools contains all 9 tools', () => {
+		strictEqual(soulsTools.length, 9);
 	});
 
 	it('each tool has a unique name', () => {
 		const names = new Set(soulsTools.map((t) => t.name));
-		strictEqual(names.size, 7);
+		strictEqual(names.size, 9);
 	});
 
 	it('all expected tool names are present', () => {
@@ -30,6 +32,8 @@ describe('tool_registry', () => {
 		ok(names.has(refineSoulToolName));
 		ok(names.has(levelUpSoulToolName));
 		ok(names.has(manageSoulToolName));
+		ok(names.has(traceSoulToolName));
+		ok(names.has(reviewTracesToolName));
 	});
 
 	it('getSoulsToolByName returns tool for known name', () => {
@@ -44,7 +48,7 @@ describe('tool_registry', () => {
 
 	it('listSoulsToolDefinitions returns all tools with handlers', () => {
 		const defs = listSoulsToolDefinitions();
-		strictEqual(defs.length, 7);
+		strictEqual(defs.length, 9);
 		for (const def of defs) {
 			ok('handler' in def);
 		}

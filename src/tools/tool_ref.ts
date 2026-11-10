@@ -26,3 +26,7 @@ export function toShardRef(record: ShardRecord): ToolEntityRef {
 export function toShardIdRef(id: number): ToolEntityRef {
 	return { kind: 'shard', id };
 }
+
+export function toTraceRef(record: { id: number; text: string }): ToolEntityRef {
+	return { kind: 'trace', id: record.id, title: record.text.slice(0, 80) };
+}

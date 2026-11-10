@@ -1,6 +1,8 @@
 import type { SoulsDb } from '../database.ts';
 import type { SurfaceTool } from '../surfaces/surface_types.ts';
+import { reviewTracesTool } from '../tools/review_traces_tool.ts';
 import { soulsTools } from '../tools/tool_registry.ts';
+import { traceSoulTool } from '../tools/trace_soul_tool.ts';
 
 const soulsSurfaceTools: readonly SurfaceTool<SoulsDb>[] = soulsTools.map((tool) => ({
 	name: tool.name,
@@ -14,6 +16,39 @@ const soulsSurfaceTools: readonly SurfaceTool<SoulsDb>[] = soulsTools.map((tool)
 }));
 
 const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
+	trace_soul: {
+		noun: 'trace',
+		verb: 'record',
+		action: {
+			property: 'action',
+			positionals: {
+				record: ['text'],
+				revise: ['id'],
+				settle: ['id'],
+				link: ['id'],
+				unlink: ['id'],
+				tag: ['id'],
+				untag: ['id'],
+				cite: ['shardId', 'id'],
+			},
+		},
+	},
+	review_traces: {
+		noun: 'trace',
+		verb: 'list',
+		action: {
+			property: 'view',
+			positionals: {
+				list: [],
+				due: [],
+				show: ['id'],
+				history: ['id'],
+				chain: ['id'],
+				changed: [],
+				stats: [],
+			},
+		},
+	},
 	search_souls: { verb: 'search', positionals: ['query'] },
 	review_souls: {
 		verb: 'review',
@@ -94,6 +129,53 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 const soulsCliSurfaceTools: readonly SurfaceTool<SoulsDb>[] = /* @__PURE__ */ soulsSurfaceTools.map(
 	(tool) => ({
 		...tool,
+		...(tool.name === 'observe_soul'
+			? {
+					inputSchema: {
+						...tool.inputSchema,
+						properties: {
+							...tool.inputSchema.properties,
+							traceIds: {
+								type: 'array',
+								items: { oneOf: [{ type: 'integer' }, { type: 'string' }] },
+								description: 'Trace ids, repeated or comma separated.',
+							},
+						},
+					},
+				}
+			: {}),
+		...(tool.name === 'trace_soul'
+			? {
+					inputSchema: {
+						...traceSoulTool.inputSchema,
+						type: 'object' as const,
+						properties: {
+							...traceSoulTool.inputSchema.properties,
+							soul: {
+								type: 'array',
+								items: { type: 'string' },
+								description: 'Linked soul[:owner|counterpart|subject]; repeat for more links.',
+							},
+							tag: { type: 'array', items: { type: 'string' } },
+							due: { type: 'string', description: 'Due date or none.' },
+							weight: { oneOf: [{ type: 'number' }, { type: 'string' }, { type: 'null' }] },
+						},
+					},
+				}
+			: {}),
+		...(tool.name === 'review_traces'
+			? {
+					inputSchema: {
+						...reviewTracesTool.inputSchema,
+						type: 'object' as const,
+						properties: {
+							...reviewTracesTool.inputSchema.properties,
+							soul: { type: 'string' },
+							with: { type: 'string' },
+						},
+					},
+				}
+			: {}),
 		...(mapping[tool.name] ? { cli: mapping[tool.name] } : {}),
 	}),
 );

@@ -2,6 +2,8 @@
 
 Use this on a periodic basis (weekly, or whenever behavioral quality signals are ambiguous) to get an overall picture of each soul's health before deciding whether intervention is needed.
 
+Record persistent dated facts and commitments with trace_soul; use traceIds when a behavioral shard interprets those facts. Review open and due traces with review_traces. Convergence requires three shards spanning two sources; readiness legacy restores the earlier gate.
+
 ## Procedure
 
 1. **List all active souls.** Use `review_souls` with view=list. Note each soul's level and any capacity warnings.

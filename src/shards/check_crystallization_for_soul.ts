@@ -1,7 +1,9 @@
+import { resolveReadiness } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { singleLinkageCluster } from '../lib/single_linkage_cluster.ts';
 import { trigramJaccard } from '../lib/trigram_jaccard.ts';
+import { traceTablesExist } from '../traces/trace_tables_exist.ts';
 
 const DEFAULT_CRYSTALLIZATION_THRESHOLD = 3;
 const DEFAULT_CLUSTER_THRESHOLD = 0.5;
@@ -10,6 +12,8 @@ const MS_PER_DAY = 86_400_000;
 const MIN_CLUSTER_DIVERSITY = 2;
 
 export interface CrystallizationCheckOptions {
+	readiness?: 'converged' | 'legacy' | undefined;
+	minClusterSize?: number | undefined;
 	minSourceDiversity?: number | undefined;
 	minSpreadDays?: number | undefined;
 	crystallizationThreshold?: number | undefined;
@@ -19,6 +23,9 @@ export interface CrystallizationCheckOptions {
 }
 
 export interface CrystallizationCheckResult {
+	convergedClusterCount?: number;
+	largestClusterSize?: number;
+	traceBackedCount?: number;
 	ready: boolean;
 	reason?: string;
 	pendingCount: number;
@@ -56,6 +63,10 @@ export function checkCrystallizationForSoul(
 	soulId: number,
 	options?: CrystallizationCheckOptions,
 ): CrystallizationCheckResult | null {
+	const readiness = resolveReadiness(db, options?.readiness);
+	const minClusterSize = options?.minClusterSize ?? 3;
+	if (!Number.isSafeInteger(minClusterSize) || minClusterSize < 1)
+		throw new SoulsValidationError('minClusterSize must be a positive integer');
 	const threshold = options?.crystallizationThreshold ?? DEFAULT_CRYSTALLIZATION_THRESHOLD;
 	const clusterThreshold = options?.clusterThreshold ?? DEFAULT_CLUSTER_THRESHOLD;
 	const expiryDays = options?.shardExpiryDays ?? DEFAULT_SHARD_EXPIRY_DAYS;
@@ -127,6 +138,9 @@ export function checkCrystallizationForSoul(
 			sourceDiversity,
 			ageSpreadDays,
 			clusterCount: 0,
+			...(readiness === 'legacy'
+				? {}
+				: { convergedClusterCount: 0, largestClusterSize: 0, traceBackedCount: 0 }),
 			priorityScore: 0,
 		};
 	if (sourceDiversity < minSourceDiversity) return null;
@@ -137,18 +151,69 @@ export function checkCrystallizationForSoul(
 	if (!hasRecentShard) return null;
 
 	// Phase 2: expensive in-memory cluster diversity check
+	const live = traceTablesExist(db)
+		? db
+				.prepare(
+					`SELECT st.shard_id,st.trace_id,COALESCE(t.weight,1) AS weight FROM shard_traces st JOIN soul_traces t ON t.id=st.trace_id WHERE t.state IN (0,1) AND NOT EXISTS (SELECT 1 FROM soul_traces successor WHERE successor.supersedes=t.id)`,
+				)
+				.all<{ shard_id: number; trace_id: number; weight: number }>()
+				.filter((r) => shards.some((s) => s.id === r.shard_id))
+		: [];
+	const backed = new Map<number, Set<number>>();
+	for (const row of live) {
+		const ids = backed.get(row.shard_id) ?? new Set<number>();
+		ids.add(row.trace_id);
+		backed.set(row.shard_id, ids);
+	}
 	const clusters = singleLinkageCluster(
-		shards.map((s) => s.content),
-		trigramJaccard,
+		shards,
+		(a, b) =>
+			readiness !== 'legacy' &&
+			[...(backed.get(a.id) ?? [])].some((id) => backed.get(b.id)?.has(id))
+				? 1
+				: trigramJaccard(a.content, b.content),
 		clusterThreshold,
 	);
 	const clusterCount = clusters.length;
-	if (clusterCount < MIN_CLUSTER_DIVERSITY) return null;
+	const convergedClusterCount = clusters.filter(
+		(c) => c.members.length >= minClusterSize && new Set(c.members.map((s) => s.source)).size >= 2,
+	).length;
+	const largestClusterSize = Math.max(0, ...clusters.map((c) => c.members.length));
+	const traceBackedCount = backed.size;
+	if (readiness === 'legacy' && clusterCount < MIN_CLUSTER_DIVERSITY) return null;
+	const extra =
+		readiness === 'legacy' ? {} : { convergedClusterCount, largestClusterSize, traceBackedCount };
+	if (readiness !== 'legacy' && convergedClusterCount === 0)
+		return {
+			ready: false,
+			reason: 'Requires a converged cluster spanning at least two sources.',
+			pendingCount,
+			sourceDiversity,
+			ageSpreadDays,
+			clusterCount,
+			priorityScore: 0,
+			...extra,
+		};
 
 	// Priority: pendingCount × sourceDiversity × ageSpreadDays × recencyFactor
 	const daysSinceLastAttuned = (now - priorityAnchor) / MS_PER_DAY;
 	const recencyFactor = 1 / Math.max(1, daysSinceLastAttuned);
-	const priorityScore = pendingCount * sourceDiversity * ageSpreadDays * recencyFactor;
+	const priorityScore =
+		pendingCount *
+		sourceDiversity *
+		ageSpreadDays *
+		recencyFactor *
+		(readiness !== 'legacy' && live.length
+			? 1 + live.reduce((sum, r) => sum + r.weight, 0) / live.length
+			: 1);
 
-	return { ready: true, pendingCount, sourceDiversity, ageSpreadDays, clusterCount, priorityScore };
+	return {
+		ready: true,
+		pendingCount,
+		sourceDiversity,
+		ageSpreadDays,
+		clusterCount,
+		priorityScore,
+		...extra,
+	};
 }

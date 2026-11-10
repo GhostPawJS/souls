@@ -45,7 +45,9 @@ export async function openSoulsDb(path: string): Promise<SoulsDb> {
 	}
 	const db = new sqlite.DatabaseSync(path);
 	try {
-		db.exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;');
+		if (!db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='souls'").get())
+			db.exec('PRAGMA journal_mode=WAL');
+		db.exec('PRAGMA busy_timeout=5000');
 		const context = db as unknown as SoulsDb;
 		initSoulsTables(context);
 		return context;

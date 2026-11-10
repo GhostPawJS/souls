@@ -53,6 +53,7 @@ export interface AwakenSoulOptions {
 }
 
 export interface RenderSoulOptions {
+	traces?: 'open' | 'due' | undefined;
 	order?: 'citations' | 'density' | undefined;
 	now?: number | undefined;
 	includeProvenance?: boolean | undefined;

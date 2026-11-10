@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { renderOpenCommitments } from '../traces/render_open_commitments.ts';
 import { getSoulOrThrow } from './get_soul_or_throw.ts';
 import type { RenderSoulOptions } from './types.ts';
 
@@ -44,5 +45,8 @@ export function renderSoul(db: SoulsDb, id: number, options?: RenderSoulOptions)
 		}
 	}
 
-	return lines.join('\n');
+	return (
+		lines.join('\n') +
+		(options?.traces ? renderOpenCommitments(db, id, options.traces, options.now) : '')
+	);
 }

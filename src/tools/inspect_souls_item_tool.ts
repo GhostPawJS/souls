@@ -33,6 +33,8 @@ export function inspectSoulsItemToolHandler(
 	db: SoulsDb,
 	rawInput: {
 		minSourceDiversity?: number | undefined;
+		readiness?: 'converged' | 'legacy' | undefined;
+		minClusterSize?: number | undefined;
 		minSpreadDays?: number | undefined;
 		soulId: number | string;
 		history?: boolean | undefined;
@@ -133,6 +135,11 @@ export const inspectSoulsItemTool = defineSoulsTool<
 			history: booleanSchema('Include wording revision history.'),
 			minSourceDiversity: integerSchema('Minimum source diversity (default 2).'),
 			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			readiness: { type: 'string', enum: ['converged', 'legacy'] },
+			minClusterSize: {
+				type: 'integer',
+				description: 'Minimum converged cluster size, default 3.',
+			},
 			soulId: soulReferenceSchema('The soul ID to inspect.'),
 			includeEvidence: booleanSchema(
 				'Include evidence report with clusters and signals. Default false.',

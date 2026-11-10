@@ -569,3 +569,21 @@ readiness within one transaction.
 
 `read.formatEvidence(db, soulId, { negationWords: ["nicht"] })` extends the
 English-only tension cues through the public library facade.
+
+## Persistent traces
+
+Use `trace_soul` to record dated facts and commitments and `review_traces` to read
+them. CLI: `trace record "Review the draft" --soul mentor:owner --tag promise
+--due +3d`; finish with `trace settle 1 --as done --reason "Delivered"`.
+A dropped commitment uses the same settle verb with `--as dropped`. Text and
+change reasons reject credentials. Shards can cite traces using `traceIds`
+(`shard observe --trace-ids 1,2`). Revisions preserve immutable snapshots.
+Corrections use a new trace with `supersedes`; list views use chain heads.
+
+`trace changed --since yesterday` returns a cursor for the next read. `trace stats`
+reports overdue counts, pairwise settle rate, chain certainty, and decayed weights.
+Dates accept epoch milliseconds, zoned ISO, calendar dates, and relative forms;
+`--tz` controls calendar words. `render --traces open|due` includes commitments.
+Default rendering is unchanged. Readiness needs a converged cluster of at least
+three shards spanning two sources; `--readiness legacy` restores the earlier gate.
+See [trace specification](TRACES.md) and [entity reference](entities/TRACES.md).

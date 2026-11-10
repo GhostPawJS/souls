@@ -119,15 +119,39 @@ test('readiness thresholds are configurable; never-attuned priority uses creatio
 			'Database transactions ensure consistency',
 			'Garden plants grow roots',
 		].entries())
-			dropShard(db, { content, source: 'one', soulIds: [soul.id], now: (101 + i / 4) * DAY });
-		equal(checkCrystallizationForSoul(db, soul.id, { now: 102 * DAY }), null);
-		const opts = { now: 102 * DAY, minSourceDiversity: 1, minSpreadDays: 0.5 };
+			dropShard(
+				db,
+				{ content, source: 'one', soulIds: [soul.id], now: (101 + i / 4) * DAY },
+				{ readiness: 'legacy' },
+			);
+		equal(checkCrystallizationForSoul(db, soul.id, { readiness: 'legacy', now: 102 * DAY }), null);
+		const opts = {
+			readiness: 'legacy' as const,
+			now: 102 * DAY,
+			minSourceDiversity: 1,
+			minSpreadDays: 0.5,
+		};
 		const check = checkCrystallizationForSoul(db, soul.id, opts);
 		ok(check?.ready);
 		equal(check.priorityScore, (3 * 1 * 0.5) / 2);
-		equal(checkCrystallizationForSoul(db, soul.id, { ...opts, minSourceDiversity: 2 }), null);
-		equal(checkCrystallizationForSoul(db, soul.id, { ...opts, minSpreadDays: 0.51 }), null);
-		throws(() => checkCrystallizationForSoul(db, soul.id, { minSpreadDays: -1 }), /minSpreadDays/);
+		equal(
+			checkCrystallizationForSoul(db, soul.id, {
+				...opts,
+				minSourceDiversity: 2,
+			}),
+			null,
+		);
+		equal(
+			checkCrystallizationForSoul(db, soul.id, {
+				...opts,
+				minSpreadDays: 0.51,
+			}),
+			null,
+		);
+		throws(
+			() => checkCrystallizationForSoul(db, soul.id, { readiness: 'legacy', minSpreadDays: -1 }),
+			/minSpreadDays/,
+		);
 		const review = reviewSoulsToolHandler(db, { view: 'readiness', ...opts });
 		ok(review.ok);
 		ok('readySouls' in review.data);

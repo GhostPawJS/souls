@@ -99,14 +99,19 @@ describe('checkCrystallizationForSoul', () => {
 			'communication style needs improvement in technical explanations given',
 		];
 		for (let i = 0; i < 3; i++) {
-			dropShard(db, {
-				content: contents[i]!,
-				source: i === 0 ? 'src_a' : 'src_b',
-				soulIds: [soul.id],
-				now: (i + 2) * DAY,
-			});
+			dropShard(
+				db,
+				{
+					content: contents[i]!,
+					source: i === 0 ? 'src_a' : 'src_b',
+					soulIds: [soul.id],
+					now: (i + 2) * DAY,
+				},
+				{ readiness: 'legacy' },
+			);
 		}
 		const result = checkCrystallizationForSoul(db, soul.id, {
+			readiness: 'legacy',
 			crystallizationThreshold: 3,
 			clusterThreshold: 0.5,
 			now: 10 * DAY,

@@ -5,3 +5,5 @@ export const observeSoulToolName = 'observe_soul';
 export const refineSoulToolName = 'refine_soul';
 export const levelUpSoulToolName = 'level_up_soul';
 export const manageSoulToolName = 'manage_soul';
+export const traceSoulToolName = 'trace_soul';
+export const reviewTracesToolName = 'review_traces';

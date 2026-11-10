@@ -14,6 +14,8 @@ Use this whenever you have evidence to deposit — after a session, delegation o
 
 5. **Check the tool result.** If crystallizationTriggers is non-empty, note which souls have reached readiness. Do not immediately act on it — flag it for the next maintenance pass.
 
+Record persistent dated facts and commitments with trace_soul; use traceIds when a behavioral shard interprets those facts. Review open and due traces with review_traces. Convergence requires three shards spanning two sources; readiness legacy restores the earlier gate.
+
 ## Notes
 
 Sealed shards (sealed=true) are only visible after reveal. Use them when evidence should only surface after a specific milestone — task completion, session close, batch import.

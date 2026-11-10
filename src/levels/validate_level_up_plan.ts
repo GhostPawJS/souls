@@ -2,17 +2,20 @@ import { resolveStrict } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { trigramJaccard } from '../lib/trigram_jaccard.ts';
+import { traceTablesExist } from '../traces/trace_tables_exist.ts';
 import { getTraitLimit } from '../traits/get_trait_limit.ts';
 import type { TraitRecord } from '../traits/types.ts';
 import type { LevelUpPlan, LevelUpValidationError } from './types.ts';
 
 export interface ValidationResult {
+	traceBackedCount?: { traitId: number; count: number }[];
 	valid: true;
 	warnings?: string[];
 	errors?: string[];
 }
 
 export interface ValidationFailure {
+	traceBackedCount?: { traitId: number; count: number }[];
 	valid: false;
 	warnings?: string[];
 	errors?: string[];
@@ -102,6 +105,19 @@ export function validateLevelUpPlan(
 			warnings,
 		};
 	return {
+		...(traceTablesExist(db)
+			? {
+					traceBackedCount: plan.carriedTraitIds.map((traitId) => ({
+						traitId,
+						count:
+							db
+								.prepare(
+									`SELECT count(DISTINCT c.shard_id) AS n FROM shard_citations c JOIN shard_traces st ON st.shard_id=c.shard_id JOIN soul_traces t ON t.id=st.trace_id WHERE c.trait_id=? AND t.state IN (0,1) AND NOT EXISTS (SELECT 1 FROM soul_traces n WHERE n.supersedes=t.id)`,
+								)
+								.get<{ n: number }>(traitId)?.n ?? 0,
+					})),
+				}
+			: {}),
 		valid: true,
 		...(errors.length ? { errors } : {}),
 		...(warnings.length || errors.length ? { warnings: [...warnings, ...errors] } : {}),

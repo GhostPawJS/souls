@@ -4,6 +4,7 @@ export { executeLevelUpPlanSkill } from './execute-level-up-plan.ts';
 export { judgeConsolidationVersusPromotionSkill } from './judge-consolidation-versus-promotion.ts';
 export { observeBehaviorWellSkill } from './observe-behavior-well.ts';
 export { produceTraitProposalsFromEvidenceSkill } from './produce-trait-proposals-from-evidence.ts';
+export { recordAndSettleTracesSkill } from './record-and-settle-traces.ts';
 export { reviewSoulHealthSkill } from './review-soul-health.ts';
 export { runMaintenancePassSkill } from './run-maintenance-pass.ts';
 export {

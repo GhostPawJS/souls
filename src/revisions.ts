@@ -1,4 +1,6 @@
 import type { SoulsDb } from './database.ts';
+import { shardTraceRefs } from './traces/shard_trace_refs.ts';
+import { traceTablesExist } from './traces/trace_tables_exist.ts';
 export interface RevisionRecord {
 	id: number;
 	entity: 'trait' | 'essence';
@@ -10,6 +12,7 @@ export interface RevisionRecord {
 	operator: string | null;
 	createdAt: number;
 	shardIds?: number[];
+	traceIds?: number[];
 }
 export function initRevisionTables(db: SoulsDb): void {
 	db.exec(
@@ -28,6 +31,7 @@ export function recordRevision(
 	oldText: string | null,
 	newText: string,
 	options: {
+		shardIds?: number[] | undefined;
 		reason?: string | undefined;
 		operator?: string | undefined;
 		now?: number | undefined;
@@ -49,7 +53,13 @@ export function recordRevision(
 			options.operator ?? null,
 			options.now ?? Date.now(),
 		);
-	return Number(result.lastInsertRowid);
+	const id = Number(result.lastInsertRowid);
+	if (options.shardIds?.some((shardId) => shardTraceRefs(db, shardId).length))
+		for (const shardId of options.shardIds)
+			db.prepare(
+				'INSERT OR IGNORE INTO soul_revision_shards(revision_id,shard_id) VALUES (?,?)',
+			).run(id, shardId);
+	return id;
 }
 export function getRevisionHistory(
 	db: SoulsDb,
@@ -75,6 +85,15 @@ export function getRevisionHistory(
 				.prepare('SELECT shard_id FROM soul_revision_shards WHERE revision_id=? ORDER BY shard_id')
 				.all<{ shard_id: number }>(record.id)
 				.map((r) => r.shard_id);
+			const traceIds = traceTablesExist(db)
+				? db
+						.prepare(
+							'SELECT DISTINCT st.trace_id AS id FROM shard_traces st JOIN soul_revision_shards rs ON rs.shard_id=st.shard_id WHERE rs.revision_id=? ORDER BY st.trace_id',
+						)
+						.all<{ id: number }>(record.id)
+						.map((r) => r.id)
+				: [];
+			if (traceIds.length) return { ...record, shardIds, traceIds };
 			return shardIds.length ? { ...record, shardIds } : { ...record };
 		});
 }

@@ -41,6 +41,8 @@ export interface ManageSoulInput {
 	name?: string | undefined;
 	slug?: string | undefined;
 	minSourceDiversity?: number | undefined;
+	readiness?: 'converged' | 'legacy' | undefined;
+	minClusterSize?: number | undefined;
 	minSpreadDays?: number | undefined;
 	strict?: boolean | undefined;
 	operator?: string | undefined;
@@ -121,6 +123,8 @@ export function manageSoulToolHandler(db: SoulsDb, rawInput: ManageSoulInput): M
 				reason: input.reason,
 				shardIds: input.shardIds,
 				minSourceDiversity: input.minSourceDiversity,
+				readiness: input.readiness,
+				minClusterSize: input.minClusterSize,
 				minSpreadDays: input.minSpreadDays,
 				...(input.externalId === undefined ? {} : { externalId: input.externalId }),
 				name: input.name,
@@ -235,6 +239,11 @@ export const manageSoulTool = defineSoulsTool<
 			description: stringSchema('Soul description.'),
 			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
 			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
+			readiness: { type: 'string', enum: ['converged', 'legacy'] },
+			minClusterSize: {
+				type: 'integer',
+				description: 'Minimum converged cluster size, default 3.',
+			},
 			soulId: soulReferenceSchema('Soul ID.'),
 		},
 		['action'],

@@ -143,20 +143,28 @@ describe('observe-behavior-well workflow', () => {
 			now: now - 3 * MS_PER_DAY,
 		});
 
-		dropShard(db, {
-			content: 'Observed careful error handling with graceful fallback mechanisms.',
-			source: 'session',
-			soulIds: [soul.id],
-			tags: ['error-handling'],
-			now: now - 2 * MS_PER_DAY,
-		});
-		dropShard(db, {
-			content: 'Delegation tasks completed using structured Docker container orchestration.',
-			source: 'delegation',
-			soulIds: [soul.id],
-			tags: ['docker'],
-			now: now - 1 * MS_PER_DAY,
-		});
+		dropShard(
+			db,
+			{
+				content: 'Observed careful error handling with graceful fallback mechanisms.',
+				source: 'session',
+				soulIds: [soul.id],
+				tags: ['error-handling'],
+				now: now - 2 * MS_PER_DAY,
+			},
+			{ readiness: 'legacy' },
+		);
+		dropShard(
+			db,
+			{
+				content: 'Delegation tasks completed using structured Docker container orchestration.',
+				source: 'delegation',
+				soulIds: [soul.id],
+				tags: ['docker'],
+				now: now - 1 * MS_PER_DAY,
+			},
+			{ readiness: 'legacy' },
+		);
 
 		const result = dropShard(
 			db,
@@ -167,7 +175,7 @@ describe('observe-behavior-well workflow', () => {
 				tags: ['communication'],
 				now,
 			},
-			{ crystallizationThreshold: 3 },
+			{ readiness: 'legacy', crystallizationThreshold: 3 },
 		);
 
 		ok(result.crystallizationTriggers.includes(soul.id));

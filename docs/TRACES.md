@@ -54,7 +54,7 @@ CREATE TABLE soul_trace_revisions (        -- append-only, enforced by triggers
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   trace_id   INTEGER NOT NULL REFERENCES soul_traces(id),
   revision   INTEGER NOT NULL,
-  kind       TEXT    NOT NULL,             -- record, revise, settle, link, unlink, tag, untag
+  kind       TEXT    NOT NULL,             -- record, revise, settle, link, unlink, tag, untag, cite
   snapshot   TEXT    NOT NULL,             -- JSON of the trace after the change, links and tags included
   reason     TEXT,
   created_at INTEGER NOT NULL,
@@ -188,12 +188,12 @@ top-level `id`.
 | ----------------------- | ---------- |
 | quest (questlog)        | tag `quest`, `due_at` optional, owner = the working soul; finish = settle done, abandon = settle dropped |
 | promise (affinity)      | tag `promise`, `due_at` set, owner = promiser, counterpart = promisee, weight = importance |
-| event (affinity)        | tag `event`, no `due_at`, `created_at` = when it happened, subject/counterpart links as needed; recorded settled `done` or left open |
+| event (affinity)        | tag `event`, no `due_at`, `created_at` = when it happened, subject/counterpart links as needed; recorded open, then optionally settled `done` |
 | belief (codex)          | tag `belief`, weight = certainty, corrections via `supersedes` |
 | rule or decision by Fox | tag `rule` or `decision`, owner = Fox's soul |
 | approval                | tag `approval`, owner = the approver (Fox), counterpart = the approved soul; one trace, two links |
 
-Fox and every bot are souls, so traces link to them the same way.
+Every participant is represented by a soul, so traces link to participants the same way.
 
 ## Reconciliation audit
 
@@ -209,3 +209,11 @@ Fox and every bot are souls, so traces link to them the same way.
 | fade | Unchanged. | Fading is about shard age; traces persist on their own. |
 | evidence formatting | Shards with trace citations add a `backs: trace #id (state)` line; shards without citations render as before. | Readers see the facts behind each observation. |
 | credentials | Trace text and settle reasons that look like a credential (private key blocks, common token prefixes, `password=`-style pairs) are rejected. Shard drops get a warning for the same patterns. | Traces and shards are evidence, never a secret store; warning on shards keeps 0.5.x inputs working. |
+
+## Implementation notes
+
+Citation writes use revision kind `cite` so the every-change history guarantee
+also covers evidence edges. SQLite math functions compute recency decay when
+available; builds without `pow` use the same formula in JavaScript. Existing
+Souls databases retain their journal mode on open to preserve file bytes during
+read-only use; newly created databases use WAL.

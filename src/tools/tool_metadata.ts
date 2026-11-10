@@ -1,7 +1,14 @@
 import type { SoulsDb } from '../database.ts';
 import type { ToolResult } from './tool_types.ts';
 
-export type JsonSchemaType = 'array' | 'boolean' | 'integer' | 'number' | 'object' | 'string';
+export type JsonSchemaType =
+	| 'array'
+	| 'boolean'
+	| 'integer'
+	| 'number'
+	| 'object'
+	| 'string'
+	| 'null';
 
 export interface JsonSchema {
 	type?: JsonSchemaType | undefined;
@@ -16,7 +23,7 @@ export interface JsonSchema {
 export type ToolSideEffects = 'none' | 'writes_state';
 export type ToolInputDescriptions = Record<string, string>;
 export type ToolOutputDescription = string;
-export type ToolEntityKindSet = readonly ('soul' | 'trait' | 'shard' | 'level')[];
+export type ToolEntityKindSet = readonly ('soul' | 'trait' | 'shard' | 'level' | 'trace')[];
 
 export interface SoulsToolDefinition<TInput = Record<string, unknown>, TOutput = unknown> {
 	name: string;

@@ -34,6 +34,7 @@ export interface AddTraitInput extends EvidenceGateOptions {
 }
 
 export interface ReviseTraitInput {
+	shardIds?: number[] | undefined;
 	reason?: string | undefined;
 	operator?: string | undefined;
 	principle?: string | undefined;

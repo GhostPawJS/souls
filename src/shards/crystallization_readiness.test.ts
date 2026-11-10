@@ -68,14 +68,22 @@ describe('crystallizationReadiness', () => {
 			'communication style needs significant improvement in technical explanations',
 		];
 		for (let i = 0; i < 3; i++) {
-			dropShard(db, {
-				content: contents[i]!,
-				source: i === 0 ? 'src_a' : 'src_b',
-				soulIds: [soul.id],
-				now: (i + 2) * DAY,
-			});
+			dropShard(
+				db,
+				{
+					content: contents[i]!,
+					source: i === 0 ? 'src_a' : 'src_b',
+					soulIds: [soul.id],
+					now: (i + 2) * DAY,
+				},
+				{ readiness: 'legacy' },
+			);
 		}
-		const results = crystallizationReadiness(db, { crystallizationThreshold: 3, now: 10 * DAY });
+		const results = crystallizationReadiness(db, {
+			readiness: 'legacy',
+			crystallizationThreshold: 3,
+			now: 10 * DAY,
+		});
 		ok(results.length > 0);
 		const rec = results[0]!;
 		strictEqual(rec.soulId, soul.id);

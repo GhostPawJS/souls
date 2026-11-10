@@ -666,3 +666,24 @@ product, clamped to 0–1. See [soul rendering and health](docs/entities/SOULS.m
 for the component formulas. Evidence suggestions count uncited clusters
 separately from semantically novel ones. Citations onto active traits count as
 alignment; singleton and single-source clusters do not prompt a new trait.
+
+## Traces
+
+Traces preserve dated facts, promises, beliefs, decisions, approvals, and quests.
+Shards remain behavioral observations and may cite traces as evidence. Trace tables
+are created on the first trace write; reads leave existing databases unchanged.
+
+```sh
+ghostpaw-souls trace record "Review the draft" --soul mentor:owner --tag promise --due +3d --json
+ghostpaw-souls trace due --soul mentor
+ghostpaw-souls trace settle 1 --as done --reason "Reviewed and delivered" --json
+```
+
+The synchronous API exposes `write.recordTrace`, `write.reviseTrace`,
+`write.settleTrace`, link/tag/cite operations, and `read.listTraces`, `dueTraces`,
+`traceHistory`, `traceChain`, `changedSince`, and `traceStats`. MCP exposes
+`trace_soul` and read-only `review_traces`. See [Traces](docs/TRACES.md).
+Rendering includes commitments only with `traces: 'open' | 'due'` or `--traces`.
+Readiness requires a converged cluster (three shards across two sources by default);
+use `readiness: 'legacy'`, `--readiness legacy`, or `config set readiness legacy`
+to retain the earlier gate.

@@ -1,7 +1,12 @@
+import { resolveReadiness, resolveStrict } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
-import { SoulsValidationError } from '../errors.ts';
+import { SoulsStateError, SoulsValidationError } from '../errors.ts';
 import { resolveNow } from '../resolve_now.ts';
 import { recordRevision } from '../revisions.ts';
+import {
+	type CrystallizationCheckOptions,
+	checkCrystallizationForSoul,
+} from '../shards/check_crystallization_for_soul.ts';
 import { getSoulOrThrow } from '../souls/get_soul_or_throw.ts';
 import { withTransaction } from '../with_transaction.ts';
 import { getLevelHistory } from './get_level_history.ts';
@@ -12,7 +17,7 @@ export function levelUp(
 	db: SoulsDb,
 	soulId: number,
 	plan: LevelUpPlan,
-	options?: { now?: number; strict?: boolean; traitLimit?: number },
+	options?: CrystallizationCheckOptions & { strict?: boolean; traitLimit?: number },
 ): LevelUpResult {
 	const soul = getSoulOrThrow(db, soulId);
 	const validation = validateLevelUpPlan(db, soulId, plan, options);
@@ -24,6 +29,12 @@ export function levelUp(
 		);
 	}
 
+	if (
+		resolveReadiness(db, options?.readiness) !== 'legacy' &&
+		resolveStrict(db, options?.strict) &&
+		!checkCrystallizationForSoul(db, soulId, options)?.ready
+	)
+		throw new SoulsStateError(`Soul ${soulId} is not crystallization-ready.`);
 	const now = resolveNow(options?.now);
 	const newLevel = soul.level + 1;
 

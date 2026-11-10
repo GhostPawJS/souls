@@ -16,6 +16,7 @@ export interface ShardRow {
 }
 
 export interface ShardRecord {
+	traces?: { id: number; state: import('../traces/types.ts').TraceState }[];
 	insertedAt?: number | null;
 	occurredAt?: number | null;
 	idempotencyKey?: string | null;
@@ -33,6 +34,7 @@ export interface ShardRecord {
 }
 
 export interface DropShardInput {
+	traceIds?: number[] | undefined;
 	occurredAt?: number | string | undefined;
 	idempotencyKey?: string | undefined;
 	ref?: string | undefined;
@@ -92,6 +94,9 @@ export interface TagCountRecord {
 }
 
 export interface CrystallizationRecord {
+	convergedClusterCount?: number;
+	largestClusterSize?: number;
+	traceBackedCount?: number;
 	soulId: number;
 	pendingCount: number;
 	sourceDiversity: number;

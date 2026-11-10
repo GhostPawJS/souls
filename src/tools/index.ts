@@ -19,6 +19,8 @@ export type {
 	ReviewSoulsToolResult,
 } from './review_souls_tool.ts';
 export { reviewSoulsTool, reviewSoulsToolHandler } from './review_souls_tool.ts';
+export type { ReviewTracesInput } from './review_traces_tool.ts';
+export { reviewTracesTool, reviewTracesToolHandler } from './review_traces_tool.ts';
 export type { SearchSoulsToolData, SearchSoulsToolResult } from './search_souls_tool.ts';
 export { searchSoulsTool, searchSoulsToolHandler } from './search_souls_tool.ts';
 export { soulEntityHint, soulNotFoundHints, translateToolError } from './tool_errors.ts';
@@ -55,7 +57,9 @@ export {
 	observeSoulToolName,
 	refineSoulToolName,
 	reviewSoulsToolName,
+	reviewTracesToolName,
 	searchSoulsToolName,
+	traceSoulToolName,
 } from './tool_names.ts';
 export {
 	inspectSoulsItemNext,
@@ -71,6 +75,7 @@ export {
 	toShardRef,
 	toSoulIdRef,
 	toSoulRef,
+	toTraceRef,
 	toTraitIdRef,
 	toTraitRef,
 } from './tool_ref.ts';
@@ -100,3 +105,5 @@ export {
 	toolSuccess,
 	toolWarning,
 } from './tool_types.ts';
+export type { TraceSoulInput } from './trace_soul_tool.ts';
+export { traceSoulTool, traceSoulToolHandler } from './trace_soul_tool.ts';

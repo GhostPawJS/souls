@@ -33,7 +33,7 @@ Only the ether catalog fetch uses the network. Core identity operations are loca
 ## Layout
 
 - `src/index.ts`: public exports; `src/read.ts` and `src/write.ts`: core facades.
-- `src/souls/`, `src/traits/`, `src/shards/`, `src/levels/`: domain operations.
+- `src/souls/`, `src/traits/`, `src/shards/`, `src/traces/`, `src/levels/`: domain operations.
 - `src/ether/`: catalog registration, fetching, parsing, search, and manifestation.
 - `src/tools/`, `src/skills/`, `src/soul.ts`: tool facade, procedures, built-in identity.
 - `src/demo/`: browser demo; `docs/`: architecture and usage references.

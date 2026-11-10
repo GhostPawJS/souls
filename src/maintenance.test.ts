@@ -49,14 +49,22 @@ describe('runMaintenance', () => {
 			'communication style needs improvement in technical explanations',
 		];
 		for (let i = 0; i < 3; i++) {
-			dropShard(db, {
-				content: contents[i]!,
-				source: i === 0 ? 'src_a' : 'src_b',
-				soulIds: [soul.id],
-				now: (i + 2) * DAY,
-			});
+			dropShard(
+				db,
+				{
+					content: contents[i]!,
+					source: i === 0 ? 'src_a' : 'src_b',
+					soulIds: [soul.id],
+					now: (i + 2) * DAY,
+				},
+				{ readiness: 'legacy' },
+			);
 		}
-		const result = runMaintenance(db, { crystallizationThreshold: 3, now: 10 * DAY });
+		const result = runMaintenance(db, {
+			readiness: 'legacy',
+			crystallizationThreshold: 3,
+			now: 10 * DAY,
+		});
 		ok(result.readySouls.length > 0);
 		ok(result.readySouls.some((r) => r.soulId === soul.id));
 	});

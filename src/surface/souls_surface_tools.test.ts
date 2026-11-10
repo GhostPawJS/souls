@@ -4,6 +4,8 @@ import { validateInput } from '../surfaces/validate_input.ts';
 import { soulsSurfaceTools } from './souls_surface_tools.ts';
 
 const inputs: Record<string, Record<string, unknown>> = {
+	trace_soul: { action: 'record', text: 'Review', souls: [{ soul: 1, role: 'owner' }] },
+	review_traces: { view: 'list' },
 	search_souls: { query: 'review' },
 	review_souls: { view: 'list' },
 	inspect_souls_item: { soulId: 1 },

@@ -57,29 +57,38 @@ describe('run-maintenance-pass workflow', () => {
 			now: now - 3 * MS_PER_DAY,
 		});
 
-		dropShard(db, {
-			content: 'Observed careful error handling with fallback mechanisms.',
-			source: 'session',
-			soulIds: [soul.id],
-			now: now - 2 * MS_PER_DAY,
-		});
-		dropShard(db, {
-			content: 'Delegation used structured Docker container orchestration.',
-			source: 'delegation',
-			soulIds: [soul.id],
-			now: now - 1 * MS_PER_DAY,
-		});
-		dropShard(db, {
-			content: 'Manual review confirms strong communication with the user.',
-			source: 'manual_review',
-			soulIds: [soul.id],
-			now,
-		});
+		dropShard(
+			db,
+			{
+				content: 'Observed careful error handling with fallback mechanisms.',
+				source: 'session',
+				soulIds: [soul.id],
+				now: now - 2 * MS_PER_DAY,
+			},
+			{ readiness: 'legacy' },
+		);
+		dropShard(
+			db,
+			{
+				content: 'Delegation used structured Docker container orchestration.',
+				source: 'delegation',
+				soulIds: [soul.id],
+				now: now - 1 * MS_PER_DAY,
+			},
+			{ readiness: 'legacy' },
+		);
+		dropShard(
+			db,
+			{
+				content: 'Manual review confirms strong communication with the user.',
+				source: 'manual_review',
+				soulIds: [soul.id],
+				now,
+			},
+			{ readiness: 'legacy' },
+		);
 
-		const result = runMaintenance(db, {
-			crystallizationThreshold: 3,
-			now,
-		});
+		const result = runMaintenance(db, { readiness: 'legacy', crystallizationThreshold: 3, now });
 		ok(result.readySouls.length > 0);
 		strictEqual(result.readySouls[0]!.soulId, soul.id);
 		ok(result.readySouls[0]!.priorityScore > 0);
@@ -138,12 +147,16 @@ describe('run-maintenance-pass workflow', () => {
 			'Communication with end users was clear and helpful.',
 		];
 		for (let i = 0; i < 3; i++) {
-			dropShard(db, {
-				content: lowContents[i]!,
-				source: ['session', 'delegation', 'manual_review'][i]!,
-				soulIds: [s1.id],
-				now: now - (2 - i) * MS_PER_DAY,
-			});
+			dropShard(
+				db,
+				{
+					content: lowContents[i]!,
+					source: ['session', 'delegation', 'manual_review'][i]!,
+					soulIds: [s1.id],
+					now: now - (2 - i) * MS_PER_DAY,
+				},
+				{ readiness: 'legacy' },
+			);
 		}
 
 		const highContents = [
@@ -155,25 +168,26 @@ describe('run-maintenance-pass workflow', () => {
 			'Session logs show excellent technical documentation quality.',
 		];
 		for (let i = 0; i < 6; i++) {
-			dropShard(db, {
-				content: highContents[i]!,
-				source: [
-					'session',
-					'delegation',
-					'manual_review',
-					'user_feedback',
-					'retrospective',
-					'monitoring',
-				][i]!,
-				soulIds: [s2.id],
-				now: now - (3 - Math.min(i, 3)) * MS_PER_DAY,
-			});
+			dropShard(
+				db,
+				{
+					content: highContents[i]!,
+					source: [
+						'session',
+						'delegation',
+						'manual_review',
+						'user_feedback',
+						'retrospective',
+						'monitoring',
+					][i]!,
+					soulIds: [s2.id],
+					now: now - (3 - Math.min(i, 3)) * MS_PER_DAY,
+				},
+				{ readiness: 'legacy' },
+			);
 		}
 
-		const result = runMaintenance(db, {
-			crystallizationThreshold: 3,
-			now,
-		});
+		const result = runMaintenance(db, { readiness: 'legacy', crystallizationThreshold: 3, now });
 		ok(result.readySouls.length >= 2);
 		ok(result.readySouls[0]!.priorityScore >= result.readySouls[1]!.priorityScore);
 	});

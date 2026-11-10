@@ -103,40 +103,61 @@ test('ingestion keys, occurrence timestamps, references, and backfill spread sou
 			ref: 'issue:1',
 			now,
 		};
-		const one = dropShard(db, input);
+		const one = dropShard(db, input, { readiness: 'legacy' });
 		equal(one.shard.createdAt, now);
 		equal(one.shard.occurredAt, now - 3 * day);
 		equal(one.shard.ref, 'issue:1');
-		const duplicate = dropShard(db, { ...input, content: 'Different payload' });
+		const duplicate = dropShard(
+			db,
+			{ ...input, content: 'Different payload' },
+			{ readiness: 'legacy' },
+		);
 		equal(duplicate.duplicate, true);
 		equal(duplicate.shard.id, one.shard.id);
 		equal(duplicate.shard.content, input.content);
-		const batch = dropShards(db, [input, input]);
+		const batch = dropShards(db, [input, input], { readiness: 'legacy' });
 		equal(batch.shards.length, 2);
 		equal(batch.results?.[0]?.duplicate, true);
 		equal(batch.results?.[1]?.duplicate, true);
 		equal(batch.shards[0]?.id, one.shard.id);
 		equal(db.prepare('SELECT COUNT(*) AS n FROM soul_shards').get()?.n, 1);
-		dropShard(db, {
-			content: 'Avoid invented details',
-			source: 'a',
-			soulIds: [soul.id],
-			occurredAt: now - day,
-			now,
-		});
-		dropShard(db, { content: 'Test edge cases', source: 'b', soulIds: [soul.id], now });
-		const blocked = checkCrystallizationForSoul(db, soul.id, { now });
+		dropShard(
+			db,
+			{
+				content: 'Avoid invented details',
+				source: 'a',
+				soulIds: [soul.id],
+				occurredAt: now - day,
+				now,
+			},
+			{ readiness: 'legacy' },
+		);
+		dropShard(
+			db,
+			{ content: 'Test edge cases', source: 'b', soulIds: [soul.id], now },
+			{ readiness: 'legacy' },
+		);
+		const blocked = checkCrystallizationForSoul(db, soul.id, { readiness: 'legacy', now });
 		equal(blocked?.ready, true);
-		dropShard(db, {
-			content: 'Verify user requirements',
-			source: 'c',
-			soulIds: [soul.id],
-			occurredAt: now - 2 * day,
-			now,
-		});
-		equal(checkCrystallizationForSoul(db, soul.id, { now })?.ready, true);
+		dropShard(
+			db,
+			{
+				content: 'Verify user requirements',
+				source: 'c',
+				soulIds: [soul.id],
+				occurredAt: now - 2 * day,
+				now,
+			},
+			{ readiness: 'legacy' },
+		);
+		equal(checkCrystallizationForSoul(db, soul.id, { readiness: 'legacy', now })?.ready, true);
 		throws(
-			() => dropShard(db, { ...input, idempotencyKey: 'invalid', occurredAt: 'invalid' }),
+			() =>
+				dropShard(
+					db,
+					{ ...input, idempotencyKey: 'invalid', occurredAt: 'invalid' },
+					{ readiness: 'legacy' },
+				),
 			/timestamp/,
 		);
 	} finally {
@@ -485,13 +506,37 @@ test('CLI trait-limit reaches reactivate/apply and level validation/execution; o
 		equal(validate.code, 0);
 		equal(JSON.parse(validate.out).data.valid, false);
 		equal(
-			(await invoke(['level', 'up', 'ext:bound', '--plan', plan, '--strict', '--trait-limit', '0']))
-				.code,
+			(
+				await invoke([
+					'level',
+					'up',
+					'ext:bound',
+					'--plan',
+					plan,
+					'--strict',
+					'--trait-limit',
+					'0',
+					'--readiness',
+					'legacy',
+				])
+			).code,
 			1,
 		);
 		equal(
-			(await invoke(['level', 'up', 'ext:bound', '--plan', plan, '--strict', '--trait-limit', '1']))
-				.code,
+			(
+				await invoke([
+					'level',
+					'up',
+					'ext:bound',
+					'--plan',
+					plan,
+					'--strict',
+					'--trait-limit',
+					'1',
+					'--readiness',
+					'legacy',
+				])
+			).code,
 			0,
 		);
 		equal(
@@ -548,6 +593,7 @@ test('legacy numeric facade timestamps preserve creation time without disguising
 			now = 10 * day;
 		for (const [i, source] of ['a', 'a'].entries()) {
 			const result = observeSoulToolHandler(db, {
+				readiness: 'legacy',
 				action: 'drop',
 				content: ['Check source code', 'Read user intent'][i] as string,
 				source,
@@ -561,14 +607,19 @@ test('legacy numeric facade timestamps preserve creation time without disguising
 				equal(result.data.shard.insertedAt, now);
 			}
 		}
-		dropShard(db, {
-			content: 'Verify database transactions',
-			source: 'b',
-			soulIds: [soul.id],
-			now,
-		});
-		equal(checkCrystallizationForSoul(db, soul.id, { now })?.ready, true);
+		dropShard(
+			db,
+			{
+				content: 'Verify database transactions',
+				source: 'b',
+				soulIds: [soul.id],
+				now,
+			},
+			{ readiness: 'legacy' },
+		);
+		equal(checkCrystallizationForSoul(db, soul.id, { readiness: 'legacy', now })?.ready, true);
 		observeSoulToolHandler(db, {
+			readiness: 'legacy',
 			action: 'drop',
 			content: 'Preserve regression assertions',
 			source: 'c',
@@ -576,7 +627,7 @@ test('legacy numeric facade timestamps preserve creation time without disguising
 			occurredAt: now - day,
 			now,
 		});
-		equal(checkCrystallizationForSoul(db, soul.id, { now })?.ready, true);
+		equal(checkCrystallizationForSoul(db, soul.id, { readiness: 'legacy', now })?.ready, true);
 	} finally {
 		db.close();
 	}

@@ -65,8 +65,26 @@ test('souls noun verb create, drop, search, show and not found use a file databa
 
 test('souls command paths cover every tool and action uniquely without changing MCP metadata', () => {
 	const commands = cliCommands(soulsSurfaceTools);
-	assert.equal(commands.length, 23);
+	assert.equal(commands.length, 38);
 	assert.equal(new Set(commands.map((c) => c.path)).size, commands.length);
+	for (const verb of [
+		'record',
+		'revise',
+		'settle',
+		'link',
+		'unlink',
+		'tag',
+		'untag',
+		'cite',
+		'list',
+		'due',
+		'show',
+		'history',
+		'chain',
+		'changed',
+		'stats',
+	])
+		assert.ok(commands.some((c) => c.path === `trace ${verb}`));
 	assert.equal(new Set(commands.map((c) => c.tool.name)).size, soulsMcpSurfaceTools.length);
 	assert.ok(soulsMcpSurfaceTools.every((tool) => tool.cli === undefined));
 	for (const tool of soulsSurfaceTools) {

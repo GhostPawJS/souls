@@ -1,4 +1,4 @@
-export type ToolEntityKind = 'soul' | 'trait' | 'shard' | 'level';
+export type ToolEntityKind = 'soul' | 'trait' | 'shard' | 'level' | 'trace';
 export type ToolOutcomeKind = 'success' | 'no_op' | 'needs_clarification' | 'error';
 export type ToolErrorCode =
 	| 'conflict'

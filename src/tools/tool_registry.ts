@@ -4,8 +4,10 @@ import { manageSoulTool } from './manage_soul_tool.ts';
 import { observeSoulTool } from './observe_soul_tool.ts';
 import { refineSoulTool } from './refine_soul_tool.ts';
 import { reviewSoulsTool } from './review_souls_tool.ts';
+import { reviewTracesTool } from './review_traces_tool.ts';
 import { searchSoulsTool } from './search_souls_tool.ts';
 import type { SoulsToolDefinition, ToolDefinitionRegistry } from './tool_metadata.ts';
+import { traceSoulTool } from './trace_soul_tool.ts';
 
 export const soulsTools = [
 	searchSoulsTool,
@@ -15,6 +17,8 @@ export const soulsTools = [
 	refineSoulTool,
 	levelUpSoulTool,
 	manageSoulTool,
+	traceSoulTool,
+	reviewTracesTool,
 ] satisfies ToolDefinitionRegistry;
 
 // biome-ignore lint/suspicious/noExplicitAny: registry contains heterogeneous tool definitions

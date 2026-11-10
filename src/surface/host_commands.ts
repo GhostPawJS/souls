@@ -84,6 +84,7 @@ export async function runHostCommand(
 			{ name: 'budget', type: 'integer' },
 			{ name: 'provenance', type: 'boolean' },
 			{ name: 'order', type: 'string', enum: ['citations', 'density'] },
+			{ name: 'traces', type: 'string', enum: ['open', 'due'] },
 			{ name: 'into', type: 'string' },
 			{ name: 'expect-hash', type: 'string' },
 			{ name: 'against', type: 'string' },
@@ -184,6 +185,7 @@ export async function runHostCommand(
 			return result.same ? 0 : 1;
 		}
 		const opts = {
+			traces: input.traces as 'open' | 'due' | undefined,
 			budget: input.budget as number | undefined,
 			order: input.order as 'citations' | 'density' | undefined,
 			includeProvenance: input.provenance as boolean | undefined,

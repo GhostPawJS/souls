@@ -18,6 +18,13 @@ export function crystallizationReadiness(
 
 		results.push({
 			soulId,
+			...(check.convergedClusterCount === undefined
+				? {}
+				: {
+						convergedClusterCount: check.convergedClusterCount,
+						largestClusterSize: check.largestClusterSize as number,
+						traceBackedCount: check.traceBackedCount as number,
+					}),
 			pendingCount: check.pendingCount,
 			sourceDiversity: check.sourceDiversity,
 			ageSpreadDays: check.ageSpreadDays,

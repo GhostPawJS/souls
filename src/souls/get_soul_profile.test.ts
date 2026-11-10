@@ -55,14 +55,22 @@ describe('getSoulProfile', () => {
 			'communication style needs improvement in technical explanations',
 		];
 		for (let i = 0; i < 3; i++) {
-			dropShard(db, {
-				content: contents[i]!,
-				source: i === 0 ? 'src_a' : 'src_b',
-				soulIds: [soul.id],
-				now: (i + 2) * DAY,
-			});
+			dropShard(
+				db,
+				{
+					content: contents[i]!,
+					source: i === 0 ? 'src_a' : 'src_b',
+					soulIds: [soul.id],
+					now: (i + 2) * DAY,
+				},
+				{ readiness: 'legacy' },
+			);
 		}
-		const profile = getSoulProfile(db, soul.id, { crystallizationThreshold: 3, now: 10 * DAY });
+		const profile = getSoulProfile(db, soul.id, {
+			readiness: 'legacy',
+			crystallizationThreshold: 3,
+			now: 10 * DAY,
+		});
 		strictEqual(profile.crystallizationReady, true);
 	});
 

@@ -7,11 +7,15 @@ import {
 	observeSoulToolName,
 	refineSoulToolName,
 	reviewSoulsToolName,
+	reviewTracesToolName,
 	searchSoulsToolName,
+	traceSoulToolName,
 } from './tool_names.ts';
 
 const allNames = [
 	searchSoulsToolName,
+	traceSoulToolName,
+	reviewTracesToolName,
 	reviewSoulsToolName,
 	inspectSoulsItemToolName,
 	observeSoulToolName,
@@ -21,8 +25,8 @@ const allNames = [
 ];
 
 describe('tool names', () => {
-	it('exports exactly 7 tool names', () => {
-		strictEqual(allNames.length, 7);
+	it('exports exactly 9 tool names', () => {
+		strictEqual(allNames.length, 9);
 	});
 
 	it('every name is a non-empty string', () => {
@@ -49,5 +53,7 @@ describe('tool names', () => {
 		strictEqual(refineSoulToolName, 'refine_soul');
 		strictEqual(levelUpSoulToolName, 'level_up_soul');
 		strictEqual(manageSoulToolName, 'manage_soul');
+		strictEqual(traceSoulToolName, 'trace_soul');
+		strictEqual(reviewTracesToolName, 'review_traces');
 	});
 });
