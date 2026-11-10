@@ -25,6 +25,44 @@ Run tools as `ghostpaw-souls ...`; use `~/.local/bin/ghostpaw-souls` if it is no
 
 Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).
 
+## Running inside sandboxed agent harnesses
+
+Inside a Codex CLI `--sandbox workspace-write` session, the database and its
+parent directory must be inside a writable root, including SQLite's `-wal` and
+`-shm` side files. A default DB under `~/.ghostpaw` outside those roots can fail
+with `SQLITE_CANTOPEN` or `EPERM` (often exit 70; directory creation failures
+may exit 2), even when normal shell permissions allow access. Put the DB inside the workspace with `--db ./state/souls.db`,
+or set `GHOSTPAW_SOULS_DB="$PWD/state/souls.db"` for CLI/MCP use.
+
+To use an external DB directory, add it when starting the OpenAI Codex CLI
+(replace `<dir-with-db>` with its absolute path):
+
+```sh
+codex exec --sandbox workspace-write --add-dir <dir-with-db> "Run the GhostPaw CLI"
+```
+
+Alternatively, set `sandbox_workspace_write.writable_roots` in
+`~/.codex/config.toml` before starting the session:
+
+```toml
+[sandbox_workspace_write]
+writable_roots = ["/absolute/dir-with-db"]
+```
+
+## What goes where
+
+| Store | Use for |
+| --- | --- |
+| souls | Agent identity and voice. |
+| codex | Beliefs with uncertainty and provenance: things that might be wrong or change. |
+| affinity | People, organizations, agents, and their relationships. |
+| questlog | Tasks and deadlines. |
+| grimoire | Procedures and how-tos. |
+| Plain memory/files | Stable operational facts. |
+
+For boundary cases, keep identity in souls, a revisable claim about someone in codex linked to their affinity record, actionable work in questlog, and reusable steps in grimoire; leave stable setup details in plain memory/files.
+
+
 ## Calling tools
 
 Compact cheat sheet: `ghostpaw-souls skill --short`. List guides: `ghostpaw-souls skill --list`.
