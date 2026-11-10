@@ -55,6 +55,7 @@ export interface ReviseTraceInput extends TraceOptions {
 	reason: string;
 }
 export interface ListTracesOptions extends TraceOptions {
+	tags?: string[];
 	all?: boolean;
 	excludeTags?: string[];
 	tagPrefix?: string;

@@ -23,7 +23,7 @@ import { validateToolInput } from './validate_tool_input.ts';
 export interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> {
 	soul?: number | string;
 	withSoul?: number | string;
-	view: 'list' | 'due' | 'show' | 'history' | 'chain' | 'changed' | 'stats';
+	view: 'list' | 'search' | 'due' | 'show' | 'history' | 'chain' | 'changed' | 'stats';
 	id?: number;
 	soulId?: number | string;
 	withSoulId?: number | string;
@@ -81,6 +81,13 @@ export function reviewTracesToolHandler(
 		};
 		let data: unknown;
 		switch (input.view) {
+			case 'search':
+				if (input.query === undefined)
+					return toolNeedsClarification('missing_required_choice', 'Provide query for search.', [
+						'query',
+					]);
+				data = read.searchTraces(db, { ...options, query: input.query });
+				break;
 			case 'list':
 				data = read.listTraces(db, options);
 				break;
@@ -131,7 +138,7 @@ export function reviewTracesToolHandler(
 		}
 		const report = data as { traces?: unknown[]; total?: number; since?: number };
 		const summary =
-			input.view === 'list'
+			input.view === 'list' || input.view === 'search'
 				? `${summarizeCount(report.total ?? 0, 'trace')}.`
 				: input.view === 'due'
 					? `${summarizeCount((data as unknown[]).length, 'due or overdue trace')}.`
@@ -188,13 +195,13 @@ export const reviewTracesTool = defineSoulsTool<ReviewTracesInput, unknown>({
 	readOnly: true,
 	supportsClarification: true,
 	targetKinds: ['trace', 'soul'],
-	inputDescriptions: { view: 'list, due, show, history, chain, changed, stats.' },
+	inputDescriptions: { view: 'list, search, due, show, history, chain, changed, stats.' },
 	outputDescription: 'Trace records or requested read-only report.',
 	inputSchema: objectSchema(
 		{
 			view: {
 				type: 'string',
-				enum: ['list', 'due', 'show', 'history', 'chain', 'changed', 'stats'],
+				enum: ['list', 'search', 'due', 'show', 'history', 'chain', 'changed', 'stats'],
 			},
 			id: integerSchema('Trace id.'),
 			soul: soulReferenceSchema('Linked soul.'),
@@ -212,7 +219,10 @@ export const reviewTracesTool = defineSoulsTool<ReviewTracesInput, unknown>({
 			tagPrefix: stringSchema('Category prefix.'),
 			excludeTags: arraySchema(stringSchema('Excluded category.'), 'Excluded categories.'),
 			all: booleanSchema('Return all results.'),
-			query: stringSchema('Text substring.'),
+			query: stringSchema(
+				'Text substring for list; literal search terms for search (trailing * matches prefixes).',
+			),
+			tags: arraySchema(stringSchema('Required category.'), 'Required categories.'),
 			dueBefore: dateSchema,
 			since: dateSchema,
 			now: dateSchema,

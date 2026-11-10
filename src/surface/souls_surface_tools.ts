@@ -41,6 +41,7 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 			property: 'view',
 			positionals: {
 				list: [],
+				search: ['query'],
 				due: [],
 				show: ['id'],
 				history: ['id'],
@@ -193,6 +194,7 @@ const soulsCliSurfaceTools: readonly SurfaceTool<SoulsDb>[] = /* @__PURE__ */ so
 							soul: { type: 'string' },
 							with: { type: 'string' },
 							excludeTag: { type: 'array', items: { type: 'string' } },
+							tag: { oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }] },
 						},
 					},
 				}

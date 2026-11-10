@@ -35,6 +35,11 @@ const verbs: Record<string, [string, string, string]> = {
 		'soul role state tag tag-prefix exclude-tag due-before query limit all offset include-retired include-superseded tz',
 		'--soul mentor --tag promise --state open',
 	],
+	search: [
+		'Search trace text and settlement reasons (default limit 20).',
+		'soul role state tag exclude-tag tag-prefix include-superseded limit offset all',
+		'"review draft" --soul mentor',
+	],
 	due: [
 		'List open due or overdue traces.',
 		'soul role tag tag-prefix exclude-tag within limit all offset include-retired include-superseded tz',

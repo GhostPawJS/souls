@@ -19,7 +19,7 @@ Record a trace for a dated fact, promise, belief, rule, decision, approval, or q
 - Contact identities and channels.
 - Procedures and skills.
 
-1. Search review_traces before recording duplicate facts.
+1. Search review_traces with view search and query before recording duplicate facts; trace search offers the same ranked read.
 2. Use trace_soul record with text and at least one souls link. Use settle: { as: "done", reason: "Delivered" } or CLI --settled done --reason "Delivered" to record a past event with record and settle revisions atomically. Set a category tag, optional dueAt, and optional weight between 0 and 1. Never include credentials.
 3. Review due work with review_traces due. Use list, show, history, chain, changed, and stats for context. Keep the cursor returned by changed for the next read.
 4. Close work using settle, as done or dropped, with a required reason. A second settlement conflicts. There is one closing verb.

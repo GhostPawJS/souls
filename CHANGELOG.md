@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Ranked trace text search through the read library, review_traces search view, and trace search CLI, with a read-only substring fallback.
 - Trace pagination notices, category exclusions and prefixes, bounded head statistics,
   role-aware overdue counts, and tagged promise settlement rates.
 - Atomic trace roll and JSONL batch recording, merge parents, historical imports,

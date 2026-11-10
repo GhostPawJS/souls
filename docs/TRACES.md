@@ -153,6 +153,7 @@ CLI noun `trace`:
 | view      | CLI                                   | returns |
 | --------- | ------------------------------------- | ------- |
 | `list`    | `trace list [--soul s] [--role r] [--state open] [--tag t] [--exclude-tag t] [--tag-prefix p] [--limit n\|--all] [--offset n] [--due-before d] [--query q]` | all states, newest updated first; links and tags; heads only by default |
+| `search` | `trace search <query> [--soul s] [--role r] [--state open] [--tag t] [--exclude-tag t] [--tag-prefix p] [--limit n\|--all] [--offset n]` | ranked text and settlement reason matches; default limit 20 |
 | `due`     | `trace due [--soul s] [--within 3d] [--exclude-tag t] [--limit n\|--all] [--offset n]`  | open traces due within the window or overdue, overdue first |
 | `show`    | `trace show <id>`                     | one trace with links, tags, chain and citing shards |
 | `history` | `trace history <id>`                  | append-only revisions |
@@ -292,3 +293,22 @@ Read results use a `data` envelope. Single-trace writes also include `data`
 containing the trace, while retaining top-level `id` and other existing keys.
 Batch CLI JSON output is the created trace array. Tool batch output uses `data`.
 `call --help` lists tools; `call <tool> --help` lists input fields and an example.
+
+### Search
+
+Use `read.searchTraces(db, { query: 'review draft', soulId })`,
+`review_traces` with `view: 'search'` and `query`, or
+`souls trace search "review draft" --soul mentor --json`.
+Terms are literal, combined with AND; a trailing `*` matches a word prefix.
+FTS5 ranks matches by bm25 ascending, then update time descending and id.
+The result includes `traces`, `total`, `truncated`, `next`, and
+`mode: 'fts' | 'substring'`; each trace adds `rank`.
+
+The index is created and backfilled on the first trace write after upgrade.
+Reads never initialize or backfill it. If FTS5 is unavailable, the index is
+absent, or MATCH fails, search uses a case-insensitive literal substring over
+text and settlement reasons, with null ranks. Percent and underscore remain
+literal in this fallback. Filters support soul, role, state, required `tags`,
+`tag`, `excludeTags`, `tagPrefix`, and `includeSuperseded`.
+Repeat CLI `--tag` to require multiple categories. Pagination accepts
+`limit` (default 20), `offset`, or `all`.

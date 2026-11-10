@@ -42,6 +42,10 @@ export const soulsCliOptions: ToolCliOptions<SoulsDb> = {
 			delete input.due;
 		}
 		if (toolName === 'review_traces') {
+			if (Array.isArray(input.tag)) {
+				input.tags = [...(Array.isArray(input.tags) ? input.tags : []), ...input.tag];
+				delete input.tag;
+			}
 			if (input.excludeTag !== undefined) input.excludeTags = input.excludeTag;
 			delete input.excludeTag;
 			if (typeof input.role === 'string' && /^[012]$/.test(input.role))

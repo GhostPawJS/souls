@@ -235,6 +235,9 @@
 	".:exports.read.searchShardsPage": {
 		"kind": "function"
 	},
+	".:exports.read.searchTraces": {
+		"kind": "function"
+	},
 	".:exports.read.shardCountsBySource": {
 		"kind": "function"
 	},
@@ -372,7 +375,7 @@
 	},
 	".:exports.skills.recordAndSettleTracesSkill.content": {
 		"kind": "string",
-		"value": "# Record and Settle Traces\n\nRecord a trace for a dated fact, promise, belief, rule, decision, approval, or quest. Drop a shard for a behavioral observation interpreting what happened. A shard may cite traces through traceIds; this does not replace shard-to-trait citations.\n\n| Usage | Mapping |\n| --- | --- |\n| Flat work list | Open trace tagged `quest`, owner = working soul. Due is optional: a parking lot needs no due date. Settle done with the honest outcome as the reason; abandon with dropped. Group a questline using `questline` plus a tag named for the line. Prerequisites/unlocks, repeatables, rewards, and due-claim delivery are not modeled; keep using questlog for scheduling and recurrence. |\n| Promises | Tag `promise`, due set, owner = promiser, counterpart = promisee. Kept = settle done; broken and cancelled = settle dropped, with the reason saying which. The settle rate counts both broken and cancelled as not kept; it cannot distinguish cancellation from a broken promise. |\n| Interaction or relationship journal | Event trace tagged `event`, optionally `note`, recorded with `--settled done` and an honest reason. Owner = writer, subject = the other soul. Long running relationship prose belongs in a series of event traces, not one ever-edited text field. |\n| Beliefs | Tag `belief`, weight = certainty, source kind as a category tag (`explicit`, `observed`, `inferred`, `distilled`). Correct with a new trace using supersedes; forget with settle dropped and a reason. To merge beliefs, pass all parent ids in supersedes. Append-only logs map to recording without supersedes. |\n| Approvals | One trace tagged `approval`, owner = Fox (approver), counterpart = approved soul. Settle done when granted, dropped when declined. This replaces keeping an approval in two stores. |\n| Rules and decisions | Tag `rule` or `decision` on Fox's soul. |\n\n### What traces do not replace\n\n- Recurring dates.\n- Scheduling and recurrence; keep using questlog.\n- Due-claim delivery.\n- Contact identities and channels.\n- Procedures and skills.\n\n1. Search review_traces before recording duplicate facts.\n2. Use trace_soul record with text and at least one souls link. Use settle: { as: \"done\", reason: \"Delivered\" } or CLI --settled done --reason \"Delivered\" to record a past event with record and settle revisions atomically. Set a category tag, optional dueAt, and optional weight between 0 and 1. Never include credentials.\n3. Review due work with review_traces due. Use list, show, history, chain, changed, and stats for context. Keep the cursor returned by changed for the next read.\n4. Close work using settle, as done or dropped, with a required reason. A second settlement conflicts. There is one closing verb.\n5. Revise text, dates, weight, tags, or links with a reason; every change keeps an immutable snapshot. Unlink and untag require reasons. The final soul link cannot be removed; an owner is optional.\n6. Correct a settled fact by recording a new trace with supersedes pointing to the old one. Chains have one successor per trace and no cycles. List and readiness use heads by default.\n7. Cite facts from behavioral shards with observe_soul traceIds or trace_soul cite. Only open or done chain heads strengthen readiness. Readiness needs a converged cluster of at least three shards across two sources; readiness legacy restores the earlier gate.\n\nExample input:\n```json\n{\"action\":\"record\",\"text\":\"Review the draft\",\"souls\":[{\"soul\":\"mentor\",\"role\":\"owner\"}],\"dueAt\":\"2026-11-12\",\"tags\":[\"promise\"],\"weight\":0.8}\n```\n\nCLI: ghostpaw-souls trace record \"Review the draft\" --soul mentor:owner --tag promise --due +3d --json\nUse trace roll 1 --next-due +7d to settle and carry a commitment forward atomically. Use trace list --state open --exclude-tag belief for commitments. Category prefixes use --tag-prefix series:. Read pages with --limit and --offset, or --all. Record JSONL atomically with trace record --batch file.jsonl (or --batch -). Use --import for historical update times. Compact old revision text only with an explicit trace compact command.\n\nCLI: ghostpaw-souls trace settle 1 --as done --reason \"Reviewed and delivered\" --json\n"
+		"value": "# Record and Settle Traces\n\nRecord a trace for a dated fact, promise, belief, rule, decision, approval, or quest. Drop a shard for a behavioral observation interpreting what happened. A shard may cite traces through traceIds; this does not replace shard-to-trait citations.\n\n| Usage | Mapping |\n| --- | --- |\n| Flat work list | Open trace tagged `quest`, owner = working soul. Due is optional: a parking lot needs no due date. Settle done with the honest outcome as the reason; abandon with dropped. Group a questline using `questline` plus a tag named for the line. Prerequisites/unlocks, repeatables, rewards, and due-claim delivery are not modeled; keep using questlog for scheduling and recurrence. |\n| Promises | Tag `promise`, due set, owner = promiser, counterpart = promisee. Kept = settle done; broken and cancelled = settle dropped, with the reason saying which. The settle rate counts both broken and cancelled as not kept; it cannot distinguish cancellation from a broken promise. |\n| Interaction or relationship journal | Event trace tagged `event`, optionally `note`, recorded with `--settled done` and an honest reason. Owner = writer, subject = the other soul. Long running relationship prose belongs in a series of event traces, not one ever-edited text field. |\n| Beliefs | Tag `belief`, weight = certainty, source kind as a category tag (`explicit`, `observed`, `inferred`, `distilled`). Correct with a new trace using supersedes; forget with settle dropped and a reason. To merge beliefs, pass all parent ids in supersedes. Append-only logs map to recording without supersedes. |\n| Approvals | One trace tagged `approval`, owner = Fox (approver), counterpart = approved soul. Settle done when granted, dropped when declined. This replaces keeping an approval in two stores. |\n| Rules and decisions | Tag `rule` or `decision` on Fox's soul. |\n\n### What traces do not replace\n\n- Recurring dates.\n- Scheduling and recurrence; keep using questlog.\n- Due-claim delivery.\n- Contact identities and channels.\n- Procedures and skills.\n\n1. Search review_traces with view search and query before recording duplicate facts; trace search offers the same ranked read.\n2. Use trace_soul record with text and at least one souls link. Use settle: { as: \"done\", reason: \"Delivered\" } or CLI --settled done --reason \"Delivered\" to record a past event with record and settle revisions atomically. Set a category tag, optional dueAt, and optional weight between 0 and 1. Never include credentials.\n3. Review due work with review_traces due. Use list, show, history, chain, changed, and stats for context. Keep the cursor returned by changed for the next read.\n4. Close work using settle, as done or dropped, with a required reason. A second settlement conflicts. There is one closing verb.\n5. Revise text, dates, weight, tags, or links with a reason; every change keeps an immutable snapshot. Unlink and untag require reasons. The final soul link cannot be removed; an owner is optional.\n6. Correct a settled fact by recording a new trace with supersedes pointing to the old one. Chains have one successor per trace and no cycles. List and readiness use heads by default.\n7. Cite facts from behavioral shards with observe_soul traceIds or trace_soul cite. Only open or done chain heads strengthen readiness. Readiness needs a converged cluster of at least three shards across two sources; readiness legacy restores the earlier gate.\n\nExample input:\n```json\n{\"action\":\"record\",\"text\":\"Review the draft\",\"souls\":[{\"soul\":\"mentor\",\"role\":\"owner\"}],\"dueAt\":\"2026-11-12\",\"tags\":[\"promise\"],\"weight\":0.8}\n```\n\nCLI: ghostpaw-souls trace record \"Review the draft\" --soul mentor:owner --tag promise --due +3d --json\nUse trace roll 1 --next-due +7d to settle and carry a commitment forward atomically. Use trace list --state open --exclude-tag belief for commitments. Category prefixes use --tag-prefix series:. Read pages with --limit and --offset, or --all. Record JSONL atomically with trace record --batch file.jsonl (or --batch -). Use --import for historical update times. Compact old revision text only with an explicit trace compact command.\n\nCLI: ghostpaw-souls trace settle 1 --as done --reason \"Reviewed and delivered\" --json\n"
 	},
 	".:exports.skills.recordAndSettleTracesSkill.description": {
 		"kind": "string",
@@ -2540,7 +2543,7 @@
 		"kind": "type",
 		"type": "EtherSourceKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -2807,7 +2810,7 @@
 		"kind": "type",
 		"type": "EtherSourceKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -3839,7 +3842,7 @@
 		"kind": "type",
 		"type": "JsonSchemaType",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -4573,12 +4576,16 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"tags": {
+				"type": "string[] | undefined",
+				"optional": true
+			},
 			"tz": {
 				"type": "string | undefined",
 				"optional": true
 			}
 		},
-		"definition": "interface ListTracesOptions extends TraceOptions { all?: boolean; excludeTags?: string[]; tagPrefix?: string; soulId?: number; role?: TraceRole | 0 | 1 | 2; state?: TraceState; tag?: string; dueBefore?: TraceTime; query?: string; includeSuperseded?: boolean; includeRetired?: boolean; limit?: number; offset?: number; }",
+		"definition": "interface ListTracesOptions extends TraceOptions { tags?: string[]; all?: boolean; excludeTags?: string[]; tagPrefix?: string; soulId?: number; role?: TraceRole | 0 | 1 | 2; state?: TraceState; tag?: string; dueBefore?: TraceTime; query?: string; includeSuperseded?: boolean; includeRetired?: boolean; limit?: number; offset?: number; }",
 		"references": {
 			"TraceOptions": ".:public.TraceOptions",
 			"TraceRole": ".:public.TraceRole",
@@ -5093,6 +5100,10 @@
 		"kind": "value",
 		"type": "(db: SoulsDb, query: string, options?: SearchShardsOptions) => ShardPage"
 	},
+	".:public.read.searchTraces": {
+		"kind": "value",
+		"type": "(db: SoulsDb, options: ListTracesOptions & { query: string; }) => { traces: { rank: number | null; id: number; text: string; state: TraceState; weight: number | null; createdAt: number; updatedAt: number; dueAt: number | null; settledAt: number | null; settleReason: string | null; supersedes: number | null; mergedFrom?: number[]; revision: number; souls: TraceLink[]; tags: string[]; }[]; total: number; truncated: boolean; next: number | null; mode: \"substring\" | \"fts\"; }"
+	},
 	".:public.read.shardCountsBySource": {
 		"kind": "value",
 		"type": "(db: SoulsDb, soulId?: number) => SourceCountRecord[]"
@@ -5115,7 +5126,7 @@
 	},
 	".:public.read.traceStats": {
 		"kind": "value",
-		"type": "(db: SoulsDb, options?: ListTracesOptions & { soulId?: number; withSoulId?: number; halfLifeDays?: number; includeRetired?: boolean; }) => { overdueBySoul: { soulId: number; count: number; owner: number; counterpart: number; subject: number; }[]; promiseSettleRateTagged: number | null; promiseSettleRateTaggedDetails: { done: number; dropped: number; overdueOpen: number; rate: number | null; }; headsTotal: number; headsTruncated: boolean; overdue: { soulId: number; count: number; }[]; promiseSettleRate: number | null; promiseSettleRateDetails: { done: number; dropped: number; overdueOpen: number; rate: number | null; }; chains: { id: number; certainty: number | null; }[]; weights: { id: number; weight: number; }[]; }"
+		"type": "(db: SoulsDb, options?: ListTracesOptions & { soulId?: number; withSoulId?: number; halfLifeDays?: number; includeRetired?: boolean; }) => { overdueBySoul: { soulId: number; count: number; owner: number; counterpart: number; subject: number; }[]; promiseSettleRateTagged: number | null; promiseSettleRateTaggedDetails: { done: number; dropped: number; overdueOpen: number; rate: number | null; }; headsTotal: number; headsTruncated: boolean; weightsTotal: number; weightsTruncated: boolean; overdue: { soulId: number; count: number; }[]; promiseSettleRate: number | null; promiseSettleRateDetails: { done: number; dropped: number; overdueOpen: number; rate: number | null; }; chains: { id: number; certainty: number | null; }[]; weights: { id: number; weight: number; }[]; }"
 	},
 	".:public.read.traceTablesExist": {
 		"kind": "value",
@@ -5665,12 +5676,16 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"tags": {
+				"type": "string[] | undefined",
+				"optional": true
+			},
 			"tz": {
 				"type": "string | undefined",
 				"optional": true
 			},
 			"view": {
-				"type": "\"due\" | \"list\" | \"show\" | \"history\" | \"chain\" | \"changed\" | \"stats\"",
+				"type": "\"due\" | \"list\" | \"search\" | \"show\" | \"history\" | \"chain\" | \"changed\" | \"stats\"",
 				"optional": false
 			},
 			"within": {
@@ -5686,7 +5701,7 @@
 				"optional": true
 			}
 		},
-		"definition": "interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> { soul?: number | string; withSoul?: number | string; view: 'list' | 'due' | 'show' | 'history' | 'chain' | 'changed' | 'stats'; id?: number; soulId?: number | string; withSoulId?: number | string; since?: TraceTime; within?: string | number; halfLifeDays?: number; }",
+		"definition": "interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> { soul?: number | string; withSoul?: number | string; view: 'list' | 'search' | 'due' | 'show' | 'history' | 'chain' | 'changed' | 'stats'; id?: number; soulId?: number | string; withSoulId?: number | string; since?: TraceTime; within?: string | number; halfLifeDays?: number; }",
 		"references": {
 			"ListTracesOptions": ".:public.ListTracesOptions",
 			"TraceTime": ".:public.TraceTime"
@@ -6000,7 +6015,7 @@
 		"kind": "type",
 		"type": "ShardFilterStatus",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -6350,7 +6365,7 @@
 		"kind": "type",
 		"type": "\"pending\" | \"faded\"",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -6638,11 +6653,11 @@
 		"kind": "type",
 		"type": "SoulsSkillRegistry",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => ArrayIterator<SoulsSkill>",
 				"optional": false
 			},
-			"__@unscopables@1009": {
+			"__@unscopables@1011": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -7149,11 +7164,11 @@
 		"kind": "type",
 		"type": "SoulsSkillRegistry",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => ArrayIterator<SoulsSkill>",
 				"optional": false
 			},
-			"__@unscopables@1009": {
+			"__@unscopables@1011": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -7614,7 +7629,7 @@
 		"kind": "type",
 		"type": "ToolClarificationCode",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -7829,11 +7844,11 @@
 		"kind": "type",
 		"type": "ToolDefinitionRegistry",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => ArrayIterator<SoulsToolDefinition<any, any>>",
 				"optional": false
 			},
-			"__@unscopables@1009": {
+			"__@unscopables@1011": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -7967,7 +7982,7 @@
 		"kind": "type",
 		"type": "ToolEntityKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -8182,11 +8197,11 @@
 		"kind": "type",
 		"type": "ToolEntityKindSet",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => ArrayIterator<\"shard\" | \"trait\" | \"soul\" | \"level\" | \"trace\">",
 				"optional": false
 			},
-			"__@unscopables@1009": {
+			"__@unscopables@1011": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -8339,7 +8354,7 @@
 		"kind": "type",
 		"type": "ToolErrorCode",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -8554,7 +8569,7 @@
 		"kind": "type",
 		"type": "ToolErrorKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -8923,7 +8938,7 @@
 		"kind": "type",
 		"type": "ToolNextStepHintKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9151,7 +9166,7 @@
 		"kind": "type",
 		"type": "ToolOutcomeKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9366,7 +9381,7 @@
 		"kind": "type",
 		"type": "string",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9771,7 +9786,7 @@
 		"kind": "type",
 		"type": "JsonSchemaType",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -10445,12 +10460,16 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"tags": {
+				"type": "string[] | undefined",
+				"optional": true
+			},
 			"tz": {
 				"type": "string | undefined",
 				"optional": true
 			},
 			"view": {
-				"type": "\"due\" | \"list\" | \"show\" | \"history\" | \"chain\" | \"changed\" | \"stats\"",
+				"type": "\"due\" | \"list\" | \"search\" | \"show\" | \"history\" | \"chain\" | \"changed\" | \"stats\"",
 				"optional": false
 			},
 			"within": {
@@ -10719,7 +10738,7 @@
 		"kind": "type",
 		"type": "ToolClarificationCode",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -10937,11 +10956,11 @@
 		"kind": "type",
 		"type": "ToolDefinitionRegistry",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => ArrayIterator<SoulsToolDefinition<any, any>>",
 				"optional": false
 			},
-			"__@unscopables@1009": {
+			"__@unscopables@1011": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -11075,7 +11094,7 @@
 		"kind": "type",
 		"type": "ToolEntityKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -11293,11 +11312,11 @@
 		"kind": "type",
 		"type": "ToolEntityKindSet",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => ArrayIterator<\"shard\" | \"trait\" | \"soul\" | \"level\" | \"trace\">",
 				"optional": false
 			},
-			"__@unscopables@1009": {
+			"__@unscopables@1011": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -11453,7 +11472,7 @@
 		"kind": "type",
 		"type": "ToolErrorCode",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -11671,7 +11690,7 @@
 		"kind": "type",
 		"type": "ToolErrorKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12008,7 +12027,7 @@
 		"kind": "type",
 		"type": "ToolNextStepHintKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12230,7 +12249,7 @@
 		"kind": "type",
 		"type": "ToolOutcomeKind",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12448,7 +12467,7 @@
 		"kind": "type",
 		"type": "string",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12705,7 +12724,7 @@
 		"kind": "type",
 		"type": "ToolSideEffects",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12992,7 +13011,7 @@
 		"kind": "type",
 		"type": "ToolWarningCode",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -13364,7 +13383,7 @@
 		"kind": "type",
 		"type": "ToolSideEffects",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -13661,7 +13680,7 @@
 		"kind": "type",
 		"type": "ToolWarningCode",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -14061,7 +14080,7 @@
 		"kind": "type",
 		"type": "TraceRole",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -14407,7 +14426,7 @@
 		"kind": "type",
 		"type": "TraceState",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -14748,7 +14767,7 @@
 		"kind": "type",
 		"type": "\"active\" | \"consolidated\" | \"promoted\" | \"reverted\"",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -15867,6 +15886,10 @@
 				"type": "string | undefined",
 				"optional": true
 			},
+			"tags": {
+				"type": "string[] | undefined",
+				"optional": true
+			},
 			"tz": {
 				"type": "string | undefined",
 				"optional": true
@@ -16395,7 +16418,7 @@
 		"kind": "type",
 		"type": "ShardFilterStatus",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -16747,7 +16770,7 @@
 		"kind": "type",
 		"type": "\"pending\" | \"faded\"",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -17265,7 +17288,7 @@
 		"kind": "type",
 		"type": "TraceRole",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -17483,7 +17506,7 @@
 		"kind": "type",
 		"type": "TraceState",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -17829,7 +17852,7 @@
 		"kind": "type",
 		"type": "\"active\" | \"consolidated\" | \"promoted\" | \"reverted\"",
 		"members": {
-			"__@iterator@989": {
+			"__@iterator@991": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -18408,7 +18431,7 @@
 	},
 	"./mcp:exports.soulsMcpInstructions": {
 		"kind": "string",
-		"value": "Use trace_soul for persistent dated facts and commitments; use review_traces for list, due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: [\"belief\"], use tagPrefix for categories, and page reads with limit and offset or all. Calendar dates resolve to local midnight using tz, TZ, then the system zone. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads default to 20 with headsTotal and headsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different)."
+		"value": "Use trace_soul for persistent dated facts and commitments; use review_traces for list, search (query required; ranked text with substring fallback), due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: [\"belief\"], use tagPrefix for categories, and page reads with limit and offset or all. Calendar dates resolve to local midnight using tz, TZ, then the system zone; a bare due date means the end of that local day. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads and weights default to 20 with headsTotal/headsTruncated and weightsTotal/weightsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different)."
 	},
 	"./mcp:public.createMcpServer": {
 		"kind": "value",
@@ -18685,7 +18708,7 @@
 	},
 	"./mcp:public.soulsMcpInstructions": {
 		"kind": "value",
-		"type": "\"Use trace_soul for persistent dated facts and commitments; use review_traces for list, due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: [\\\"belief\\\"], use tagPrefix for categories, and page reads with limit and offset or all. Calendar dates resolve to local midnight using tz, TZ, then the system zone. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads default to 20 with headsTotal and headsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).\""
+		"type": "\"Use trace_soul for persistent dated facts and commitments; use review_traces for list, search (query required; ranked text with substring fallback), due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: [\\\"belief\\\"], use tagPrefix for categories, and page reads with limit and offset or all. Calendar dates resolve to local midnight using tz, TZ, then the system zone; a bare due date means the end of that local day. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads and weights default to 20 with headsTotal/headsTruncated and weightsTotal/weightsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).\""
 	},
 	"./mcp:public.SurfaceTool": {
 		"kind": "type",

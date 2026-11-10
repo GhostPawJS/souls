@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { initTraceSearch } from './init_trace_search.ts';
 export function initTraceTables(db: SoulsDb): void {
 	db.exec(`CREATE TABLE IF NOT EXISTS soul_trace_texts (hash TEXT PRIMARY KEY, text TEXT NOT NULL) STRICT;
 CREATE TABLE IF NOT EXISTS soul_trace_merges (trace_id INTEGER NOT NULL REFERENCES soul_traces(id), parent_id INTEGER NOT NULL REFERENCES soul_traces(id), created_at INTEGER NOT NULL, PRIMARY KEY(trace_id,parent_id)) STRICT;
@@ -64,4 +65,5 @@ CREATE TRIGGER IF NOT EXISTS trace_revision_no_update BEFORE UPDATE ON soul_trac
 CREATE TRIGGER IF NOT EXISTS trace_revision_no_delete BEFORE DELETE ON soul_trace_revisions BEGIN SELECT RAISE(ABORT, 'Trace revisions are append-only'); END;
 CREATE TRIGGER IF NOT EXISTS trace_no_delete BEFORE DELETE ON soul_traces BEGIN SELECT RAISE(ABORT, 'Traces cannot be deleted'); END;
 `);
+	initTraceSearch(db);
 }

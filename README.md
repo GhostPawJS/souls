@@ -682,7 +682,7 @@ ghostpaw-souls trace settle 1 --as done --reason "Reviewed and delivered" --json
 The synchronous API exposes `write.recordTrace`, `write.reviseTrace`,
 `write.settleTrace`, link/tag/cite operations, and `read.listTraces`, `dueTraces`,
 `traceHistory`, `traceChain`, `changedSince`, and `traceStats`. MCP exposes
-`trace_soul` and read-only `review_traces`. See [Traces](docs/TRACES.md).
+`trace_soul` and read-only `review_traces`; `trace search <query>` searches text with ranked results. See [Traces](docs/TRACES.md).
 Rendering includes commitments only with `traces: 'open' | 'due'` or `--traces`.
 Readiness requires a converged cluster (three shards across two sources by default);
 use `readiness: 'legacy'`, `--readiness legacy`, or `config set readiness legacy`
