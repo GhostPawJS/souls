@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { SoulsValidationError } from '../errors.ts';
 import { withTransaction } from '../with_transaction.ts';
 import { snapshot } from './append_trace_revision.ts';
 import { safeText } from './assert_trace_text.ts';
@@ -19,6 +20,17 @@ export function reviseTrace(db: SoulsDb, id: number, input: ReviseTraceInput): T
 		const now = clock(input);
 		const supersedes = input.supersedes === undefined ? old.supersedes : input.supersedes;
 		validateSupersedes(db, id, supersedes);
+		const parents = [supersedes, ...(input.mergedFrom ?? old.mergedFrom ?? [])].filter(
+			(p) => p != null,
+		);
+		if (new Set(parents).size !== parents.length)
+			throw new SoulsValidationError('Duplicate supersedes parent');
+		if (input.mergedFrom !== undefined) {
+			for (const parent of input.mergedFrom) validateSupersedes(db, id, parent);
+			db.prepare('DELETE FROM soul_trace_merges WHERE trace_id=?').run(id);
+			for (const parent of input.mergedFrom)
+				db.prepare('INSERT INTO soul_trace_merges VALUES (?,?,?)').run(id, parent, now);
+		}
 		db.prepare('UPDATE soul_traces SET text=?,due_at=?,weight=?,supersedes=? WHERE id=?').run(
 			input.text === undefined ? old.text : safeText(input.text, 'text'),
 			input.dueAt === undefined

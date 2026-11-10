@@ -2,22 +2,25 @@ import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { getTrace } from './get_trace.ts';
 import { roleCode } from './role_code.ts';
+import { traceEdges } from './trace_edges.ts';
 import { traceTablesExist } from './trace_tables_exist.ts';
 import { time } from './trace_time.ts';
 import type { ListTracesOptions, Trace } from './types.ts';
 export function listTraces(
 	db: SoulsDb,
 	options: ListTracesOptions = {},
-): { traces: Trace[]; total: number } {
-	const limit = options.limit ?? 100;
+): { traces: Trace[]; total: number; truncated: boolean; next: number | null } {
+	const limit = options.all ? 2147483647 : (options.limit ?? 100);
 	const offset = options.offset ?? 0;
 	if (!Number.isSafeInteger(limit) || limit < 0 || !Number.isSafeInteger(offset) || offset < 0)
 		throw new SoulsValidationError('limit and offset must be non-negative integers');
-	if (!traceTablesExist(db)) return { traces: [], total: 0 };
+	if (!traceTablesExist(db)) return { traces: [], total: 0, truncated: false, next: null };
 	const where: string[] = [];
 	const args: unknown[] = [];
 	if (!options.includeSuperseded)
-		where.push('NOT EXISTS (SELECT 1 FROM soul_traces successor WHERE successor.supersedes=t.id)');
+		where.push(
+			`NOT EXISTS (SELECT 1 FROM (${traceEdges(db)}) successor WHERE successor.parent=t.id)`,
+		);
 	if (!options.includeRetired)
 		where.push(
 			'EXISTS (SELECT 1 FROM soul_trace_souls l JOIN souls s ON s.id=l.soul_id WHERE l.trace_id=t.id AND s.deleted_at IS NULL)',
@@ -42,7 +45,19 @@ export function listTraces(
 		where.push('t.state=?');
 		args.push(state);
 	}
-	if (options.tag !== undefined) {
+	for (const tag of options.excludeTags ?? []) {
+		where.push('NOT EXISTS (SELECT 1 FROM soul_trace_tags g WHERE g.trace_id=t.id AND g.tag=?)');
+		args.push(tag.toLowerCase().trim());
+	}
+	const prefix =
+		options.tagPrefix ?? (options.tag?.endsWith('*') ? options.tag.slice(0, -1) : undefined);
+	if (prefix !== undefined) {
+		where.push(
+			'EXISTS (SELECT 1 FROM soul_trace_tags g WHERE g.trace_id=t.id AND substr(g.tag,1,length(?))=?)',
+		);
+		args.push(prefix.toLowerCase().trim(), prefix.toLowerCase().trim());
+	}
+	if (options.tag !== undefined && !options.tag.endsWith('*')) {
 		where.push('EXISTS (SELECT 1 FROM soul_trace_tags g WHERE g.trace_id=t.id AND g.tag=?)');
 		args.push(options.tag.toLowerCase().trim());
 	}
@@ -60,5 +75,10 @@ export function listTraces(
 		.prepare(`SELECT t.id ${sql} ORDER BY t.updated_at DESC,t.id DESC LIMIT ? OFFSET ?`)
 		.all<{ id: number }>(...args, limit, offset)
 		.map((r) => getTrace(db, r.id) as Trace);
-	return { traces, total };
+	return {
+		traces,
+		total,
+		truncated: offset + traces.length < total,
+		next: offset + traces.length < total ? offset + traces.length : null,
+	};
 }

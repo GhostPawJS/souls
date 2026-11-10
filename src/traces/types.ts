@@ -23,6 +23,7 @@ export interface Trace {
 	settledAt: number | null;
 	settleReason: string | null;
 	supersedes: number | null;
+	mergedFrom?: number[];
 	revision: number;
 	souls: TraceLink[];
 	tags: string[];
@@ -32,6 +33,9 @@ export interface TraceOptions {
 	tz?: string | undefined;
 }
 export interface RecordTraceInput extends TraceOptions {
+	import?: boolean;
+	updatedAt?: TraceTime;
+	mergedFrom?: number[];
 	settle?: { as: 'done' | 'dropped'; reason: string; at?: TraceTime };
 	text: string;
 	souls: TraceLinkInput[];
@@ -39,17 +43,21 @@ export interface RecordTraceInput extends TraceOptions {
 	weight?: number | null;
 	createdAt?: TraceTime;
 	dueAt?: TraceTime | null;
-	supersedes?: number | null;
+	supersedes?: number | null | undefined;
 	reason?: string;
 }
 export interface ReviseTraceInput extends TraceOptions {
+	mergedFrom?: number[];
 	text?: string;
 	dueAt?: TraceTime | null;
 	weight?: number | null;
-	supersedes?: number | null;
+	supersedes?: number | null | undefined;
 	reason: string;
 }
 export interface ListTracesOptions extends TraceOptions {
+	all?: boolean;
+	excludeTags?: string[];
+	tagPrefix?: string;
 	soulId?: number;
 	role?: TraceRole | 0 | 1 | 2;
 	state?: TraceState;

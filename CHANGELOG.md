@@ -5,6 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Trace pagination notices, category exclusions and prefixes, bounded head statistics,
+  role-aware overdue counts, and tagged promise settlement rates.
+- Atomic trace roll and JSONL batch recording, merge parents, historical imports,
+  revision text deduplication and explicit compaction, and call command help.
+- Consistent additive data envelopes for trace writes.
+
+### Fixed
+
+- Independent trace creation and settlement dates, and local midnight resolution
+  for trace calendar dates across CLI and tool inputs.
+
 ## [0.6.0] - 2026-11-10
 
 ### Added

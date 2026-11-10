@@ -123,13 +123,15 @@ export async function runCliCommand<T>(
 			const argument = (name: string, schema: JsonSchema): CliArgument => ({
 				name,
 				type:
-					schema.type === 'array' && schema.items?.type === 'object'
-						? 'json'
-						: schema.oneOf?.some((b) => b.type === 'string')
-							? 'string'
-							: schema.type === 'object' || !schema.type
-								? 'json'
-								: (schema.type as CliArgument['type']),
+					Array.isArray(schema.type) && schema.type.includes('array')
+						? 'array'
+						: schema.type === 'array' && schema.items?.type === 'object'
+							? 'json'
+							: schema.oneOf?.some((b) => b.type === 'string')
+								? 'string'
+								: schema.type === 'object' || !schema.type
+									? 'json'
+									: (schema.type as CliArgument['type']),
 				description: schema.description,
 				...(schema.type === 'array' && schema.items?.type === 'object' ? { jsonLines: true } : {}),
 				enum: schema.enum,
@@ -328,6 +330,17 @@ export async function runCliCommand<T>(
 				}
 			}
 			collectWarnings(result);
+			const page = (record.data && !Array.isArray(record.data) ? record.data : result) as {
+				truncated?: boolean;
+				total?: number;
+				next?: unknown;
+				headsTruncated?: boolean;
+				headsTotal?: number;
+			};
+			if (page.truncated || page.headsTruncated)
+				stderr.write(
+					`Results truncated (${page.total ?? page.headsTotal} total); use --all or --limit with --offset to continue.\n`,
+				);
 			for (const warning of warningMessages)
 				stderr.write(`warning: ${warning.replace(/\s+/g, ' ')}\n`);
 

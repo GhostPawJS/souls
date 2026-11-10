@@ -1,5 +1,6 @@
 import type { SoulsDb } from '../database.ts';
 import { traceTablesExist } from './trace_tables_exist.ts';
+import { decodeSnapshot } from './trace_text_storage.ts';
 import type { Trace } from './types.ts';
 export interface TraceRevision {
 	id: number;
@@ -28,7 +29,7 @@ export function traceHistory(db: SoulsDb, id: number): TraceRevision[] {
 			traceId: r.trace_id,
 			revision: r.revision,
 			kind: r.kind,
-			snapshot: JSON.parse(r.snapshot) as Trace,
+			snapshot: decodeSnapshot(db, r.snapshot),
 			reason: r.reason,
 			createdAt: r.created_at,
 		}));

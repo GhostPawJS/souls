@@ -6,7 +6,7 @@ approval. Shards stay what they always were, short behavioral observations
 that crystallize into traits. Traces are the record that shards can point at
 as evidence. Traces persist; shards interpret them.
 
-Traces are an additive, unreleased feature. Databases, commands, tools and outputs from
+Traces are an additive feature. Databases, commands, tools and outputs from
 0.5.x keep working unchanged, and nothing about traces takes effect until the
 first trace is written.
 
@@ -84,9 +84,13 @@ anything computes on (dates, weights, states, roles) live in typed columns.
 Every date input (`createdAt`, `dueAt`, `at`, `since`, `now`) accepts the same
 forms as affinity and questlog 0.14.1: epoch milliseconds (>= 1e12), ISO 8601
 with `Z` or an offset, `YYYY-MM-DD`, `DD.MM.YYYY`, `today`, `tomorrow`,
-`yesterday`, `+Nd`/`-Nd` and `+Nh`/`-Nh`. Calendar words resolve in the zone
-from `tz` (tool input or `--tz`), else `TZ`, else the host zone. A bare day used
-as `dueAt` means the end of that day (23:59:59.999 UTC), as in affinity.
+`yesterday`, `now`, `+Nd`/`-Nd` and `+Nh`/`-Nh`. Calendar words resolve in the zone
+from `tz` (tool input or `--tz`), else `TZ`, else the host zone. A bare day resolves to local midnight in that zone; used as a due date
+(`dueAt`, `--due`, `nextDue`, `--next-due`) it means the end of that local day
+(23:59:59.999), so `--due 2026-11-12` with `TZ=Europe/Berlin` is
+`2026-11-12T22:59:59.999Z`. With `tz` UTC this matches 0.6.0.
+Explicit ISO offsets and epoch milliseconds identify absolute instants.
+`at` sets settlement time; `createdAt` sets creation time independently.
 Storage is always integer epoch milliseconds. Numeric seconds are rejected.
 
 ## Lifecycle
@@ -117,12 +121,19 @@ view `history` (CLI `trace history <id>`) returns the revisions in order.
 ## Supersedes chain
 
 `supersedes` points a newer trace at the one it corrects. A trace has at most
-one successor (unique index), so each chain is linear. Setting `supersedes` is
+one successor (across primary and merge parents), and can have multiple parents. Setting `supersedes` is
 rejected when the target does not exist, is the trace itself, already has a
 successor, or when walking the chain from the target reaches the new trace
 (cycle). The walk is a recursive CTE with a depth cap of 1000. The head of a
 chain is the trace without a successor; list and readiness views use heads only
 unless `includeSuperseded` is set.
+
+Additional parents live in `soul_trace_merges(trace_id, parent_id, created_at)`.
+The primary `supersedes` column and unique index remain unchanged. CLI
+`--supersedes 4,5` or repeated flags use the first id as primary; tool input
+accepts a number or an array. Outputs add `mergedFrom` for additional parents.
+Every parent must exist, must not form a cycle, and may be consumed by only
+one successor across both kinds of edge. Chain views include all branches.
 
 ## Roles
 
@@ -141,24 +152,44 @@ CLI noun `trace`:
 
 | view      | CLI                                   | returns |
 | --------- | ------------------------------------- | ------- |
-| `list`    | `trace list [--soul s] [--role r] [--state open] [--tag t] [--due-before d] [--query q]` | all states, newest updated first; links and tags; heads only by default |
-| `due`     | `trace due [--soul s] [--within 3d]`  | open traces due within the window or overdue, overdue first |
+| `list`    | `trace list [--soul s] [--role r] [--state open] [--tag t] [--exclude-tag t] [--tag-prefix p] [--limit n\|--all] [--offset n] [--due-before d] [--query q]` | all states, newest updated first; links and tags; heads only by default |
+| `due`     | `trace due [--soul s] [--within 3d] [--exclude-tag t] [--limit n\|--all] [--offset n]`  | open traces due within the window or overdue, overdue first |
 | `show`    | `trace show <id>`                     | one trace with links, tags, chain and citing shards |
 | `history` | `trace history <id>`                  | append-only revisions |
 | `chain`   | `trace chain <id>`                    | the supersedes chain with weighted certainty |
-| `changed` | `trace changed --since <date>`        | what changed since T across the store, plus a `cursor` to pass next time |
-| `stats`   | `trace stats [--soul s] [--with s2] [--half-life-days 30]` | the numbers below |
+| `changed` | `trace changed --since <date> [--limit n\|--all] [--offset n]`        | what changed since T across the store, plus a `cursor` to pass next time |
+| `stats`   | `trace stats [--soul s] [--with s2] [--half-life-days 30] [--limit n\|--all] [--exclude-tag t]` | the numbers below |
 
 `changed` covers traces (created, revised, settled), shards dropped or faded,
 trait and essence revisions, level-ups and attunements since T, plus open traces
 that became due or overdue. It never writes; callers keep the returned `cursor`. Keys are `traces`, `shards`, `revisions`, `levelUps`, `attunements`, `newlyDue`, `cursor`, and `since`. Items use camelCase timestamps: updatedAt for traces/shards, createdAt for revisions/level-ups, lastAttunedAt for attunements, and dueAt for newly due traces.
 
-Numbers in `stats`, all computed in SQL:
+Lists and due views default to 100 records; changed pages the trace records at
+100 while retaining the other change arrays and cursor. `--limit`, `--offset`,
+and `--all` (tool `limit`, `offset`, `all`) control pages. Truncation emits a
+notice on stderr in both output modes. Lists and changed add `truncated`,
+`total`, and `next` offset to data. Due retains its data array and adds these
+fields to the envelope, with `next` expressed as a tool continuation hint.
+Finish all pages before advancing a changed cursor; pass the same `now` to
+freeze the window across pages. Tag filters accept a trailing `*` prefix or
+`--tag-prefix` / `tagPrefix`; exclusions use repeatable `--exclude-tag` or
+`excludeTags`. The same category filters apply to stats.
+
+Numbers in `stats`:
 
 - **overdue per soul**: open traces with `due_at < now`, grouped by owner soul.
+- **overdue across roles**: `overdueBySoul` counts each soul once per overdue
+  trace, with `owner`, `counterpart`, and `subject` counts for its roles.
 - **promise settle rate between two souls**: over traces with `due_at` linked to
   both souls, `done / (done + dropped + open and overdue)`; `null` when the
   denominator is zero. The existing numeric `promiseSettleRate` is accompanied by `promiseSettleRateDetails: { done, dropped, overdueOpen, rate }`. This legacy calculation includes all dated traces linking the selected pair, not only those tagged promise. Broken and cancelled promises both count as dropped and therefore not kept.
+- **tagged promise settle rate**: `promiseSettleRateTagged` and
+  `promiseSettleRateTaggedDetails` apply the same formula only to `promise` tags.
+  The legacy fields above retain the all-dated-traces calculation.
+- **bounded chain heads**: `chains` defaults to 20 entries; `limit` / `--limit`
+  changes this and `all` / `--all` returns every head. `headsTotal` and
+  `headsTruncated` describe the full population. `weights` follows the same
+  limit, with `weightsTotal` and `weightsTruncated`.
 - **weighted certainty along a chain**: `Σ weight_i · 0.5^depth_i / Σ 0.5^depth_i`,
   reported only for chain heads, depth 0 at the head; a NULL weight counts as 1.
 - **recency-decayed weight**: `weight · 0.5^(age_days / half_life_days)`, age
@@ -167,7 +198,7 @@ Numbers in `stats`, all computed in SQL:
 ## Writes
 
 The write tool is `trace_soul` with actions `record`, `revise`, `settle`,
-`link`, `unlink`, `tag`, `untag` and `cite`. CLI equivalents:
+`roll`, `record_batch`, `compact`, `link`, `unlink`, `tag`, `untag` and `cite`. CLI equivalents:
 
 ```
 souls trace record <text> --soul mentor[:owner] [--soul fox:counterpart] [--tag promise] [--due +3d] [--weight 0.8] [--supersedes 12] [--at 2026-11-09] [--tz Europe/Berlin] [--json]
@@ -189,7 +220,7 @@ top-level `id`.
 | Flat work list | Open trace tagged `quest`, owner = working soul. Due is optional: a parking lot needs no due date. Settle done with the honest outcome as the reason; abandon with dropped. Group a questline using `questline` plus a tag named for the line. Prerequisites/unlocks, repeatables, rewards, and due-claim delivery are not modeled; keep using questlog for scheduling and recurrence. |
 | Promises | Tag `promise`, due set, owner = promiser, counterpart = promisee. Kept = settle done; broken and cancelled = settle dropped, with the reason saying which. The settle rate counts both broken and cancelled as not kept; it cannot distinguish cancellation from a broken promise. |
 | Interaction or relationship journal | Event trace tagged `event`, optionally `note`, recorded with `--settled done` and an honest reason. Owner = writer, subject = the other soul. Long running relationship prose belongs in a series of event traces, not one ever-edited text field. |
-| Beliefs | Tag `belief`, weight = certainty, source kind as a category tag (`explicit`, `observed`, `inferred`, `distilled`). Correct with a new trace using supersedes; forget with settle dropped and a reason. To merge two beliefs, the new trace supersedes one and the other is settled dropped with reason "merged into #N". Append-only logs map to recording without supersedes. |
+| Beliefs | Tag `belief`, weight = certainty, source kind as a category tag (`explicit`, `observed`, `inferred`, `distilled`). Correct with a new trace using supersedes; forget with settle dropped and a reason. To merge beliefs, record one trace with all parent ids in supersedes. Append-only logs map to recording without supersedes. |
 | Approvals | One trace tagged `approval`, owner = Fox (approver), counterpart = approved soul. Settle done when granted, dropped when declined. This replaces keeping an approval in two stores. |
 | Rules and decisions | Tag `rule` or `decision` on Fox's soul. |
 
@@ -223,3 +254,41 @@ also covers evidence edges. SQLite math functions compute recency decay when
 available, in one pass joined to the filtered trace ids; builds without `pow` use the same formula in JavaScript. Existing
 Souls databases retain their journal mode on open to preserve file bytes during
 read-only use; newly created databases use WAL.
+
+## Roll, batch, import and compaction
+
+`trace roll <id> --next-due +7d [--as done|dropped] [--reason why]
+[--at T] [--text replacement]` settles and records a successor in one
+transaction. Defaults are done and reason "rolled forward". Text, tags, soul
+links and roles, and weight carry forward; the new trace is open and supersedes
+the old one. Any failure rolls back both writes. A consumed parent cannot roll
+again. Library: `write.rollTrace`; tool: `trace_soul` action `roll`, `nextDue`.
+
+`trace record --batch file.jsonl` or `--batch -` reads one record object per
+line with the same fields as `trace_soul` record. All records succeed together;
+errors identify the line. JSON output is an array, human output a count.
+Library: `write.recordTraceBatch`; tool: `record_batch` with `items`.
+
+`--import` / `import: true` preserves `createdAt` and sets `updatedAt` to the
+provided `--updated-at` / `updatedAt`, otherwise creation time. The record
+revision reason is `import`. Record-and-settle imports preserve that update
+time too. `changed` uses updated_at, so historical imports do not appear as new
+beyond a later cursor. Callers starting fresh after import should take a
+`trace changed --since now` cursor (the literal `now` is accepted).
+
+New snapshots deduplicate texts of at least 256 characters in
+`soul_trace_texts(hash TEXT PRIMARY KEY, text TEXT NOT NULL) STRICT` using
+SHA-256. Reads reconstruct the same snapshot objects; old inline rows remain
+valid. `trace compact [--dry-run] [--vacuum] [--json]` explicitly rewrites old
+snapshots in one transaction and reports `bytesBefore`, `bytesAfter`, and
+`revisions`. These bytes count snapshot JSON only, excluding the text table.
+Dry run is read-only. Append-only protection is restored within the transaction;
+compaction never runs implicitly. Vacuum runs only when requested, after commit.
+Library: `write.compactTraces`; tool: action `compact`.
+
+## Output shape
+
+Read results use a `data` envelope. Single-trace writes also include `data`
+containing the trace, while retaining top-level `id` and other existing keys.
+Batch CLI JSON output is the created trace array. Tool batch output uses `data`.
+`call --help` lists tools; `call <tool> --help` lists input fields and an example.

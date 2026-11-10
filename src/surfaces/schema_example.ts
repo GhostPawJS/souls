@@ -25,6 +25,8 @@ const actionFields: Record<string, Record<string, string[]>> = {
 };
 
 export function schemaExample(schema: JsonSchema, name = '', action?: string): unknown {
+	if (name === 'trace_soul' && (!action || action === 'record'))
+		return { action: 'record', text: 'Review the draft', souls: [{ soul: 1, role: 'owner' }] };
 	if (schema.enum) return action && schema.enum.includes(action) ? action : schema.enum[0];
 	if (schema.oneOf) return schemaExample(schema.oneOf[0] ?? {}, name);
 	if (schema.type === 'object' || schema.properties) {

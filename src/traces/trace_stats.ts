@@ -3,11 +3,12 @@ import { SoulsValidationError } from '../errors.ts';
 import { listTraces } from './list_traces.ts';
 import { traceChain } from './trace_chain.ts';
 import { clock } from './trace_clock.ts';
+import { traceEdges } from './trace_edges.ts';
 import { traceTablesExist } from './trace_tables_exist.ts';
-import type { TraceOptions } from './types.ts';
+import type { ListTracesOptions } from './types.ts';
 export function traceStats(
 	db: SoulsDb,
-	options: TraceOptions & {
+	options: ListTracesOptions & {
 		soulId?: number;
 		withSoulId?: number;
 		halfLifeDays?: number;
@@ -25,6 +26,13 @@ export function traceStats(
 			promiseSettleRate: null,
 			promiseSettleRateDetails: empty,
 			chains: [],
+			headsTotal: 0,
+			headsTruncated: false,
+			weightsTotal: 0,
+			weightsTruncated: false,
+			overdueBySoul: [],
+			promiseSettleRateTagged: null,
+			promiseSettleRateTaggedDetails: empty,
 			weights: [],
 		};
 	const traces = listTraces(db, { ...options, limit: 2147483647 }).traces;
@@ -40,11 +48,11 @@ export function traceStats(
 			now,
 			...(options.soulId === undefined ? [] : [options.soulId]),
 		);
-	let details = empty;
-	if (options.soulId !== undefined && options.withSoulId !== undefined) {
+	const settleDetails = (tagged: boolean) => {
+		if (options.soulId === undefined || options.withSoulId === undefined) return empty;
 		const counts = db
 			.prepare(
-				`SELECT COALESCE(SUM(t.state=1),0) AS done,COALESCE(SUM(t.state=2),0) AS dropped,COALESCE(SUM(t.state=0 AND t.due_at<?),0) AS overdueOpen FROM soul_traces t ${filtered} WHERE t.due_at IS NOT NULL AND EXISTS (SELECT 1 FROM soul_trace_souls l WHERE l.trace_id=t.id AND l.soul_id=? ${options.includeRetired ? '' : 'AND EXISTS (SELECT 1 FROM souls s WHERE s.id=l.soul_id AND s.deleted_at IS NULL)'})`,
+				`SELECT COALESCE(SUM(t.state=1),0) AS done,COALESCE(SUM(t.state=2),0) AS dropped,COALESCE(SUM(t.state=0 AND t.due_at<?),0) AS overdueOpen FROM soul_traces t ${filtered} WHERE t.due_at IS NOT NULL AND EXISTS (SELECT 1 FROM soul_trace_souls l WHERE l.trace_id=t.id AND l.soul_id=? ${options.includeRetired ? '' : 'AND EXISTS (SELECT 1 FROM souls s WHERE s.id=l.soul_id AND s.deleted_at IS NULL)'}) ${tagged ? "AND EXISTS (SELECT 1 FROM soul_trace_tags g WHERE g.trace_id=t.id AND g.tag='promise')" : ''}`,
 			)
 			.get<{ done: number; dropped: number; overdueOpen: number }>(
 				now,
@@ -52,8 +60,10 @@ export function traceStats(
 				options.withSoulId,
 			) as { done: number; dropped: number; overdueOpen: number };
 		const denominator = counts.done + counts.dropped + counts.overdueOpen;
-		details = { ...counts, rate: denominator ? counts.done / denominator : null };
-	}
+		return { ...counts, rate: denominator ? counts.done / denominator : null };
+	};
+	const details = settleDetails(false);
+	const taggedDetails = settleDetails(true);
 	let weights: { id: number; weight: number }[];
 	try {
 		weights = db
@@ -72,19 +82,39 @@ export function traceStats(
 	const heads = new Set(
 		db
 			.prepare(
-				'SELECT id FROM soul_traces t WHERE NOT EXISTS (SELECT 1 FROM soul_traces n WHERE n.supersedes=t.id)',
+				`SELECT id FROM soul_traces t WHERE NOT EXISTS (SELECT 1 FROM (${traceEdges(db)}) n WHERE n.parent=t.id)`,
 			)
 			.all<{ id: number }>()
 			.map((r) => r.id),
 	);
-	const chains = traces
-		.filter((t) => heads.has(t.id))
-		.map((t) => ({ id: t.id, certainty: traceChain(db, t.id).certainty }));
+	const headTraces = traces.filter((t) => heads.has(t.id));
+	const overdueBySoul = db
+		.prepare(
+			`SELECT l.soul_id AS soulId,count(DISTINCT t.id) AS count,sum(l.role=0) AS owner,sum(l.role=1) AS counterpart,sum(l.role=2) AS subject FROM soul_traces t ${filtered} JOIN soul_trace_souls l ON l.trace_id=t.id JOIN souls s ON s.id=l.soul_id WHERE t.state=0 AND t.due_at<? ${options.includeRetired ? '' : 'AND s.deleted_at IS NULL'} ${options.soulId === undefined ? '' : 'AND l.soul_id=?'} GROUP BY l.soul_id ORDER BY l.soul_id`,
+		)
+		.all<{ soulId: number; count: number; owner: number; counterpart: number; subject: number }>(
+			ids,
+			now,
+			...(options.soulId === undefined ? [] : [options.soulId]),
+		)
+		.map((r) => ({ ...r }));
+	const headLimit = options.all ? headTraces.length : (options.limit ?? 20);
+	if (!Number.isSafeInteger(headLimit) || headLimit < 0)
+		throw new SoulsValidationError('limit must be a non-negative integer');
 	return {
+		overdueBySoul,
+		promiseSettleRateTagged: taggedDetails.rate,
+		promiseSettleRateTaggedDetails: taggedDetails,
+		headsTotal: headTraces.length,
+		headsTruncated: headTraces.length > headLimit,
+		weightsTotal: weights.length,
+		weightsTruncated: weights.length > headLimit,
 		overdue: overdue.map((r) => ({ ...r })),
 		promiseSettleRate: details.rate,
 		promiseSettleRateDetails: details,
-		chains,
-		weights,
+		chains: headTraces
+			.slice(0, headLimit)
+			.map((t) => ({ id: t.id, certainty: traceChain(db, t.id).certainty })),
+		weights: weights.slice(0, headLimit),
 	};
 }

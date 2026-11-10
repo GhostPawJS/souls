@@ -3,6 +3,7 @@ import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { singleLinkageCluster } from '../lib/single_linkage_cluster.ts';
 import { trigramJaccard } from '../lib/trigram_jaccard.ts';
+import { traceEdges } from '../traces/trace_edges.ts';
 import { traceTablesExist } from '../traces/trace_tables_exist.ts';
 
 const DEFAULT_CRYSTALLIZATION_THRESHOLD = 3;
@@ -154,7 +155,7 @@ export function checkCrystallizationForSoul(
 	const live = traceTablesExist(db)
 		? db
 				.prepare(
-					`SELECT st.shard_id,st.trace_id,COALESCE(t.weight,1) AS weight FROM shard_traces st JOIN soul_traces t ON t.id=st.trace_id WHERE t.state IN (0,1) AND NOT EXISTS (SELECT 1 FROM soul_traces successor WHERE successor.supersedes=t.id)`,
+					`SELECT st.shard_id,st.trace_id,COALESCE(t.weight,1) AS weight FROM shard_traces st JOIN soul_traces t ON t.id=st.trace_id WHERE t.state IN (0,1) AND NOT EXISTS (SELECT 1 FROM (${traceEdges(db)}) successor WHERE successor.parent=t.id)`,
 				)
 				.all<{ shard_id: number; trace_id: number; weight: number }>()
 				.filter((r) => shards.some((s) => s.id === r.shard_id))

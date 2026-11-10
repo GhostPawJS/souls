@@ -23,7 +23,7 @@ irm https://raw.githubusercontent.com/GhostPawJS/souls/main/install.ps1 | iex
 
 Run tools as `ghostpaw-souls ...`; use `~/.local/bin/ghostpaw-souls` if it is not on PATH.
 
-Use trace_soul for persistent dated facts and commitments; use review_traces for list, due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).
+Use trace_soul for persistent dated facts and commitments; use review_traces for list, due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: ["belief"], use tagPrefix for categories, and page reads with limit and offset or all. Calendar dates resolve to local midnight using tz, TZ, then the system zone; a bare due date means the end of that local day. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads and weights default to 20 with headsTotal/headsTruncated and weightsTotal/weightsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).
 
 ## Running inside sandboxed agent harnesses
 
@@ -328,7 +328,7 @@ ghostpaw-souls call manage_soul '{"action":"retire","soulId":1}'
 
 ## trace_soul
 
-Record persistent facts and commitments, revise, settle, link, tag, or cite traces.
+Record persistent facts and commitments, revise, settle, roll forward atomically, link, tag, or cite traces.
 
 Use when: Use for dated facts, promises, beliefs, approvals, and decisions.
 
@@ -338,7 +338,10 @@ Writes: writes_state.
 
 | Parameter | Type | Required | Values / description |
 | --- | --- | --- | --- |
-| action | string | yes | record, revise, settle, link, unlink, tag, untag, cite. string value. |
+| action | string | yes | record, revise, settle, link, unlink, tag, untag, cite, roll, record_batch, compact. string value. |
+| items | array | no | Record inputs; all succeed or none are written. |
+| dryRun | boolean | no | Report compaction without writing. |
+| vacuum | boolean | no | Vacuum after explicit compaction. |
 | id | integer | no | Trace id. |
 | traceId | integer | no | Trace id alias. |
 | shardId | integer | no | Citing shard id. |
@@ -350,11 +353,14 @@ Writes: writes_state.
 | tags | array | no | Category tags. |
 | dueAt | integer / string / null | no | integer / string / null value. |
 | createdAt | integer / string | no | integer / string value. |
+| updatedAt | integer / string | no | integer / string value. |
+| import | boolean | no | Preserve historical update time; revision reason is import. |
+| nextDue | integer / string | no | integer / string value. |
 | at | integer / string | no | integer / string value. |
 | now | integer / string | no | integer / string value. |
 | tz | string | no | IANA time zone. |
 | weight | number / string / null | no | number / string / null value. |
-| supersedes | integer / null | no | integer / null value. |
+| supersedes | array,integer,null | no | array,integer,null value. |
 | as | string | no | done, dropped. string value. |
 | settle | object | no | Object: as (required), reason (required), at |
 | settle.as | string | yes | done, dropped. string value. |
@@ -366,7 +372,7 @@ Writes: writes_state.
 | settled | string | no | done, dropped. Record an already settled trace. |
 
 ```sh
-ghostpaw-souls call trace_soul '{"action":"record"}'
+ghostpaw-souls call trace_soul '{"action":"record","text":"Review the draft","souls":[{"soul":1,"role":"owner"}]}'
 ```
 
 ```sh
@@ -397,7 +403,10 @@ Read-only.
 | withSoulId | integer / string | no | Other soul for settle rate. Accepts numeric id, ext: reference, slug, or name. |
 | role | string / integer | no | string / integer value. |
 | state | string | no | open, done, dropped. string value. |
-| tag | string | no | Category. |
+| tag | string | no | Category; trailing * matches a prefix. |
+| tagPrefix | string | no | Category prefix. |
+| excludeTags | array | no | Excluded categories. |
+| all | boolean | no | Return all results. |
 | query | string | no | Text substring. |
 | dueBefore | integer / string | no | integer / string value. |
 | since | integer / string | no | integer / string value. |
@@ -410,6 +419,7 @@ Read-only.
 | offset | integer | no | Page offset. |
 | halfLifeDays | number | no | Decay half life, default 30 days. |
 | with | string | no | string value. |
+| excludeTag | array | no | array value. |
 
 ```sh
 ghostpaw-souls call review_traces '{"view":"list"}'

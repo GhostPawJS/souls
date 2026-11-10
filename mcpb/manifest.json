@@ -100,7 +100,7 @@
     },
     {
       "name": "trace_soul",
-      "description": "Record persistent facts and commitments, revise, settle, link, tag, or cite traces."
+      "description": "Record persistent facts and commitments, revise, settle, roll forward atomically, link, tag, or cite traces."
     },
     {
       "name": "review_traces",

@@ -13,6 +13,8 @@ export const soulsCliOptions: ToolCliOptions<SoulsDb> = {
 	resolveReference: resolveSoulReference,
 	prepareInput: (input, toolName) => {
 		if (toolName === 'trace_soul') {
+			if (Array.isArray(input.supersedes))
+				input.supersedes = input.supersedes.flatMap((v) => String(v).split(',').map(Number));
 			if (Array.isArray(input.soul))
 				input.souls = input.soul.map((value) => {
 					const text = String(value);
@@ -26,7 +28,7 @@ export const soulsCliOptions: ToolCliOptions<SoulsDb> = {
 			if (input.due !== undefined) input.dueAt = input.due === 'none' ? null : input.due;
 			if (input.weight === 'none') input.weight = null;
 			else if (typeof input.weight === 'string') input.weight = Number(input.weight);
-			if (input.action === 'record' && input.at !== undefined) input.createdAt = input.at;
+
 			if (input.settled !== undefined) {
 				input.settle = {
 					as: input.settled,
@@ -40,6 +42,8 @@ export const soulsCliOptions: ToolCliOptions<SoulsDb> = {
 			delete input.due;
 		}
 		if (toolName === 'review_traces') {
+			if (input.excludeTag !== undefined) input.excludeTags = input.excludeTag;
+			delete input.excludeTag;
 			if (typeof input.role === 'string' && /^[012]$/.test(input.role))
 				input.role = Number(input.role);
 			if (input.soul !== undefined) input.soulId = input.soul;

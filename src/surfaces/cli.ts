@@ -5,6 +5,7 @@ import { cliVersion } from './cli_version.ts';
 import { schemaExample } from './schema_example.ts';
 import { schemaRows } from './schema_rows.ts';
 import { isErrorResult, type JsonSchema, type SurfaceTool } from './surface_types.ts';
+import { traceBatchArgs } from './trace_cli_io.ts';
 import { validateInput } from './validate_input.ts';
 
 export interface ToolCliOptions<TCtx> {
@@ -31,6 +32,14 @@ export async function runToolCli<TCtx>(
 	argv: string[],
 	options: ToolCliOptions<TCtx>,
 ): Promise<number> {
+	try {
+		argv = (await traceBatchArgs(argv, options)) ?? argv;
+	} catch (error) {
+		(options.stderr ?? process.stderr).write(
+			`${error instanceof Error ? error.message : String(error)}\n`,
+		);
+		return 2;
+	}
 	argv = argv.map((arg) => (arg === '-q' ? '--quiet' : arg));
 	if (process.env.GHOSTPAW_OUTPUT === 'json' && !argv.includes('--json'))
 		argv = [...argv, '--json'];
@@ -175,6 +184,23 @@ export async function runToolCli<TCtx>(
 		await options.commands.mcp(ctxOptions);
 		return 0;
 	}
+	if (command === 'call' && (args.includes('--help') || args.includes('-h'))) {
+		const target = args.find((arg) => !arg.startsWith('-'));
+		const tool = options.tools.find((t) => normalize(t.name) === normalize(target ?? ''));
+		if (target && !tool) return fail(`Unknown tool: ${target}`);
+		stdout.write(
+			`Usage: ${options.bin} call <tool> [JSON|-]\n${
+				tool
+					? `${tool.name}\n${schemaRows(tool.inputSchema)
+							.map((row) => `${row.name} | ${row.type} | ${row.description}`)
+							.join(
+								'\n',
+							)}\nExample: ${options.bin} call ${tool.name} '${JSON.stringify(schemaExample(tool.inputSchema, tool.name))}'`
+					: options.tools.map((t) => `${t.name}  ${t.description}`).join('\n')
+			}\n`,
+		);
+		return 0;
+	}
 	const name = command === 'call' || command === 'describe' ? args.shift() : command;
 	const tool = options.tools.find((tool) => normalize(tool.name) === normalize(name ?? ''));
 	if (!tool) return fail(`Unknown tool: ${name ?? ''}`);
@@ -269,7 +295,22 @@ export async function runToolCli<TCtx>(
 	}
 	try {
 		const result = await tool.handler(context, input as Record<string, unknown>);
-		stdout.write(`${JSON.stringify(result, null, compact ? undefined : 2)}\n`);
+		const batch =
+			tool.name === 'trace_soul' && (input as { action?: string }).action === 'record_batch';
+		const value = result as { ok?: boolean; data?: unknown; truncated?: boolean };
+		const page = (value.data && !Array.isArray(value.data) ? value.data : value) as {
+			truncated?: boolean;
+			headsTruncated?: boolean;
+		};
+		if (page.truncated || page.headsTruncated)
+			stderr.write('Results truncated; use --all or --limit with --offset to continue.\n');
+		if (batch && value.ok)
+			stdout.write(
+				explicitJson || !(stdout as { isTTY?: boolean }).isTTY
+					? `${JSON.stringify(value.data)}\n`
+					: `Recorded ${(value.data as unknown[]).length} traces.\n`,
+			);
+		else stdout.write(`${JSON.stringify(result, null, compact ? undefined : 2)}\n`);
 		if (
 			typeof result === 'object' &&
 			result !== null &&

@@ -8,6 +8,9 @@ export function dueTraces(
 	options: ListTracesOptions & { within?: string | number } = {},
 ): Trace[] {
 	const now = clock(options);
+	for (const value of [options.offset ?? 0, options.limit ?? 100])
+		if (!Number.isSafeInteger(value) || value < 0)
+			throw new SoulsValidationError('limit and offset must be non-negative integers');
 	const within = options.within ?? '3d';
 	if (typeof within === 'string' && !/^\d+(?:\.\d+)?[dh]$/.test(within))
 		throw new SoulsValidationError('within must be a duration such as 3d or 12h');
@@ -25,5 +28,8 @@ export function dueTraces(
 		offset: 0,
 	})
 		.traces.sort((a, b) => (a.dueAt as number) - (b.dueAt as number) || a.id - b.id)
-		.slice(options.offset ?? 0, (options.offset ?? 0) + (options.limit ?? 100));
+		.slice(
+			options.offset ?? 0,
+			(options.offset ?? 0) + (options.all ? 2147483647 : (options.limit ?? 100)),
+		);
 }

@@ -1,16 +1,27 @@
 import type { SoulsDb } from '../database.ts';
+import { SoulsValidationError } from '../errors.ts';
 import { listTraces } from './list_traces.ts';
 import { clock } from './trace_clock.ts';
 import { time } from './trace_time.ts';
-import type { TraceOptions, TraceTime } from './types.ts';
-export function changedSince(db: SoulsDb, since: TraceTime, options: TraceOptions = {}) {
+import type { ListTracesOptions, TraceTime } from './types.ts';
+export function changedSince(db: SoulsDb, since: TraceTime, options: ListTracesOptions = {}) {
 	const cursor = clock(options);
+	for (const value of [options.offset ?? 0, options.limit ?? 100])
+		if (!Number.isSafeInteger(value) || value < 0)
+			throw new SoulsValidationError('limit and offset must be non-negative integers');
 	const start = time(since, 'since', options);
-	const traces = listTraces(db, {
+	const matching = listTraces(db, {
+		...options,
+		all: true,
+		offset: 0,
 		includeRetired: true,
 		includeSuperseded: true,
 		limit: 2147483647,
 	}).traces.filter((t) => t.updatedAt > start && t.updatedAt <= cursor);
+	const offset = options.offset ?? 0;
+	const limit = options.all ? matching.length : (options.limit ?? 100);
+	const traces = matching.slice(offset, offset + limit);
+	const truncated = offset + traces.length < matching.length;
 	const newlyDue = listTraces(db, { state: 'open', limit: 2147483647 }).traces.filter(
 		(t) => t.dueAt !== null && t.dueAt > start && t.dueAt <= cursor,
 	);
@@ -50,6 +61,9 @@ export function changedSince(db: SoulsDb, since: TraceTime, options: TraceOption
 		.map(camel);
 	return {
 		traces,
+		total: matching.length,
+		truncated,
+		next: truncated ? offset + traces.length : null,
 		shards,
 		revisions: changes.revisions ?? [],
 		levelUps: changes.levelUps ?? [],

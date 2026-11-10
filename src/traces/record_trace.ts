@@ -25,8 +25,17 @@ export function recordTrace(db: SoulsDb, input: RecordTraceInput): Trace {
 			getSoulOrThrow(db, link.soulId);
 			roleCode(link.role);
 		}
-		const now = clock(input);
-		const created = input.createdAt === undefined ? now : time(input.createdAt, 'createdAt', input);
+		const clockNow = clock(input);
+		const created =
+			input.createdAt === undefined ? clockNow : time(input.createdAt, 'createdAt', input);
+		const now = input.import
+			? input.updatedAt === undefined
+				? created
+				: time(input.updatedAt, 'updatedAt', input)
+			: clockNow;
+		const parents = [input.supersedes, ...(input.mergedFrom ?? [])].filter((p) => p != null);
+		if (new Set(parents).size !== parents.length)
+			throw new SoulsValidationError('Duplicate supersedes parent');
 		validateSupersedes(db, null, input.supersedes ?? null);
 		const result = db
 			.prepare(
@@ -50,8 +59,12 @@ export function recordTrace(db: SoulsDb, input: RecordTraceInput): Trace {
 			);
 		for (const tag of normalizeTags(input.tags ?? []))
 			db.prepare('INSERT INTO soul_trace_tags VALUES (?,?)').run(id, tag);
+		for (const parent of input.mergedFrom ?? []) {
+			validateSupersedes(db, id, parent);
+			db.prepare('INSERT INTO soul_trace_merges VALUES (?,?,?)').run(id, parent, now);
+		}
 		const trace = getTrace(db, id) as Trace;
-		snapshot(db, trace, 'record', reason, now);
-		return input.settle ? settleTrace(db, id, { ...input, ...input.settle }) : trace;
+		snapshot(db, trace, 'record', input.import ? 'import' : reason, now);
+		return input.settle ? settleTrace(db, id, { ...input, ...input.settle, now }) : trace;
 	});
 }

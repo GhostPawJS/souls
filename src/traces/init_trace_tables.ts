@@ -1,6 +1,9 @@
 import type { SoulsDb } from '../database.ts';
 export function initTraceTables(db: SoulsDb): void {
-	db.exec(`CREATE TABLE IF NOT EXISTS soul_traces (
+	db.exec(`CREATE TABLE IF NOT EXISTS soul_trace_texts (hash TEXT PRIMARY KEY, text TEXT NOT NULL) STRICT;
+CREATE TABLE IF NOT EXISTS soul_trace_merges (trace_id INTEGER NOT NULL REFERENCES soul_traces(id), parent_id INTEGER NOT NULL REFERENCES soul_traces(id), created_at INTEGER NOT NULL, PRIMARY KEY(trace_id,parent_id)) STRICT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_trace_merge_parent ON soul_trace_merges(parent_id);
+CREATE TABLE IF NOT EXISTS soul_traces (
   id           INTEGER PRIMARY KEY,
   text         TEXT    NOT NULL CHECK (length(trim(text)) > 0),   -- content only
   state        INTEGER NOT NULL DEFAULT 0 CHECK (state IN (0, 1, 2)), -- 0 open, 1 done, 2 dropped

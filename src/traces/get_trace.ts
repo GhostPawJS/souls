@@ -30,6 +30,12 @@ export function getTrace(db: SoulsDb, id: number): Trace | null {
 		settleReason: row.settle_reason,
 		supersedes: row.supersedes,
 		revision: row.revision,
+		mergedFrom: db.prepare("SELECT name FROM sqlite_master WHERE name='soul_trace_merges'").get()
+			? db
+					.prepare('SELECT parent_id FROM soul_trace_merges WHERE trace_id=? ORDER BY parent_id')
+					.all<{ parent_id: number }>(id)
+					.map((r) => r.parent_id)
+			: [],
 		souls: db
 			.prepare(
 				'SELECT l.soul_id,l.role,l.created_at,s.name,s.slug FROM soul_trace_souls l JOIN souls s ON s.id=l.soul_id WHERE trace_id=? ORDER BY soul_id,role',

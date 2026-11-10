@@ -25,6 +25,7 @@ afterEach(() => db.close());
 const record = () =>
 	write.recordTrace(db, {
 		text: 'Review the draft',
+		tz: 'UTC',
 		souls: [{ soulId, role: 'owner' }],
 		tags: [' Promise ', 'promise'],
 		weight: 0.8,
@@ -35,7 +36,7 @@ describe('trace lifecycle', () => {
 	it('keeps reads lazy and default rendering identical', () => {
 		const before = renderSoul(db, soulId);
 		strictEqual(read.traceTablesExist(db), false);
-		deepStrictEqual(read.listTraces(db), { traces: [], total: 0 });
+		deepStrictEqual(read.listTraces(db), { traces: [], total: 0, truncated: false, next: null });
 		deepStrictEqual(read.traceHistory(db, 1), []);
 		deepStrictEqual(read.traceChain(db, 1), { traces: [], certainty: null });
 		read.changedSince(db, NOW, { now: NOW });

@@ -7,6 +7,7 @@ import { traceTablesExist } from '../traces/trace_tables_exist.ts';
 import type { ListTracesOptions, TraceTime } from '../traces/types.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
+	arraySchema,
 	booleanSchema,
 	defineSoulsTool,
 	integerSchema,
@@ -30,7 +31,10 @@ export interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> {
 	within?: string | number;
 	halfLifeDays?: number;
 }
-export function reviewTracesToolHandler(db: SoulsDb, input: ReviewTracesInput): ToolResult {
+export function reviewTracesToolHandler(
+	db: SoulsDb,
+	input: ReviewTracesInput,
+): ToolResult & { total?: number; truncated?: boolean } {
 	const example =
 		input?.view === 'stats'
 			? '{"view":"stats","soul":"mentor","withSoul":"fox","halfLifeDays":30}'
@@ -144,7 +148,29 @@ export function reviewTracesToolHandler(db: SoulsDb, input: ReviewTracesInput): 
 							: input.view === 'stats'
 								? 'Trace statistics.'
 								: `${input.view === 'chain' ? 'Chain for trace' : 'Trace'} #${input.id}.`;
-		return toolSuccess(summary, data);
+		const result = toolSuccess(summary, data);
+		if (input.view === 'due') {
+			const total = read.dueTraces(db, { ...options, all: true, offset: 0 }).length;
+			const count = (data as unknown[]).length;
+			const truncated = (input.offset ?? 0) + count < total;
+			const paged = {
+				...result,
+				total,
+				truncated,
+				next: truncated
+					? [
+							{
+								kind: 'use_tool' as const,
+								message: 'Continue due results.',
+								tool: 'review_traces',
+								suggestedInput: { ...input, offset: (input.offset ?? 0) + count },
+							},
+						]
+					: [],
+			};
+			return paged;
+		}
+		return result;
 	} catch (error) {
 		return translateToolError(error, {
 			summary: `Could not review traces. Example input: ${example}`,
@@ -182,7 +208,10 @@ export const reviewTracesTool = defineSoulsTool<ReviewTracesInput, unknown>({
 				],
 			},
 			state: { type: 'string', enum: ['open', 'done', 'dropped'] },
-			tag: stringSchema('Category.'),
+			tag: stringSchema('Category; trailing * matches a prefix.'),
+			tagPrefix: stringSchema('Category prefix.'),
+			excludeTags: arraySchema(stringSchema('Excluded category.'), 'Excluded categories.'),
+			all: booleanSchema('Return all results.'),
 			query: stringSchema('Text substring.'),
 			dueBefore: dateSchema,
 			since: dateSchema,

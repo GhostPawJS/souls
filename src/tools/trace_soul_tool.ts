@@ -7,6 +7,7 @@ import * as write from '../write.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	arraySchema,
+	booleanSchema,
 	defineSoulsTool,
 	integerSchema,
 	numberSchema,
@@ -21,7 +22,23 @@ import { validateToolInput } from './validate_tool_input.ts';
 export const traceExample =
 	'{"action":"record","text":"Review the draft","souls":[{"soul":"mentor","role":"owner"}],"dueAt":"2026-11-12","tags":["promise"],"weight":0.8}';
 export interface TraceSoulInput {
-	action: 'record' | 'revise' | 'settle' | 'link' | 'unlink' | 'tag' | 'untag' | 'cite';
+	action:
+		| 'record_batch'
+		| 'compact'
+		| 'roll'
+		| 'record'
+		| 'revise'
+		| 'settle'
+		| 'link'
+		| 'unlink'
+		| 'tag'
+		| 'untag'
+		| 'cite';
+	items?: (Omit<TraceSoulInput, 'action'> & { action?: 'record' })[];
+	/** Physical JSONL line numbers supplied by the CLI. */
+	batchLines?: number[];
+	dryRun?: boolean;
+	vacuum?: boolean;
 	id?: number;
 	traceId?: number;
 	shardId?: number;
@@ -35,11 +52,26 @@ export interface TraceSoulInput {
 	now?: TraceTime;
 	tz?: string;
 	weight?: number | null;
-	supersedes?: number | null;
+	supersedes?: number | number[] | null;
+	import?: boolean;
+	updatedAt?: TraceTime;
+	nextDue?: TraceTime;
 	as?: 'done' | 'dropped';
 	settle?: RecordTraceInput['settle'];
 }
-export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolResult<Trace> {
+export function traceSoulToolHandler(
+	db: SoulsDb,
+	input: TraceSoulInput & { action: 'record_batch' },
+): ToolResult<Trace[]>;
+export function traceSoulToolHandler(
+	db: SoulsDb,
+	input: TraceSoulInput & { action: 'compact' },
+): ToolResult<ReturnType<typeof write.compactTraces>>;
+export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolResult<Trace>;
+export function traceSoulToolHandler(
+	db: SoulsDb,
+	input: TraceSoulInput,
+): ToolResult<Trace | Trace[] | ReturnType<typeof write.compactTraces>> {
 	const example =
 		(
 			{
@@ -59,6 +91,29 @@ export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolRe
 		return invalid;
 	}
 	try {
+		if (input.action === 'compact')
+			return toolSuccess('Trace revision compaction.', write.compactTraces(db, input));
+		if (input.action === 'record_batch') {
+			if (!Array.isArray(input.items)) throw new SoulsValidationError('items is required');
+			const traces = withTransaction(
+				db,
+				() =>
+					input.items?.map((item, index) => {
+						const result = traceSoulToolHandler(db, {
+							...(input.import ? { import: true } : {}),
+							...(input.tz ? { tz: input.tz } : {}),
+							...item,
+							action: 'record',
+						});
+						if (!result.ok)
+							throw new SoulsValidationError(
+								`Line ${input.batchLines?.[index] ?? index + 1}: ${result.outcome === 'error' ? result.error.message : result.summary}`,
+							);
+						return result.data as Trace;
+					}) ?? [],
+			);
+			return toolSuccess(`Recorded ${traces.length} traces.`, traces);
+		}
 		const links = input.souls?.map((l) => ({
 			soulId: typeof l.soul === 'number' ? l.soul : resolveSoulReference(db, l.soul),
 			role: l.role,
@@ -74,6 +129,8 @@ export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolRe
 			if (!input.text || !links?.length) return need(['text', 'souls']);
 			trace = write.recordTrace(db, {
 				...input,
+				supersedes: Array.isArray(input.supersedes) ? input.supersedes[0] : input.supersedes,
+				mergedFrom: Array.isArray(input.supersedes) ? input.supersedes.slice(1) : [],
 				text: input.text,
 				souls: links,
 			} as RecordTraceInput);
@@ -81,9 +138,18 @@ export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolRe
 			const id = input.id ?? input.traceId;
 			if (!id) return need(['id']);
 			switch (input.action) {
+				case 'roll':
+					if (input.nextDue === undefined) return need(['nextDue']);
+					trace = write.rollTrace(db, id, { ...input, nextDue: input.nextDue });
+					break;
 				case 'revise':
 					if (!input.reason) return need(['reason']);
-					trace = write.reviseTrace(db, id, { ...input, reason: input.reason });
+					trace = write.reviseTrace(db, id, {
+						...input,
+						supersedes: Array.isArray(input.supersedes) ? input.supersedes[0] : input.supersedes,
+						...(Array.isArray(input.supersedes) ? { mergedFrom: input.supersedes.slice(1) } : {}),
+						reason: input.reason,
+					});
 					break;
 				case 'settle':
 					if (!input.reason || !input.as) return need(['as', 'reason']);
@@ -124,8 +190,8 @@ export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolRe
 					throw new SoulsValidationError('Unknown trace action');
 			}
 		}
-		return toolSuccess(
-			`${{ record: 'Recorded', revise: 'Revised', settle: 'Settled', link: 'Linked', unlink: 'Unlinked', tag: 'Tagged', untag: 'Untagged', cite: 'Cited' }[input.action]} trace #${trace.id}${input.action === 'settle' ? ` as ${input.as}` : ''}.`,
+		const result = toolSuccess(
+			`${{ roll: 'Rolled', record: 'Recorded', revise: 'Revised', settle: 'Settled', link: 'Linked', unlink: 'Unlinked', tag: 'Tagged', untag: 'Untagged', cite: 'Cited' }[input.action]} trace #${trace.id}${input.action === 'settle' ? ` as ${input.as}` : ''}.`,
 			trace,
 			{
 				entities: [toTraceRef(trace)],
@@ -139,6 +205,7 @@ export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolRe
 				],
 			},
 		);
+		return { ...trace, ...result };
 	} catch (error) {
 		const result = translateToolError(error, { summary: 'Could not change trace.' });
 		if (result.outcome === 'error') result.error.recovery = `Example input: ${example}`;
@@ -146,24 +213,44 @@ export function traceSoulToolHandler(db: SoulsDb, input: TraceSoulInput): ToolRe
 	}
 }
 const dateSchema = { oneOf: [{ type: 'integer' as const }, { type: 'string' as const }] };
-export const traceSoulTool = defineSoulsTool<TraceSoulInput, Trace>({
+export const traceSoulTool = defineSoulsTool<
+	TraceSoulInput,
+	Trace | Trace[] | ReturnType<typeof write.compactTraces>
+>({
 	name: traceSoulToolName,
 	description:
-		'Record persistent facts and commitments, revise, settle, link, tag, or cite traces.',
+		'Record persistent facts and commitments, revise, settle, roll forward atomically, link, tag, or cite traces.',
 	whenToUse: 'Use for dated facts, promises, beliefs, approvals, and decisions.',
 	whenNotToUse: 'Use observe_soul for behavioral interpretations and review_traces for reading.',
 	sideEffects: 'writes_state',
 	readOnly: false,
 	supportsClarification: true,
 	targetKinds: ['trace', 'soul', 'shard'],
-	inputDescriptions: { action: 'record, revise, settle, link, unlink, tag, untag, cite.' },
+	inputDescriptions: {
+		action: 'record, revise, settle, roll, record_batch, compact, link, unlink, tag, untag, cite.',
+	},
 	outputDescription: 'Trace with top-level id, links, tags, state and revision.',
 	inputSchema: objectSchema(
 		{
 			action: {
 				type: 'string',
-				enum: ['record', 'revise', 'settle', 'link', 'unlink', 'tag', 'untag', 'cite'],
+				enum: [
+					'record',
+					'revise',
+					'settle',
+					'link',
+					'unlink',
+					'tag',
+					'untag',
+					'cite',
+					'roll',
+					'record_batch',
+					'compact',
+				],
 			},
+			items: arraySchema({ type: 'object' }, 'Record inputs; all succeed or none are written.'),
+			dryRun: booleanSchema('Report compaction without writing.'),
+			vacuum: booleanSchema('Vacuum after explicit compaction.'),
 			id: integerSchema('Trace id.'),
 			traceId: integerSchema('Trace id alias.'),
 			shardId: integerSchema('Citing shard id.'),
@@ -187,11 +274,20 @@ export const traceSoulTool = defineSoulsTool<TraceSoulInput, Trace>({
 			tags: arraySchema(stringSchema('Category.'), 'Category tags.'),
 			dueAt: { oneOf: [...dateSchema.oneOf, { type: 'null' }] },
 			createdAt: dateSchema,
+			updatedAt: dateSchema,
+			import: booleanSchema('Preserve historical update time; revision reason is import.'),
+			nextDue: dateSchema,
 			at: dateSchema,
 			now: dateSchema,
 			tz: stringSchema('IANA time zone.'),
 			weight: { oneOf: [numberSchema('Weight between 0 and 1; null clears.'), { type: 'null' }] },
-			supersedes: { oneOf: [integerSchema('Trace being corrected.'), { type: 'null' }] },
+			supersedes: {
+				oneOf: [
+					integerSchema('Trace being corrected.'),
+					arraySchema(integerSchema('Parent id.'), 'Primary parent followed by merge parents.'),
+					{ type: 'null' },
+				],
+			},
 			as: { type: 'string', enum: ['done', 'dropped'] },
 			settle: objectSchema(
 				{

@@ -23,6 +23,7 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 			property: 'action',
 			positionals: {
 				record: ['text'],
+				roll: ['id'],
 				revise: ['id'],
 				settle: ['id'],
 				link: ['id'],
@@ -161,6 +162,10 @@ const soulsCliSurfaceTools: readonly SurfaceTool<SoulsDb>[] = /* @__PURE__ */ so
 						type: 'object' as const,
 						properties: {
 							...traceSoulTool.inputSchema.properties,
+							supersedes: {
+								type: ['array', 'integer', 'null'],
+								items: { oneOf: [{ type: 'string' }, { type: 'integer' }] },
+							},
 							soul: {
 								type: 'array',
 								items: { type: 'string' },
@@ -187,6 +192,7 @@ const soulsCliSurfaceTools: readonly SurfaceTool<SoulsDb>[] = /* @__PURE__ */ so
 							...reviewTracesTool.inputSchema.properties,
 							soul: { type: 'string' },
 							with: { type: 'string' },
+							excludeTag: { type: 'array', items: { type: 'string' } },
 						},
 					},
 				}

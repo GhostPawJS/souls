@@ -449,12 +449,15 @@ it('changed reports every source with camelCase timestamps and excludes old rows
 	deepStrictEqual(
 		Object.keys(report).sort(),
 		[
+			'total',
 			'traces',
+			'truncated',
 			'shards',
 			'revisions',
 			'levelUps',
 			'attunements',
 			'newlyDue',
+			'next',
 			'cursor',
 			'since',
 		].sort(),

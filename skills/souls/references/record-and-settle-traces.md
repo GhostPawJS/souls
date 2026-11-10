@@ -7,7 +7,7 @@ Record a trace for a dated fact, promise, belief, rule, decision, approval, or q
 | Flat work list | Open trace tagged `quest`, owner = working soul. Due is optional: a parking lot needs no due date. Settle done with the honest outcome as the reason; abandon with dropped. Group a questline using `questline` plus a tag named for the line. Prerequisites/unlocks, repeatables, rewards, and due-claim delivery are not modeled; keep using questlog for scheduling and recurrence. |
 | Promises | Tag `promise`, due set, owner = promiser, counterpart = promisee. Kept = settle done; broken and cancelled = settle dropped, with the reason saying which. The settle rate counts both broken and cancelled as not kept; it cannot distinguish cancellation from a broken promise. |
 | Interaction or relationship journal | Event trace tagged `event`, optionally `note`, recorded with `--settled done` and an honest reason. Owner = writer, subject = the other soul. Long running relationship prose belongs in a series of event traces, not one ever-edited text field. |
-| Beliefs | Tag `belief`, weight = certainty, source kind as a category tag (`explicit`, `observed`, `inferred`, `distilled`). Correct with a new trace using supersedes; forget with settle dropped and a reason. To merge two beliefs, the new trace supersedes one and the other is settled dropped with reason "merged into #N". Append-only logs map to recording without supersedes. |
+| Beliefs | Tag `belief`, weight = certainty, source kind as a category tag (`explicit`, `observed`, `inferred`, `distilled`). Correct with a new trace using supersedes; forget with settle dropped and a reason. To merge beliefs, pass all parent ids in supersedes. Append-only logs map to recording without supersedes. |
 | Approvals | One trace tagged `approval`, owner = Fox (approver), counterpart = approved soul. Settle done when granted, dropped when declined. This replaces keeping an approval in two stores. |
 | Rules and decisions | Tag `rule` or `decision` on Fox's soul. |
 
@@ -33,4 +33,6 @@ Example input:
 ```
 
 CLI: ghostpaw-souls trace record "Review the draft" --soul mentor:owner --tag promise --due +3d --json
+Use trace roll 1 --next-due +7d to settle and carry a commitment forward atomically. Use trace list --state open --exclude-tag belief for commitments. Category prefixes use --tag-prefix series:. Read pages with --limit and --offset, or --all. Record JSONL atomically with trace record --batch file.jsonl (or --batch -). Use --import for historical update times. Compact old revision text only with an explicit trace compact command.
+
 CLI: ghostpaw-souls trace settle 1 --as done --reason "Reviewed and delivered" --json
