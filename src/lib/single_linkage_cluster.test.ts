@@ -1,4 +1,4 @@
-import { ok, strictEqual } from 'node:assert/strict';
+import { deepStrictEqual, ok, strictEqual } from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { singleLinkageCluster } from './single_linkage_cluster.ts';
 
@@ -21,5 +21,13 @@ describe('singleLinkageCluster', () => {
 		ok(bigCluster);
 		ok(bigCluster.members.includes('apple'));
 		ok(bigCluster.members.includes('ant'));
+	});
+	it('merges transitive bridges while preserving member and cluster order', () => {
+		const clusters = singleLinkageCluster(
+			[0, 2, 10, 1],
+			(a, b) => (Math.abs(a - b) <= 1 ? 1 : 0),
+			1,
+		);
+		deepStrictEqual(clusters, [{ members: [0, 1, 2] }, { members: [10] }]);
 	});
 });

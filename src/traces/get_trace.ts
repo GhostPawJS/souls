@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { projectRow } from '../lib/project_row.ts';
 import { roles } from './trace_roles.ts';
 import { traceTablesExist } from './trace_tables_exist.ts';
 import type { Trace, TraceRole, TraceState } from './types.ts';
@@ -22,14 +23,28 @@ export function getTrace(db: SoulsDb, id: number): Trace | null {
 		id: row.id,
 		text: row.text,
 		state: ['open', 'done', 'dropped'][row.state] as TraceState,
-		weight: row.weight,
-		createdAt: row.created_at,
-		updatedAt: row.updated_at,
-		dueAt: row.due_at,
-		settledAt: row.settled_at,
-		settleReason: row.settle_reason,
-		supersedes: row.supersedes,
-		revision: row.revision,
+		...projectRow<
+			Pick<
+				Trace,
+				| 'weight'
+				| 'createdAt'
+				| 'updatedAt'
+				| 'dueAt'
+				| 'settledAt'
+				| 'settleReason'
+				| 'supersedes'
+				| 'revision'
+			>
+		>(row, [
+			'weight',
+			'created_at',
+			'updated_at',
+			'due_at',
+			'settled_at',
+			'settle_reason',
+			'supersedes',
+			'revision',
+		]),
 		mergedFrom: db.prepare("SELECT name FROM sqlite_master WHERE name='soul_trace_merges'").get()
 			? db
 					.prepare('SELECT parent_id FROM soul_trace_merges WHERE trace_id=? ORDER BY parent_id')

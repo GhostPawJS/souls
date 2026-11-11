@@ -18,6 +18,7 @@ import {
 } from './tool_metadata.ts';
 import { reviewTracesToolName } from './tool_names.ts';
 import { summarizeCount } from './tool_summary.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import { type ToolResult, toolNeedsClarification, toolSuccess } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
 export interface ReviewTracesInput extends Omit<ListTracesOptions, 'soulId'> {
@@ -43,7 +44,7 @@ export function reviewTracesToolHandler(
 				: ['show', 'history', 'chain'].includes(input?.view)
 					? JSON.stringify({ view: input.view, id: 4 })
 					: JSON.stringify({ view: input?.view ?? 'list', soul: 'mentor' });
-	const invalid = validateToolInput(reviewTracesTool, input);
+	const invalid = validateToolInput(reviewTracesToolSurface, input);
 	if (invalid) {
 		invalid.error.recovery = `Example input: ${example}`;
 		return invalid;
@@ -185,7 +186,7 @@ export function reviewTracesToolHandler(
 	}
 }
 const dateSchema = { oneOf: [{ type: 'integer' as const }, { type: 'string' as const }] };
-export const reviewTracesTool = defineSoulsTool<ReviewTracesInput, unknown>({
+export const reviewTracesToolSurface = {
 	name: reviewTracesToolName,
 	description:
 		'Read traces, due commitments, revision history, chains, store changes, and statistics.',
@@ -193,10 +194,6 @@ export const reviewTracesTool = defineSoulsTool<ReviewTracesInput, unknown>({
 	whenNotToUse: 'Use trace_soul to write or settle traces.',
 	sideEffects: 'none',
 	readOnly: true,
-	supportsClarification: true,
-	targetKinds: ['trace', 'soul'],
-	inputDescriptions: { view: 'list, search, due, show, history, chain, changed, stats.' },
-	outputDescription: 'Trace records or requested read-only report.',
 	inputSchema: objectSchema(
 		{
 			view: {
@@ -237,4 +234,12 @@ export const reviewTracesTool = defineSoulsTool<ReviewTracesInput, unknown>({
 		['view'],
 	),
 	handler: reviewTracesToolHandler,
+} satisfies ToolSurfaceDefinition<ReviewTracesInput, unknown>;
+
+export const reviewTracesTool = /* @__PURE__ */ defineSoulsTool<ReviewTracesInput, unknown>({
+	...reviewTracesToolSurface,
+	supportsClarification: true,
+	targetKinds: ['trace', 'soul'],
+	inputDescriptions: { view: 'list, search, due, show, history, chain, changed, stats.' },
+	outputDescription: 'Trace records or requested read-only report.',
 });

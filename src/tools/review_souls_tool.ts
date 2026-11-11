@@ -6,14 +6,13 @@ import { reviewNoChange } from '../review.ts';
 import { getRevisionHistory } from '../revisions.ts';
 import type { CrystallizationRecord } from '../shards/types.ts';
 import type { SoulRecord } from '../souls/types.ts';
+import { readinessSchema } from './readiness_schema.ts';
 import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	booleanSchema,
 	defineSoulsTool,
 	enumSchema,
-	integerSchema,
-	numberSchema,
 	objectSchema,
 	soulReferenceSchema,
 	stringSchema,
@@ -22,6 +21,7 @@ import { reviewSoulsToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulRef } from './tool_ref.ts';
 import { summarizeCount } from './tool_summary.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
@@ -63,7 +63,7 @@ export function reviewSoulsToolHandler(
 		reason?: string | undefined;
 	},
 ): ReviewSoulsToolResult {
-	const invalid = validateToolInput(reviewSoulsTool, rawInput);
+	const invalid = validateToolInput(reviewSoulsToolSurface, rawInput);
 	if (invalid) return invalid;
 	try {
 		const input = resolveToolSoulReferences(db, rawInput);
@@ -124,10 +124,7 @@ export function reviewSoulsToolHandler(
 	}
 }
 
-export const reviewSoulsTool = defineSoulsTool<
-	Parameters<typeof reviewSoulsToolHandler>[1],
-	ReviewSoulsToolData
->({
+export const reviewSoulsToolSurface = {
 	name: reviewSoulsToolName,
 	description:
 		'List all active souls, run the maintenance cycle, or check crystallization readiness.',
@@ -137,18 +134,9 @@ export const reviewSoulsTool = defineSoulsTool<
 		'Do not use this to inspect a specific soul in detail — use inspect_souls_item. Do not use this to search shards — use search_souls.',
 	sideEffects: 'writes_state',
 	readOnly: false,
-	supportsClarification: false,
-	targetKinds: ['soul'],
-	inputDescriptions: {
-		view: 'list: all active souls, maintenance: run fade + readiness cycle, readiness: crystallization status only.',
-	},
-	outputDescription: 'Depends on view: soul list, maintenance result, or readiness records.',
 	inputSchema: objectSchema(
 		{
-			minSourceDiversity: integerSchema('Minimum source diversity (default 2).'),
-			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
-			readiness: { type: 'string', enum: ['converged', 'legacy'] },
-			minClusterSize: integerSchema('Minimum converged cluster size, default 3.'),
+			...readinessSchema(),
 			soulId: soulReferenceSchema('Soul to review.'),
 			noChange: booleanSchema('Record a review without edits and stamp attuned.'),
 			reason: stringSchema('Review reason.'),
@@ -161,4 +149,20 @@ export const reviewSoulsTool = defineSoulsTool<
 		'Review souls or run maintenance.',
 	),
 	handler: reviewSoulsToolHandler,
+} satisfies ToolSurfaceDefinition<
+	Parameters<typeof reviewSoulsToolHandler>[1],
+	ReviewSoulsToolData
+>;
+
+export const reviewSoulsTool = /* @__PURE__ */ defineSoulsTool<
+	Parameters<typeof reviewSoulsToolHandler>[1],
+	ReviewSoulsToolData
+>({
+	...reviewSoulsToolSurface,
+	supportsClarification: false,
+	targetKinds: ['soul'],
+	inputDescriptions: {
+		view: 'list: all active souls, maintenance: run fade + readiness cycle, readiness: crystallization status only.',
+	},
+	outputDescription: 'Depends on view: soul list, maintenance result, or readiness records.',
 });

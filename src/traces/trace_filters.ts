@@ -1,16 +1,13 @@
 import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { roleCode } from './role_code.ts';
-import { traceEdges } from './trace_edges.ts';
+import { traceHeadCondition } from './trace_edges.ts';
 import { time } from './trace_time.ts';
 import type { ListTracesOptions } from './types.ts';
 export function traceFilters(db: SoulsDb, options: ListTracesOptions) {
 	const where: string[] = [];
 	const args: unknown[] = [];
-	if (!options.includeSuperseded)
-		where.push(
-			`NOT EXISTS (SELECT 1 FROM (${traceEdges(db)}) successor WHERE successor.parent=t.id)`,
-		);
+	if (!options.includeSuperseded) where.push(traceHeadCondition(db));
 	if (!options.includeRetired)
 		where.push(
 			'EXISTS (SELECT 1 FROM soul_trace_souls l JOIN souls s ON s.id=l.soul_id WHERE l.trace_id=t.id AND s.deleted_at IS NULL)',

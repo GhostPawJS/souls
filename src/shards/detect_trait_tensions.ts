@@ -1,14 +1,7 @@
 import type { TraitSignal, TraitTension } from './types.ts';
 
 // Built-in negation cues are English-only; callers can extend them.
-const NEGATION_PATTERNS = [
-	/\bnot\b/i,
-	/\bnever\b/i,
-	/\bavoid\b/i,
-	/\bdon'?t\b/i,
-	/\brefuse\b/i,
-	/\bwithout\b/i,
-];
+const NEGATION_PATTERN = /\b(?:not|never|avoid|don'?t|refuse|without)\b/i;
 
 function isNegated(text: string, words: string[] = []): boolean {
 	if (
@@ -20,7 +13,7 @@ function isNegated(text: string, words: string[] = []): boolean {
 		)
 	)
 		return true;
-	return NEGATION_PATTERNS.some((p) => p.test(text));
+	return NEGATION_PATTERN.test(text);
 }
 
 export function detectTraitTensions(

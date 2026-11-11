@@ -2,15 +2,13 @@ import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { getTrace } from './get_trace.ts';
 import { traceFilters } from './trace_filters.ts';
+import { tracePageBounds } from './trace_page.ts';
 import { traceTablesExist } from './trace_tables_exist.ts';
 import type { ListTracesOptions, Trace } from './types.ts';
 
 export function searchTraces(db: SoulsDb, options: ListTracesOptions & { query: string }) {
 	if (typeof options.query !== 'string') throw new SoulsValidationError('query is required');
-	const limit = options.all ? 2147483647 : (options.limit ?? 20);
-	const offset = options.offset ?? 0;
-	if (!Number.isSafeInteger(limit) || limit < 0 || !Number.isSafeInteger(offset) || offset < 0)
-		throw new SoulsValidationError('limit and offset must be non-negative integers');
+	const { limit, offset } = tracePageBounds(options, 20);
 	if (!traceTablesExist(db))
 		return { traces: [], total: 0, truncated: false, next: null, mode: 'substring' as const };
 	const { query: _query, ...filters } = options;

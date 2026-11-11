@@ -1,10 +1,10 @@
 import type { SoulsDb } from '../database.ts';
 import type { SurfaceTool } from '../surfaces/surface_types.ts';
-import { reviewTracesTool } from '../tools/review_traces_tool.ts';
-import { soulsTools } from '../tools/tool_registry.ts';
-import { traceSoulTool } from '../tools/trace_soul_tool.ts';
+import { reviewTracesToolSurface as reviewTracesTool } from '../tools/review_traces_tool.ts';
+import { traceSoulToolSurface as traceSoulTool } from '../tools/trace_soul_tool.ts';
+import { surfaceToolRegistry } from './surface_tool_registry.ts';
 
-const soulsSurfaceTools: readonly SurfaceTool<SoulsDb>[] = soulsTools.map((tool) => ({
+const soulsSurfaceTools: readonly SurfaceTool<SoulsDb>[] = surfaceToolRegistry.map((tool) => ({
 	name: tool.name,
 	description: tool.description,
 	whenToUse: tool.whenToUse,

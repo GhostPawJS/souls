@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { projectRow } from '../lib/project_row.ts';
 import type { EtherEntry, EtherEntryRow } from './types.ts';
 
 export function getEntry(db: SoulsDb, entryId: number): EtherEntry | undefined {
@@ -16,13 +17,15 @@ export function mapEntryRow(row: EtherEntryRow): EtherEntry {
 		}
 	}
 	return {
-		id: row.id,
-		sourceId: row.source_id,
-		externalId: row.external_id,
-		name: row.name,
-		description: row.description,
-		content: row.content,
-		category: row.category,
+		...projectRow<Omit<EtherEntry, 'tags' | 'metadata' | 'fetchedAt'>>(row, [
+			'id',
+			'source_id',
+			'external_id',
+			'name',
+			'description',
+			'content',
+			'category',
+		]),
 		tags: row.tags ? row.tags.split(',').map((t) => t.trim()) : [],
 		metadata,
 		fetchedAt: row.fetched_at,

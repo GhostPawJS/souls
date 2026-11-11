@@ -5,6 +5,9 @@ export function renderEvidenceMarkdown(
 	options?: { maxMembersPerCluster?: number | undefined },
 ): string {
 	const lines: string[] = [];
+	const section = (title: string, items: string[]) => {
+		if (items.length) lines.push(`## ${title}`, '', ...items, '');
+	};
 
 	lines.push(`# Evidence Report`);
 	lines.push('');
@@ -13,14 +16,10 @@ export function renderEvidenceMarkdown(
 	);
 	lines.push('');
 
-	if (report.suggestedActions.length > 0) {
-		lines.push(`## Suggested Actions`);
-		lines.push('');
-		for (const action of report.suggestedActions) {
-			lines.push(`- ${action}`);
-		}
-		lines.push('');
-	}
+	section(
+		'Suggested Actions',
+		report.suggestedActions.map((action) => `- ${action}`),
+	);
 
 	if (report.clusters.length > 0) {
 		lines.push(`## Evidence Clusters (${report.clusters.length})`);
@@ -76,34 +75,23 @@ export function renderEvidenceMarkdown(
 		lines.push('');
 	}
 
-	if (report.tensions.length > 0) {
-		lines.push(`## Detected Tensions`);
-		lines.push('');
-		for (const tension of report.tensions) {
-			lines.push(`- ${tension.description}`);
-		}
-		lines.push('');
-	}
-
-	if (report.consolidationSuggestions.length > 0) {
-		lines.push(`## Consolidation Suggestions`);
-		lines.push('');
-		for (const sug of report.consolidationSuggestions) {
-			lines.push(
+	section(
+		'Detected Tensions',
+		report.tensions.map((tension) => `- ${tension.description}`),
+	);
+	section(
+		'Consolidation Suggestions',
+		report.consolidationSuggestions.map(
+			(sug) =>
 				`- [similarity: ${(sug.similarity * 100).toFixed(1)}%] ${sug.principles.join(' | ')}`,
-			);
-		}
-		lines.push('');
-	}
-
-	if (report.promotionCandidates.length > 0) {
-		lines.push(`## Promotion Candidates`);
-		lines.push('');
-		for (const cand of report.promotionCandidates) {
-			lines.push(`- [score: ${cand.score.toFixed(4)}] ${cand.principle}`);
-		}
-		lines.push('');
-	}
+		),
+	);
+	section(
+		'Promotion Candidates',
+		report.promotionCandidates.map(
+			(cand) => `- [score: ${cand.score.toFixed(4)}] ${cand.principle}`,
+		),
+	);
 
 	return lines.join('\n');
 }

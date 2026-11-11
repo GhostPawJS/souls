@@ -9,6 +9,7 @@ import { withTransaction } from '../with_transaction.ts';
 import { countActiveTraits } from './count_active_traits.ts';
 import { getTraitLimit } from './get_trait_limit.ts';
 import { getTraitOrThrow } from './get_trait_or_throw.ts';
+import { insertTrait } from './insert_trait.ts';
 import type { AddTraitInput, TraitRecord } from './types.ts';
 import { assertPrinciple, assertProvenance } from './validators.ts';
 
@@ -35,14 +36,7 @@ export function addTrait(
 		const now = resolveNow(input.now);
 		const warnings = evidenceGate(db, soulId, input);
 
-		const result = db
-			.prepare(
-				`INSERT INTO soul_traits (soul_id, principle, provenance, generation, status, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, 'active', ?, ?)`,
-			)
-			.run(soulId, input.principle, input.provenance, soul.level, now, now);
-
-		const id = Number(result.lastInsertRowid);
+		const id = insertTrait(db, soulId, input.principle, input.provenance, soul.level, now);
 		for (const shardId of input.shardIds ?? []) citeShard(db, shardId, id, input);
 		recordRevision(db, 'trait', id, soulId, null, input.principle, { ...input, now });
 		const record = getTraitOrThrow(db, id);

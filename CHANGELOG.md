@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Reduce bundle sizes (CLI 207 KB to 183 KB, MCP server 140 KB to 117 KB minified) by sharing schema setup, shard and trace queries, row projection and tool helpers, and by removing local dynamic imports in the executables. Results, guides and tool descriptions are unchanged.
+
 ## [0.6.2] - 2026-11-11
 
 ### Added

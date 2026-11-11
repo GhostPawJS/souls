@@ -1,14 +1,13 @@
 import type { SoulsDb } from '../database.ts';
-import { SoulsValidationError } from '../errors.ts';
+import { projectRow } from '../lib/project_row.ts';
 import { listTraces } from './list_traces.ts';
 import { clock } from './trace_clock.ts';
+import { tracePageBounds } from './trace_page.ts';
 import { time } from './trace_time.ts';
 import type { ListTracesOptions, TraceTime } from './types.ts';
 export function changedSince(db: SoulsDb, since: TraceTime, options: ListTracesOptions = {}) {
 	const cursor = clock(options);
-	for (const value of [options.offset ?? 0, options.limit ?? 100])
-		if (!Number.isSafeInteger(value) || value < 0)
-			throw new SoulsValidationError('limit and offset must be non-negative integers');
+	tracePageBounds(options, 100, false);
 	const start = time(since, 'since', options);
 	const matching = listTraces(db, {
 		...options,
@@ -26,12 +25,7 @@ export function changedSince(db: SoulsDb, since: TraceTime, options: ListTracesO
 		(t) => t.dueAt !== null && t.dueAt > start && t.dueAt <= cursor,
 	);
 	const camel = (row: Record<string, unknown>) =>
-		Object.fromEntries(
-			Object.entries(row).map(([key, value]) => [
-				key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()),
-				value,
-			]),
-		);
+		projectRow<{ [k: string]: unknown }>(row, Object.keys(row));
 	const shards = db
 		.prepare(
 			'SELECT * FROM soul_shards WHERE updated_at>? AND updated_at<=? ORDER BY updated_at,id',

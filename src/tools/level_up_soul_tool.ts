@@ -3,6 +3,7 @@ import type { LevelUpPlan, LevelUpResult } from '../levels/types.ts';
 import type { ValidationFailure, ValidationResult } from '../levels/validate_level_up_plan.ts';
 import * as read from '../read.ts';
 import * as write from '../write.ts';
+import { missingToolInput } from './missing_tool_input.ts';
 import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
@@ -20,6 +21,7 @@ import {
 import { levelUpSoulToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulIdRef } from './tool_ref.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
@@ -66,7 +68,7 @@ export function levelUpSoulToolHandler(
 		plan?: LevelUpPlan | undefined;
 	},
 ): LevelUpSoulToolResult {
-	const invalid = validateToolInput(levelUpSoulTool, rawInput);
+	const invalid = validateToolInput(levelUpSoulToolSurface, rawInput);
 	if (invalid) return invalid;
 	try {
 		const input = resolveToolSoulReferences(db, rawInput);
@@ -104,17 +106,11 @@ export function levelUpSoulToolHandler(
 
 		if (input.action === 'execute') {
 			if (!input.plan) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'plan is required for execute.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a LevelUpPlan. Validate it first.',
-						missing: ['plan'],
-					},
-				};
+				return missingToolInput(
+					'plan is required for execute.',
+					'Provide a LevelUpPlan. Validate it first.',
+					['plan'],
+				);
 			}
 			const result = write.levelUp(db, input.soulId, input.plan, {
 				readiness: input.readiness,
@@ -156,10 +152,7 @@ export function levelUpSoulToolHandler(
 	}
 }
 
-export const levelUpSoulTool = defineSoulsTool<
-	Parameters<typeof levelUpSoulToolHandler>[1],
-	LevelUpSoulToolData
->({
+export const levelUpSoulToolSurface = {
 	name: levelUpSoulToolName,
 	description:
 		'Validate, execute, or revert a level-up plan for a soul — consolidating traits, promoting knowledge into essence, and incrementing the generation.',
@@ -169,15 +162,6 @@ export const levelUpSoulTool = defineSoulsTool<
 		'Do not use this for targeted trait mutations — use refine_soul. Do not use this unless the soul is at or near trait capacity and crystallization is ready.',
 	sideEffects: 'writes_state',
 	readOnly: false,
-	supportsClarification: true,
-	targetKinds: ['soul'],
-	inputDescriptions: {
-		action:
-			'validate: check plan completeness, execute: apply the plan, revert: undo last level-up.',
-		soulId: 'The soul to level up.',
-		plan: 'The level-up plan (required for execute; omit for a readiness and blockers check with validate).',
-	},
-	outputDescription: 'Validation result, level-up result with snapshot, or revert confirmation.',
 	inputSchema: objectSchema(
 		{
 			action: enumSchema(['validate', 'execute', 'revert'], 'The operation to perform.'),
@@ -220,4 +204,23 @@ export const levelUpSoulTool = defineSoulsTool<
 		'Execute or validate a soul level-up.',
 	),
 	handler: levelUpSoulToolHandler,
+} satisfies ToolSurfaceDefinition<
+	Parameters<typeof levelUpSoulToolHandler>[1],
+	LevelUpSoulToolData
+>;
+
+export const levelUpSoulTool = /* @__PURE__ */ defineSoulsTool<
+	Parameters<typeof levelUpSoulToolHandler>[1],
+	LevelUpSoulToolData
+>({
+	...levelUpSoulToolSurface,
+	supportsClarification: true,
+	targetKinds: ['soul'],
+	inputDescriptions: {
+		action:
+			'validate: check plan completeness, execute: apply the plan, revert: undo last level-up.',
+		soulId: 'The soul to level up.',
+		plan: 'The level-up plan (required for execute; omit for a readiness and blockers check with validate).',
+	},
+	outputDescription: 'Validation result, level-up result with snapshot, or revert confirmation.',
 });

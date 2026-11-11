@@ -2,6 +2,8 @@ import { getSoulsConfig, setSoulsConfig } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
 import type { SoulRecord } from '../souls/types.ts';
 import * as write from '../write.ts';
+import { missingToolInput } from './missing_tool_input.ts';
+import { readinessSchema } from './readiness_schema.ts';
 import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
@@ -9,15 +11,14 @@ import {
 	defineSoulsTool,
 	enumSchema,
 	integerArraySchema,
-	numberSchema,
 	objectSchema,
 	soulReferenceSchema,
 	stringSchema,
-	integerSchema as thresholdIntegerSchema,
 } from './tool_metadata.ts';
 import { manageSoulToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulRef } from './tool_ref.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
@@ -58,7 +59,7 @@ export function manageSoulToolHandler(
 ): ManageSoulToolResult;
 export function manageSoulToolHandler(db: SoulsDb, input: ManageSoulInput): ManageResult;
 export function manageSoulToolHandler(db: SoulsDb, rawInput: ManageSoulInput): ManageResult {
-	const invalid = validateToolInput(manageSoulTool, rawInput);
+	const invalid = validateToolInput(manageSoulToolSurface, rawInput);
 	if (invalid) return invalid;
 	try {
 		const input = resolveToolSoulReferences(db, rawInput);
@@ -72,19 +73,11 @@ export function manageSoulToolHandler(db: SoulsDb, rawInput: ManageSoulInput): M
 		}
 		if (input.action === 'create') {
 			if (!input.name || !input.essence || !input.description) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'name, essence, and description are required to create a soul.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide name, essence, and description.',
-						missing: ['name', 'essence', 'description'].filter(
-							(f) => !input[f as keyof typeof input],
-						),
-					},
-				};
+				return missingToolInput(
+					'name, essence, and description are required to create a soul.',
+					'Provide name, essence, and description.',
+					['name', 'essence', 'description'].filter((f) => !input[f as keyof typeof input]),
+				);
 			}
 			const soul = write.createSoul(db, {
 				...(input.externalId === undefined ? {} : { externalId: input.externalId }),
@@ -103,89 +96,40 @@ export function manageSoulToolHandler(db: SoulsDb, rawInput: ManageSoulInput): M
 			);
 		}
 
-		if (input.action === 'update') {
-			if (!input.soulId) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'soulId is required for update.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a soulId.',
-						missing: ['soulId'],
-					},
-				};
-			}
-			const soul = write.updateSoul(db, input.soulId, {
-				strict: input.strict,
-				operator: input.operator,
-				reason: input.reason,
-				shardIds: input.shardIds,
-				minSourceDiversity: input.minSourceDiversity,
-				readiness: input.readiness,
-				minClusterSize: input.minClusterSize,
-				minSpreadDays: input.minSpreadDays,
-				...(input.externalId === undefined ? {} : { externalId: input.externalId }),
-				name: input.name,
-				...(input.slug === undefined ? {} : { slug: input.slug }),
-				essence: input.essence,
-				description: input.description,
-			});
+		if (input.action === 'update' || input.action === 'retire' || input.action === 'awaken') {
+			if (!input.soulId)
+				return missingToolInput(`soulId is required for ${input.action}.`, 'Provide a soulId.', [
+					'soulId',
+				]);
+			const soul =
+				input.action === 'update'
+					? write.updateSoul(db, input.soulId, {
+							strict: input.strict,
+							operator: input.operator,
+							reason: input.reason,
+							shardIds: input.shardIds,
+							minSourceDiversity: input.minSourceDiversity,
+							readiness: input.readiness,
+							minClusterSize: input.minClusterSize,
+							minSpreadDays: input.minSpreadDays,
+							...(input.externalId === undefined ? {} : { externalId: input.externalId }),
+							name: input.name,
+							...(input.slug === undefined ? {} : { slug: input.slug }),
+							essence: input.essence,
+							description: input.description,
+						})
+					: input.action === 'retire'
+						? write.retireSoul(db, input.soulId)
+						: write.awakenSoul(db, input.soulId);
+			const verb = { update: 'updated', retire: 'retired', awaken: 'awakened' }[input.action];
 			return toolSuccess(
-				`Soul ${input.soulId} updated.`,
+				`Soul ${input.soulId} ${verb}.`,
 				{ soul, ...(soul.warnings?.length ? { warnings: soul.warnings } : {}) },
 				{
 					entities: [toSoulRef(soul)],
-				},
-			);
-		}
-
-		if (input.action === 'retire') {
-			if (!input.soulId) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'soulId is required for retire.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a soulId.',
-						missing: ['soulId'],
-					},
-				};
-			}
-			const soul = write.retireSoul(db, input.soulId);
-			return toolSuccess(
-				`Soul ${input.soulId} retired.`,
-				{ soul, ...(soul.warnings?.length ? { warnings: soul.warnings } : {}) },
-				{
-					entities: [toSoulRef(soul)],
-				},
-			);
-		}
-
-		if (input.action === 'awaken') {
-			if (!input.soulId) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'soulId is required for awaken.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a soulId.',
-						missing: ['soulId'],
-					},
-				};
-			}
-			const soul = write.awakenSoul(db, input.soulId);
-			return toolSuccess(
-				`Soul ${input.soulId} awakened.`,
-				{ soul, ...(soul.warnings?.length ? { warnings: soul.warnings } : {}) },
-				{
-					entities: [toSoulRef(soul)],
-					next: [inspectSoulsItemNext(input.soulId, soul.name)],
+					...(input.action === 'awaken'
+						? { next: [inspectSoulsItemNext(input.soulId, soul.name)] }
+						: {}),
 				},
 			);
 		}
@@ -198,10 +142,7 @@ export function manageSoulToolHandler(db: SoulsDb, rawInput: ManageSoulInput): M
 	}
 }
 
-export const manageSoulTool = defineSoulsTool<
-	Parameters<typeof manageSoulToolHandler>[1],
-	ManageSoulToolData | ManageConfigData
->({
+export const manageSoulToolSurface = {
 	name: manageSoulToolName,
 	description: 'Create, update, retire, or awaken a soul; read or set database configuration.',
 	whenToUse:
@@ -210,16 +151,6 @@ export const manageSoulTool = defineSoulsTool<
 		'Do not use update to restructure identity — use level_up_soul. Do not use this to make trait changes — use refine_soul.',
 	sideEffects: 'writes_state',
 	readOnly: false,
-	supportsClarification: true,
-	targetKinds: ['soul'],
-	inputDescriptions: {
-		action: 'create, update, retire, or awaken.',
-		name: 'Soul name (required for create; optional for update).',
-		essence: 'Soul essence narrative (required for create; optional for update).',
-		description: 'Soul description (required for create; optional for update).',
-		soulId: 'Soul ID (required for update, retire, awaken).',
-	},
-	outputDescription: 'The created or modified soul record.',
 	inputSchema: objectSchema(
 		{
 			action: enumSchema(
@@ -237,17 +168,31 @@ export const manageSoulTool = defineSoulsTool<
 			name: stringSchema('Soul name.'),
 			essence: stringSchema('Soul essence narrative.'),
 			description: stringSchema('Soul description.'),
-			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
-			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
-			readiness: { type: 'string', enum: ['converged', 'legacy'] },
-			minClusterSize: {
-				type: 'integer',
-				description: 'Minimum converged cluster size, default 3.',
-			},
+			...readinessSchema(),
 			soulId: soulReferenceSchema('Soul ID.'),
 		},
 		['action'],
 		'Create or manage a soul lifecycle.',
 	),
 	handler: manageSoulToolHandler,
+} satisfies ToolSurfaceDefinition<
+	Parameters<typeof manageSoulToolHandler>[1],
+	ManageSoulToolData | ManageConfigData
+>;
+
+export const manageSoulTool = /* @__PURE__ */ defineSoulsTool<
+	Parameters<typeof manageSoulToolHandler>[1],
+	ManageSoulToolData | ManageConfigData
+>({
+	...manageSoulToolSurface,
+	supportsClarification: true,
+	targetKinds: ['soul'],
+	inputDescriptions: {
+		action: 'create, update, retire, or awaken.',
+		name: 'Soul name (required for create; optional for update).',
+		essence: 'Soul essence narrative (required for create; optional for update).',
+		description: 'Soul description (required for create; optional for update).',
+		soulId: 'Soul ID (required for update, retire, awaken).',
+	},
+	outputDescription: 'The created or modified soul record.',
 });

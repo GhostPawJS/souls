@@ -3,17 +3,22 @@ import { readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'n
 import { dirname, join, resolve } from 'node:path';
 import type { SoulsDb } from './database.ts';
 import { SoulsConflictError, SoulsValidationError } from './errors.ts';
+import { createTable } from './lib/schema_ddl.ts';
 import { getSoulOrThrow } from './souls/get_soul_or_throw.ts';
 import { CliUsageError } from './surfaces/cli_args.ts';
 import { renderOpenCommitments } from './traces/render_open_commitments.ts';
 
 export const sha256 = (text: string): string => createHash('sha256').update(text).digest('hex');
 export function initPublicationTables(db: SoulsDb): void {
-	db.exec(
-		`CREATE TABLE IF NOT EXISTS soul_publications (id INTEGER PRIMARY KEY, soul_id INTEGER NOT NULL REFERENCES souls(id), path TEXT NOT NULL, marker TEXT NOT NULL, file_hash TEXT NOT NULL, block_hash TEXT NOT NULL, created_at INTEGER NOT NULL) STRICT`,
+	createTable(
+		db,
+		'soul_publications',
+		`id INTEGER PRIMARY KEY, soul_id INTEGER NOT NULL REFERENCES souls(id), path TEXT NOT NULL, marker TEXT NOT NULL, file_hash TEXT NOT NULL, block_hash TEXT NOT NULL, created_at INTEGER NOT NULL`,
 	);
-	db.exec(
-		`CREATE TABLE IF NOT EXISTS soul_reviews (id INTEGER PRIMARY KEY, soul_id INTEGER NOT NULL REFERENCES souls(id), reason TEXT, created_at INTEGER NOT NULL) STRICT`,
+	createTable(
+		db,
+		'soul_reviews',
+		`id INTEGER PRIMARY KEY, soul_id INTEGER NOT NULL REFERENCES souls(id), reason TEXT, created_at INTEGER NOT NULL`,
 	);
 }
 export function markerParts(

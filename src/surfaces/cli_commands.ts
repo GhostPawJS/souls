@@ -152,9 +152,6 @@ export async function runCliCommand<T>(
 				command: `${options.bin} ${command.path}`,
 				description:
 					command.tool.description +
-					(command.path.startsWith('trace ')
-						? `\nExample: ${options.bin} ${command.path} ${command.positionals.map((n) => (n === 'text' ? '"Review the draft"' : '1')).join(' ')}${command.path === 'trace record' ? ' --soul mentor:owner --tag promise --due +3d' : command.path === 'trace settle' ? ' --as done --reason completed' : command.path === 'trace changed' ? ' --since yesterday' : (({ 'trace revise': ' --text "Clarified fact" --reason clarification', 'trace link': ' --soul mentor:subject', 'trace unlink': ' --soul mentor:subject --reason correction', 'trace tag': ' --tag promise', 'trace untag': ' --tag promise --reason correction' } as Record<string, string>)[command.path] ?? '')} --json`
-						: '') +
 					(command.path === 'shard add'
 						? '\nBatch import: shard add --batch @file (JSON array or JSON Lines); or shard drop-batch --shards @file.'
 						: '') +

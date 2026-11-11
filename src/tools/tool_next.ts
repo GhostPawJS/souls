@@ -37,21 +37,11 @@ export function reviewSoulsNext(message: string): ToolNextStepHint {
 }
 
 export function observeSoulNext(soulId: number, message: string): ToolNextStepHint {
-	return {
-		kind: 'use_tool',
-		message,
-		tool: observeSoulToolName,
-		suggestedInput: { soulId },
-	};
+	return useToolNext(observeSoulToolName, message, { soulId });
 }
 
 export function refineSoulNext(action: string, soulId: number, message: string): ToolNextStepHint {
-	return {
-		kind: 'use_tool',
-		message,
-		tool: refineSoulToolName,
-		suggestedInput: { action, soulId },
-	};
+	return useToolNext(refineSoulToolName, message, { action, soulId });
 }
 
 export function retryNext(
@@ -70,10 +60,5 @@ export function useToolNext(
 }
 
 export function reviewTracesNext(id: number): ToolNextStepHint {
-	return {
-		kind: 'use_tool',
-		message: 'Review this trace.',
-		tool: 'review_traces',
-		suggestedInput: { view: 'show', id },
-	};
+	return useToolNext('review_traces', 'Review this trace.', { view: 'show', id });
 }

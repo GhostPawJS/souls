@@ -5,6 +5,8 @@ import { getShardOrThrow } from '../shards/get_shard_or_throw.ts';
 import type { DropShardInput, DropShardsResult, ShardRecord } from '../shards/types.ts';
 import { withdrawShard } from '../shards/withdraw_shard.ts';
 import * as write from '../write.ts';
+import { missingToolInput } from './missing_tool_input.ts';
+import { readinessSchema } from './readiness_schema.ts';
 import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
@@ -13,17 +15,16 @@ import {
 	defineSoulsTool,
 	integerArraySchema,
 	integerSchema,
-	numberSchema,
 	objectSchema,
 	soulReferenceSchema,
 	stringArraySchema,
 	stringSchema,
-	integerSchema as thresholdIntegerSchema,
 } from './tool_metadata.ts';
 import { observeSoulToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
 import { toShardRef } from './tool_ref.ts';
 import { summarizeCount } from './tool_summary.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
@@ -80,7 +81,7 @@ export function observeSoulToolHandler(
 		shardIds?: number[] | undefined;
 	},
 ): ObserveSoulToolResult {
-	const invalid = validateToolInput(observeSoulTool, rawInput);
+	const invalid = validateToolInput(observeSoulToolSurface, rawInput);
 	if (invalid) return invalid;
 	try {
 		const input = resolveToolSoulReferences(db, rawInput);
@@ -102,19 +103,11 @@ export function observeSoulToolHandler(
 		}
 		if (input.action === 'drop') {
 			if (!input.content || !input.source || !input.soulIds) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'content, source, and soulIds are required for drop.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide content, source, and soulIds.',
-						missing: ['content', 'source', 'soulIds'].filter(
-							(f) => !input[f as keyof typeof input],
-						),
-					},
-				};
+				return missingToolInput(
+					'content, source, and soulIds are required for drop.',
+					'Provide content, source, and soulIds.',
+					['content', 'source', 'soulIds'].filter((f) => !input[f as keyof typeof input]),
+				);
 			}
 			const result = write.dropShard(
 				db,
@@ -177,17 +170,11 @@ export function observeSoulToolHandler(
 
 		if (input.action === 'drop_batch') {
 			if (!input.shards || input.shards.length === 0) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'shards array is required for drop_batch.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a non-empty shards array.',
-						missing: ['shards'],
-					},
-				};
+				return missingToolInput(
+					'shards array is required for drop_batch.',
+					'Provide a non-empty shards array.',
+					['shards'],
+				);
 			}
 			const result = write.dropShards(
 				db,
@@ -226,17 +213,11 @@ export function observeSoulToolHandler(
 
 		if (input.action === 'reveal') {
 			if (!input.shardIds || input.shardIds.length === 0) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'shardIds is required for reveal.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a non-empty shardIds array.',
-						missing: ['shardIds'],
-					},
-				};
+				return missingToolInput(
+					'shardIds is required for reveal.',
+					'Provide a non-empty shardIds array.',
+					['shardIds'],
+				);
 			}
 			const revealed = write.revealShards(db, input.shardIds);
 			const data: ObserveSoulRevealData = { revealedCount: revealed.length };
@@ -253,10 +234,7 @@ export function observeSoulToolHandler(
 	}
 }
 
-export const observeSoulTool = defineSoulsTool<
-	Parameters<typeof observeSoulToolHandler>[1],
-	ObserveSoulToolData
->({
+export const observeSoulToolSurface = {
 	name: observeSoulToolName,
 	description:
 		'Deposit behavioral observations (shards) for one or more souls, or reveal previously sealed shards.',
@@ -266,20 +244,6 @@ export const observeSoulTool = defineSoulsTool<
 		'Do not use this to read evidence — use search_souls or inspect_souls_item. Do not use this to add traits — use refine_soul.',
 	sideEffects: 'writes_state',
 	readOnly: false,
-	supportsClarification: true,
-	targetKinds: ['shard', 'soul'],
-	inputDescriptions: {
-		action:
-			'drop: single shard, drop_batch: multiple shards at once, reveal: unseal shards; retract: withdraw with reason; supersede: replace by another shard; show/history: retained shard metadata.',
-		content: 'The behavioral observation text (for drop).',
-		source: 'The evidence channel origin label, e.g. "delegation", "manual_review" (for drop).',
-		soulIds: 'IDs of the souls this observation is attributed to (for drop).',
-		tags: 'Optional topic tags, e.g. ["error_handling", "docker"] (for drop).',
-		sealed: 'If true, shard is hidden until revealed (for drop).',
-		shards: 'Array of shard inputs to deposit in one transaction (for drop_batch).',
-		shardIds: 'IDs of sealed shards to reveal (for reveal).',
-	},
-	outputDescription: 'The deposited shard(s) with crystallization trigger notifications.',
 	inputSchema: objectSchema(
 		{
 			id: integerSchema('Shard ID for show, history, retract or supersede.'),
@@ -297,10 +261,7 @@ export const observeSoulTool = defineSoulsTool<
 			idempotencyKey: stringSchema('Unique ingestion key.'),
 			ref: stringSchema('External evidence reference.'),
 			now: integerSchema('Timestamp in epoch milliseconds; occurredAt takes precedence.'),
-			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
-			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
-			readiness: { type: 'string', enum: ['converged', 'legacy'] },
-			minClusterSize: integerSchema('Minimum converged cluster size, default 3.'),
+			...readinessSchema(),
 			content: stringSchema('Behavioral observation text.'),
 			source: stringSchema('Evidence channel origin label.'),
 			soulIds: arraySchema(
@@ -335,4 +296,28 @@ export const observeSoulTool = defineSoulsTool<
 		'Deposit behavioral observations for a soul.',
 	),
 	handler: observeSoulToolHandler,
+} satisfies ToolSurfaceDefinition<
+	Parameters<typeof observeSoulToolHandler>[1],
+	ObserveSoulToolData
+>;
+
+export const observeSoulTool = /* @__PURE__ */ defineSoulsTool<
+	Parameters<typeof observeSoulToolHandler>[1],
+	ObserveSoulToolData
+>({
+	...observeSoulToolSurface,
+	supportsClarification: true,
+	targetKinds: ['shard', 'soul'],
+	inputDescriptions: {
+		action:
+			'drop: single shard, drop_batch: multiple shards at once, reveal: unseal shards; retract: withdraw with reason; supersede: replace by another shard; show/history: retained shard metadata.',
+		content: 'The behavioral observation text (for drop).',
+		source: 'The evidence channel origin label, e.g. "delegation", "manual_review" (for drop).',
+		soulIds: 'IDs of the souls this observation is attributed to (for drop).',
+		tags: 'Optional topic tags, e.g. ["error_handling", "docker"] (for drop).',
+		sealed: 'If true, shard is hidden until revealed (for drop).',
+		shards: 'Array of shard inputs to deposit in one transaction (for drop_batch).',
+		shardIds: 'IDs of sealed shards to reveal (for reveal).',
+	},
+	outputDescription: 'The deposited shard(s) with crystallization trigger notifications.',
 });

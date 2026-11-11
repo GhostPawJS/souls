@@ -1,4 +1,5 @@
 import type { SoulsDb } from '../database.ts';
+import { projectRow } from '../lib/project_row.ts';
 import type { ShardRecord, ShardRow } from './types.ts';
 
 interface ShardSoulRow {
@@ -31,13 +32,19 @@ export function mapShardRow(db: SoulsDb, row: ShardRow): ShardRecord {
 
 	return {
 		id: row.id,
-		...(row.withdrawn_at == null ? {} : { withdrawnAt: row.withdrawn_at }),
-		...(row.withdrawal_reason == null ? {} : { withdrawalReason: row.withdrawal_reason }),
-		...(row.superseded_by == null ? {} : { supersededBy: row.superseded_by }),
-		...(row.inserted_at == null ? {} : { insertedAt: row.inserted_at }),
-		...(row.occurred_at == null ? {} : { occurredAt: row.occurred_at }),
-		...(row.idempotency_key == null ? {} : { idempotencyKey: row.idempotency_key }),
-		...(row.ref == null ? {} : { ref: row.ref }),
+		...projectRow<Partial<ShardRecord>>(
+			row,
+			[
+				'withdrawn_at',
+				'withdrawal_reason',
+				'superseded_by',
+				'inserted_at',
+				'occurred_at',
+				'idempotency_key',
+				'ref',
+			],
+			true,
+		),
 		content: row.content,
 		source: row.source,
 		status: row.status,

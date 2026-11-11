@@ -1,18 +1,21 @@
+import { projectRow } from '../lib/project_row.ts';
 import type { SoulRecord, SoulRow } from './types.ts';
 
 export function mapSoulRow(row: SoulRow): SoulRecord {
 	return {
 		id: row.id,
 		...(row.external_id == null ? {} : { externalId: row.external_id }),
-		name: row.name,
-		slug: row.slug,
-		essence: row.essence,
-		description: row.description,
-		level: row.level,
-		createdAt: row.created_at,
-		updatedAt: row.updated_at,
-		deletedAt: row.deleted_at,
-		lastAttunedAt: row.last_attuned_at,
+		...projectRow<Omit<SoulRecord, 'id' | 'externalId' | 'isDormant'>>(row, [
+			'name',
+			'slug',
+			'essence',
+			'description',
+			'level',
+			'created_at',
+			'updated_at',
+			'deleted_at',
+			'last_attuned_at',
+		]),
 		isDormant: row.deleted_at !== null,
 	};
 }

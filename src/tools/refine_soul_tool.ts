@@ -3,6 +3,8 @@ import { SoulsValidationError } from '../errors.ts';
 import * as read from '../read.ts';
 import type { TraitRecord } from '../traits/types.ts';
 import * as write from '../write.ts';
+import { missingToolInput } from './missing_tool_input.ts';
+import { readinessSchema } from './readiness_schema.ts';
 import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
@@ -11,15 +13,14 @@ import {
 	enumSchema,
 	integerArraySchema,
 	integerSchema,
-	numberSchema,
 	objectSchema,
 	soulReferenceSchema,
 	stringSchema,
-	integerSchema as thresholdIntegerSchema,
 } from './tool_metadata.ts';
 import { refineSoulToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulIdRef, toTraitRef } from './tool_ref.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
@@ -62,7 +63,7 @@ export function refineSoulToolHandler(
 		shardId?: number | undefined;
 	},
 ): RefineSoulToolResult {
-	const invalid = validateToolInput(refineSoulTool, rawInput);
+	const invalid = validateToolInput(refineSoulToolSurface, rawInput);
 	if (invalid) return invalid;
 	try {
 		const input = resolveToolSoulReferences(db, rawInput);
@@ -89,19 +90,11 @@ export function refineSoulToolHandler(
 		}
 		if (input.action === 'add_trait') {
 			if (!input.soulId || !input.principle || !input.provenance) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'soulId, principle, and provenance are required for add_trait.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide soulId, principle, and provenance.',
-						missing: ['soulId', 'principle', 'provenance'].filter(
-							(f) => !input[f as keyof typeof input],
-						),
-					},
-				};
+				return missingToolInput(
+					'soulId, principle, and provenance are required for add_trait.',
+					'Provide soulId, principle, and provenance.',
+					['soulId', 'principle', 'provenance'].filter((f) => !input[f as keyof typeof input]),
+				);
 			}
 			const trait = write.addTrait(
 				db,
@@ -147,99 +140,48 @@ export function refineSoulToolHandler(
 			);
 		}
 
-		if (input.action === 'revise_trait') {
-			if (!input.traitId) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'traitId is required for revise_trait.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a traitId.',
-						missing: ['traitId'],
-					},
-				};
-			}
-			const trait = write.reviseTrait(db, input.traitId, {
-				principle: input.principle,
-				provenance: input.provenance,
-				reason: input.reason,
-				operator: input.operator,
-			});
+		if (
+			input.action === 'revise_trait' ||
+			input.action === 'revert_trait' ||
+			input.action === 'reactivate_trait'
+		) {
+			if (!input.traitId)
+				return missingToolInput(`traitId is required for ${input.action}.`, 'Provide a traitId.', [
+					'traitId',
+				]);
+			const trait =
+				input.action === 'revise_trait'
+					? write.reviseTrait(db, input.traitId, {
+							principle: input.principle,
+							provenance: input.provenance,
+							reason: input.reason,
+							operator: input.operator,
+						})
+					: input.action === 'revert_trait'
+						? write.revertTrait(db, input.traitId)
+						: write.reactivateTrait(db, input.traitId, {
+								...(input.strict === undefined ? {} : { strict: input.strict }),
+								...(input.traitLimit === undefined ? {} : { traitLimit: input.traitLimit }),
+							});
+			const verb = {
+				revise_trait: 'revised',
+				revert_trait: 'reverted',
+				reactivate_trait: 'reactivated',
+			}[input.action];
 			return toolSuccess(
-				`Trait ${input.traitId} revised.`,
+				`Trait ${input.traitId} ${verb}.`,
 				{ trait, ...(trait.warnings?.length ? { warnings: trait.warnings } : {}) },
-				{
-					entities: [toTraitRef(trait)],
-				},
-			);
-		}
-
-		if (input.action === 'revert_trait') {
-			if (!input.traitId) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'traitId is required for revert_trait.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a traitId.',
-						missing: ['traitId'],
-					},
-				};
-			}
-			const trait = write.revertTrait(db, input.traitId);
-			return toolSuccess(
-				`Trait ${input.traitId} reverted.`,
-				{ trait, ...(trait.warnings?.length ? { warnings: trait.warnings } : {}) },
-				{
-					entities: [toTraitRef(trait)],
-				},
-			);
-		}
-
-		if (input.action === 'reactivate_trait') {
-			if (!input.traitId) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'traitId is required for reactivate_trait.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a traitId.',
-						missing: ['traitId'],
-					},
-				};
-			}
-			const trait = write.reactivateTrait(db, input.traitId, {
-				...(input.strict === undefined ? {} : { strict: input.strict }),
-				...(input.traitLimit === undefined ? {} : { traitLimit: input.traitLimit }),
-			});
-			return toolSuccess(
-				`Trait ${input.traitId} reactivated.`,
-				{ trait, ...(trait.warnings?.length ? { warnings: trait.warnings } : {}) },
-				{
-					entities: [toTraitRef(trait)],
-				},
+				{ entities: [toTraitRef(trait)] },
 			);
 		}
 
 		if (input.action === 'cite_shard') {
 			if (!input.shardId || !input.traitId) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'shardId and traitId are required for cite_shard.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide shardId and traitId.',
-						missing: ['shardId', 'traitId'].filter((f) => !input[f as keyof typeof input]),
-					},
-				};
+				return missingToolInput(
+					'shardId and traitId are required for cite_shard.',
+					'Provide shardId and traitId.',
+					['shardId', 'traitId'].filter((f) => !input[f as keyof typeof input]),
+				);
 			}
 			write.citeShard(db, input.shardId, input.traitId);
 			return toolSuccess(`Shard ${input.shardId} cited for trait ${input.traitId}.`, {
@@ -249,17 +191,9 @@ export function refineSoulToolHandler(
 
 		if (input.action === 'stamp_attuned') {
 			if (!input.soulId) {
-				return {
-					ok: false,
-					outcome: 'needs_clarification',
-					summary: 'soulId is required for stamp_attuned.',
-					entities: [],
-					clarification: {
-						code: 'missing_required_choice',
-						question: 'Provide a soulId.',
-						missing: ['soulId'],
-					},
-				};
+				return missingToolInput('soulId is required for stamp_attuned.', 'Provide a soulId.', [
+					'soulId',
+				]);
 			}
 			write.stampAttuned(db, input.soulId);
 			return toolSuccess(`Attunement timestamp stamped for soul ${input.soulId}.`, {
@@ -275,10 +209,7 @@ export function refineSoulToolHandler(
 	}
 }
 
-export const refineSoulTool = defineSoulsTool<
-	Parameters<typeof refineSoulToolHandler>[1],
-	RefineSoulToolData
->({
+export const refineSoulToolSurface = {
 	name: refineSoulToolName,
 	description:
 		'Add, revise, revert, or reactivate traits; cite evidence; apply atomic refinement with revision conflict checks.',
@@ -288,18 +219,6 @@ export const refineSoulTool = defineSoulsTool<
 		'Do not use this for consolidation and essence rewriting — use level_up_soul. Do not use this to deposit observations — use observe_soul.',
 	sideEffects: 'writes_state',
 	readOnly: false,
-	supportsClarification: true,
-	targetKinds: ['soul', 'trait', 'shard'],
-	inputDescriptions: {
-		action:
-			'add_trait, revise_trait, revert_trait, reactivate_trait, cite_shard, stamp_attuned, or refine_with_evidence. New evidence gates warn by default; strict enforces them; operator records a correction.',
-		soulId: 'Required for add_trait, stamp_attuned.',
-		traitId: 'Required for revise_trait, revert_trait, reactivate_trait, cite_shard.',
-		principle: 'The cognitive rule (for add_trait, revise_trait).',
-		provenance: 'Evidence chain justifying the trait (for add_trait, revise_trait).',
-		shardId: 'Shard to link (for cite_shard).',
-	},
-	outputDescription: 'The affected trait record, or a confirmation for cite_shard/stamp_attuned.',
 	inputSchema: objectSchema(
 		{
 			action: enumSchema(
@@ -314,13 +233,7 @@ export const refineSoulTool = defineSoulsTool<
 				],
 				'The refinement action to perform.',
 			),
-			minSourceDiversity: thresholdIntegerSchema('Minimum source diversity (default 2).'),
-			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
-			readiness: { type: 'string', enum: ['converged', 'legacy'] },
-			minClusterSize: {
-				type: 'integer',
-				description: 'Minimum converged cluster size, default 3.',
-			},
+			...readinessSchema(),
 			soulId: soulReferenceSchema('Soul ID (required for add_trait, stamp_attuned).'),
 			traitId: integerSchema(
 				'Trait ID (required for revise_trait, revert_trait, reactivate_trait, cite_shard).',
@@ -343,4 +256,23 @@ export const refineSoulTool = defineSoulsTool<
 		'Make a targeted refinement mutation to a soul.',
 	),
 	handler: refineSoulToolHandler,
+} satisfies ToolSurfaceDefinition<Parameters<typeof refineSoulToolHandler>[1], RefineSoulToolData>;
+
+export const refineSoulTool = /* @__PURE__ */ defineSoulsTool<
+	Parameters<typeof refineSoulToolHandler>[1],
+	RefineSoulToolData
+>({
+	...refineSoulToolSurface,
+	supportsClarification: true,
+	targetKinds: ['soul', 'trait', 'shard'],
+	inputDescriptions: {
+		action:
+			'add_trait, revise_trait, revert_trait, reactivate_trait, cite_shard, stamp_attuned, or refine_with_evidence. New evidence gates warn by default; strict enforces them; operator records a correction.',
+		soulId: 'Required for add_trait, stamp_attuned.',
+		traitId: 'Required for revise_trait, revert_trait, reactivate_trait, cite_shard.',
+		principle: 'The cognitive rule (for add_trait, revise_trait).',
+		provenance: 'Evidence chain justifying the trait (for add_trait, revise_trait).',
+		shardId: 'Shard to link (for cite_shard).',
+	},
+	outputDescription: 'The affected trait record, or a confirmation for cite_shard/stamp_attuned.',
 });

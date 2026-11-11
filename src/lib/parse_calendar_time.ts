@@ -5,8 +5,7 @@ const timeInputForms =
 	'epoch milliseconds integer (>= 1e12), ISO datetime (Z/offset or tz, TZ, host zone), YYYY-MM-DD, DD.MM.YYYY, today, tomorrow, yesterday, +Nd/-Nd or +Nh/-Nh';
 export function localCalendarDate(now: number, tz?: string): string {
 	const zone = tz ?? process.env.TZ;
-	if (zone !== undefined) new Intl.DateTimeFormat('en', { timeZone: zone }).format(now);
-	if (zone)
+	if (zone !== undefined)
 		return new Intl.DateTimeFormat('en-CA', {
 			timeZone: zone,
 			year: 'numeric',
@@ -35,6 +34,7 @@ export function parseCalendarTime(
 		throw new SoulsValidationError(
 			'occurredAt is required (ISO, YYYY-MM-DD, epoch ms, today, +3d …)',
 		);
+	const isDue = field.split('.').at(-1) === 'dueAt';
 	const fail = (): never => {
 		throw new SoulsValidationError(`${field}: expected timestamp: ${timeInputForms}`);
 	};
@@ -49,7 +49,7 @@ export function parseCalendarTime(
 		return {
 			timestamp,
 			day:
-				zone && field.split('.').at(-1) === 'dueAt'
+				zone && isDue
 					? localCalendarDate(timestamp, zone)
 					: new Date(timestamp).toISOString().slice(0, 10),
 		};
@@ -96,30 +96,10 @@ export function parseCalendarTime(
 			Number(text.slice(17, 19) || 0) > 59
 		)
 			return fail();
-		const formatter = new Intl.DateTimeFormat('en-CA', {
-			timeZone: zone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
-			year: 'numeric',
-			month: '2-digit',
-			day: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
-			hourCycle: 'h23',
-		});
-		let timestamp = target;
-		for (let i = 0; i < 4; i++) {
-			const parts = Object.fromEntries(
-				formatter.formatToParts(timestamp).map((p) => [p.type, p.value]),
-			);
-			const local =
-				Date.parse(
-					`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}Z`,
-				) +
-				(target % 1000);
-			const correction = target - local;
-			if (!correction) break;
-			timestamp += correction;
-		}
+		const timestamp = zonedTimestamp(
+			target,
+			zone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+		);
 		return { timestamp, day: localCalendarDate(timestamp, zone) };
 	}
 	const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(text);
@@ -132,15 +112,39 @@ export function parseCalendarTime(
 	const midnight = Date.parse(`${day}T00:00:00Z`);
 	if (!Number.isFinite(midnight) || new Date(midnight).toISOString().slice(0, 10) !== day)
 		return fail();
-	const timestamp = dateOnly
-		? midnight + (field.split('.').at(-1) === 'dueAt' ? 86399999 : 0)
-		: Date.parse(text);
+	const timestamp = dateOnly ? midnight + (isDue ? 86399999 : 0) : Date.parse(text);
 	if (!Number.isFinite(timestamp)) return fail();
 	return {
 		timestamp,
-		day:
-			zone && !dateOnly && field.split('.').at(-1) === 'dueAt'
-				? localCalendarDate(timestamp, zone)
-				: day,
+		day: zone && !dateOnly && isDue ? localCalendarDate(timestamp, zone) : day,
 	};
+}
+
+/** Resolve a local wall-clock timestamp using the shared four-pass zone correction. */
+export function zonedTimestamp(target: number, zone: string): number {
+	const formatter = new Intl.DateTimeFormat('en-CA', {
+		timeZone: zone,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		second: '2-digit',
+		hourCycle: 'h23',
+	});
+	let timestamp = target;
+	for (let i = 0; i < 4; i++) {
+		const parts = Object.fromEntries(
+			formatter.formatToParts(timestamp).map((p) => [p.type, p.value]),
+		);
+		const local =
+			Date.parse(
+				`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}Z`,
+			) +
+			(target % 1000);
+		const correction = target - local;
+		if (!correction) break;
+		timestamp += correction;
+	}
+	return timestamp;
 }

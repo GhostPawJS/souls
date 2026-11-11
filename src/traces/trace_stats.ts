@@ -3,7 +3,7 @@ import { SoulsValidationError } from '../errors.ts';
 import { listTraces } from './list_traces.ts';
 import { traceChain } from './trace_chain.ts';
 import { clock } from './trace_clock.ts';
-import { traceEdges } from './trace_edges.ts';
+import { traceHeadCondition } from './trace_edges.ts';
 import { traceTablesExist } from './trace_tables_exist.ts';
 import type { ListTracesOptions } from './types.ts';
 export function traceStats(
@@ -81,9 +81,7 @@ export function traceStats(
 	}
 	const heads = new Set(
 		db
-			.prepare(
-				`SELECT id FROM soul_traces t WHERE NOT EXISTS (SELECT 1 FROM (${traceEdges(db)}) n WHERE n.parent=t.id)`,
-			)
+			.prepare(`SELECT id FROM soul_traces t WHERE ${traceHeadCondition(db)}`)
 			.all<{ id: number }>()
 			.map((r) => r.id),
 	);

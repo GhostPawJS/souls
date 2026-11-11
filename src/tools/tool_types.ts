@@ -113,10 +113,9 @@ export function toolNoOp<TData>(
 	data: TData,
 	options: ToolResultOptions = {},
 ): ToolSuccess<TData> {
-	return withOptionalFields(
-		{ ok: true, outcome: 'no_op', summary, entities: options.entities ?? [], data },
-		options,
-	);
+	const result = toolSuccess(summary, data, options);
+	result.outcome = 'no_op';
+	return result;
 }
 
 export function toolNeedsClarification(

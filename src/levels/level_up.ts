@@ -8,6 +8,7 @@ import {
 	checkCrystallizationForSoul,
 } from '../shards/check_crystallization_for_soul.ts';
 import { getSoulOrThrow } from '../souls/get_soul_or_throw.ts';
+import { insertTrait } from '../traits/insert_trait.ts';
 import { withTransaction } from '../with_transaction.ts';
 import { getLevelHistory } from './get_level_history.ts';
 import type { LevelUpPlan, LevelUpResult } from './types.ts';
@@ -50,14 +51,14 @@ export function levelUp(
 
 		// 1. Process consolidations: mark sources as consolidated, create merged traits
 		for (const group of plan.consolidations) {
-			const mergeResult = db
-				.prepare(
-					`INSERT INTO soul_traits (soul_id, principle, provenance, generation, status, created_at, updated_at)
-					 VALUES (?, ?, ?, ?, 'active', ?, ?)`,
-				)
-				.run(soulId, group.mergedPrinciple, group.mergedProvenance, newLevel, now, now);
-
-			const mergedId = Number(mergeResult.lastInsertRowid);
+			const mergedId = insertTrait(
+				db,
+				soulId,
+				group.mergedPrinciple,
+				group.mergedProvenance,
+				newLevel,
+				now,
+			);
 			mergedTraitIds.push(mergedId);
 			recordRevision(db, 'trait', mergedId, soulId, null, group.mergedPrinciple, {
 				now,

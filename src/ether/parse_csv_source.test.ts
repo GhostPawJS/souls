@@ -75,4 +75,13 @@ describe('parseCsvSource', () => {
 			['A', 'B', 'C'],
 		);
 	});
+	it('preserves escaped quotes and embedded CRLF at the end of the file', () => {
+		const [entry] = parseCsvSource('act,prompt\r\nBot,"A ""quote"",\r\nlast line"');
+		strictEqual(entry?.content, 'A "quote",\r\nlast line');
+	});
+
+	it('retains the accepted unterminated quoted field at EOF', () => {
+		const [entry] = parseCsvSource('act,prompt\nBot,"still\nopen');
+		strictEqual(entry?.content, 'still\nopen');
+	});
 });

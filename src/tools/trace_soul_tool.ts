@@ -16,7 +16,9 @@ import {
 	stringSchema,
 } from './tool_metadata.ts';
 import { traceSoulToolName } from './tool_names.ts';
+import { reviewTracesNext } from './tool_next.ts';
 import { toTraceRef } from './tool_ref.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import { type ToolResult, toolNeedsClarification, toolSuccess } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
 export const traceExample =
@@ -85,7 +87,7 @@ export function traceSoulToolHandler(
 				untag: '{"action":"untag","id":4,"tags":["promise"],"reason":"wrong category"}',
 			} as Record<string, string>
 		)[input?.action] ?? traceExample;
-	const invalid = validateToolInput(traceSoulTool, input);
+	const invalid = validateToolInput(traceSoulToolSurface, input);
 	if (invalid) {
 		invalid.error.recovery = `Example input: ${example}`;
 		return invalid;
@@ -195,14 +197,7 @@ export function traceSoulToolHandler(
 			trace,
 			{
 				entities: [toTraceRef(trace)],
-				next: [
-					{
-						kind: 'use_tool',
-						message: 'Review this trace.',
-						tool: 'review_traces',
-						suggestedInput: { view: 'show', id: trace.id },
-					},
-				],
+				next: [reviewTracesNext(trace.id)],
 			},
 		);
 		return { ...trace, ...result };
@@ -213,10 +208,7 @@ export function traceSoulToolHandler(
 	}
 }
 const dateSchema = { oneOf: [{ type: 'integer' as const }, { type: 'string' as const }] };
-export const traceSoulTool = defineSoulsTool<
-	TraceSoulInput,
-	Trace | Trace[] | ReturnType<typeof write.compactTraces>
->({
+export const traceSoulToolSurface = {
 	name: traceSoulToolName,
 	description:
 		'Record persistent facts and commitments, revise, settle, roll forward atomically, link, tag, or cite traces.',
@@ -224,12 +216,6 @@ export const traceSoulTool = defineSoulsTool<
 	whenNotToUse: 'Use observe_soul for behavioral interpretations and review_traces for reading.',
 	sideEffects: 'writes_state',
 	readOnly: false,
-	supportsClarification: true,
-	targetKinds: ['trace', 'soul', 'shard'],
-	inputDescriptions: {
-		action: 'record, revise, settle, roll, record_batch, compact, link, unlink, tag, untag, cite.',
-	},
-	outputDescription: 'Trace with top-level id, links, tags, state and revision.',
 	inputSchema: objectSchema(
 		{
 			action: {
@@ -301,4 +287,20 @@ export const traceSoulTool = defineSoulsTool<
 		['action'],
 	),
 	handler: traceSoulToolHandler,
+} satisfies ToolSurfaceDefinition<
+	TraceSoulInput,
+	Trace | Trace[] | ReturnType<typeof write.compactTraces>
+>;
+
+export const traceSoulTool = /* @__PURE__ */ defineSoulsTool<
+	TraceSoulInput,
+	Trace | Trace[] | ReturnType<typeof write.compactTraces>
+>({
+	...traceSoulToolSurface,
+	supportsClarification: true,
+	targetKinds: ['trace', 'soul', 'shard'],
+	inputDescriptions: {
+		action: 'record, revise, settle, roll, record_batch, compact, link, unlink, tag, untag, cite.',
+	},
+	outputDescription: 'Trace with top-level id, links, tags, state and revision.',
 });

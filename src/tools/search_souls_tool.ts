@@ -16,6 +16,7 @@ import { searchSoulsToolName } from './tool_names.ts';
 import { inspectSoulsItemNext } from './tool_next.ts';
 import { toSoulIdRef } from './tool_ref.ts';
 import { summarizeCount } from './tool_summary.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
@@ -40,7 +41,7 @@ export function searchSoulsToolHandler(
 		limit?: number | undefined;
 	},
 ): SearchSoulsToolResult {
-	const invalid = validateToolInput(searchSoulsTool, rawInput);
+	const invalid = validateToolInput(searchSoulsToolSurface, rawInput);
 	if (invalid) return invalid;
 	try {
 		const input = resolveToolSoulReferences(db, rawInput);
@@ -68,10 +69,7 @@ export function searchSoulsToolHandler(
 	}
 }
 
-export const searchSoulsTool = defineSoulsTool<
-	Parameters<typeof searchSoulsToolHandler>[1],
-	SearchSoulsToolData
->({
+export const searchSoulsToolSurface = {
 	name: searchSoulsToolName,
 	description:
 		'Search shards by content using full-text search, or list pending shards with optional filters.',
@@ -81,15 +79,6 @@ export const searchSoulsTool = defineSoulsTool<
 		'Do not use this to view the structured evidence report — use inspect_souls_item with includeEvidence. Do not use this to deposit observations — use observe_soul.',
 	sideEffects: 'none',
 	readOnly: true,
-	supportsClarification: false,
-	targetKinds: ['shard'],
-	inputDescriptions: {
-		query: 'FTS5 search query. Omit to list pending shards by recency.',
-		soulId: 'Filter shards attributed to this soul.',
-		tags: 'Filter shards by all supplied topic tags.',
-		limit: 'Maximum results to return (default 100, maximum 1000).',
-	},
-	outputDescription: 'Matching or listed shards with count.',
 	inputSchema: objectSchema(
 		{
 			status: enumSchema(
@@ -106,4 +95,23 @@ export const searchSoulsTool = defineSoulsTool<
 		'Search or list shards.',
 	),
 	handler: searchSoulsToolHandler,
+} satisfies ToolSurfaceDefinition<
+	Parameters<typeof searchSoulsToolHandler>[1],
+	SearchSoulsToolData
+>;
+
+export const searchSoulsTool = /* @__PURE__ */ defineSoulsTool<
+	Parameters<typeof searchSoulsToolHandler>[1],
+	SearchSoulsToolData
+>({
+	...searchSoulsToolSurface,
+	supportsClarification: false,
+	targetKinds: ['shard'],
+	inputDescriptions: {
+		query: 'FTS5 search query. Omit to list pending shards by recency.',
+		soulId: 'Filter shards attributed to this soul.',
+		tags: 'Filter shards by all supplied topic tags.',
+		limit: 'Maximum results to return (default 100, maximum 1000).',
+	},
+	outputDescription: 'Matching or listed shards with count.',
 });

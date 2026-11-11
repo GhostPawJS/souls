@@ -14,7 +14,7 @@ function parseCsv(text: string): Record<string, string>[] {
 	while (pos < text.length) {
 		const { fields, next } = parseRow(text, pos);
 		pos = next;
-		if (fields.length === 0 || (fields.length === 1 && fields[0] === '')) continue;
+		if (fields.length === 1 && fields[0] === '') continue;
 		if (!headers) {
 			headers = fields.map((h) => h.trim());
 			continue;
@@ -22,7 +22,7 @@ function parseCsv(text: string): Record<string, string>[] {
 		const record: Record<string, string> = {};
 		for (let i = 0; i < headers.length; i++) {
 			const key = headers[i] as string;
-			record[key] = i < fields.length ? (fields[i] as string) : '';
+			record[key] = fields[i] ?? '';
 		}
 		records.push(record);
 	}
@@ -35,18 +35,12 @@ function parseRow(text: string, start: number): { fields: string[]; next: number
 	let pos = start;
 
 	while (pos < text.length) {
-		if (text[pos] === '"') {
-			const { value, next } = parseQuotedField(text, pos);
-			fields.push(value);
-			pos = next;
-		} else {
-			let end = pos;
-			while (end < text.length && text[end] !== ',' && text[end] !== '\n' && text[end] !== '\r') {
-				end++;
-			}
-			fields.push(text.slice(pos, end));
-			pos = end;
-		}
+		const quoted = text[pos] === '"';
+		const pattern = quoted ? /"((?:""|[^"])*)"?/y : /([^,\n\r]*)/y;
+		pattern.lastIndex = pos;
+		const match = pattern.exec(text) as RegExpExecArray;
+		fields.push(quoted ? (match[1] as string).replaceAll('""', '"') : (match[1] as string));
+		pos = pattern.lastIndex;
 
 		if (pos >= text.length || text[pos] === '\n' || text[pos] === '\r') {
 			if (text[pos] === '\r') pos++;
@@ -57,26 +51,6 @@ function parseRow(text: string, start: number): { fields: string[]; next: number
 	}
 
 	return { fields, next: pos };
-}
-
-function parseQuotedField(text: string, start: number): { value: string; next: number } {
-	let pos = start + 1;
-	let value = '';
-	while (pos < text.length) {
-		if (text[pos] === '"') {
-			if (pos + 1 < text.length && text[pos + 1] === '"') {
-				value += '"';
-				pos += 2;
-			} else {
-				pos++;
-				break;
-			}
-		} else {
-			value += text[pos];
-			pos++;
-		}
-	}
-	return { value, next: pos };
 }
 
 export function parseCsvSource(text: string): RawEtherEntry[] {

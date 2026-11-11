@@ -1,4 +1,5 @@
 import type { SoulsDb } from './database.ts';
+import { createTable } from './lib/schema_ddl.ts';
 import { shardTraceRefs } from './traces/shard_trace_refs.ts';
 import { traceTablesExist } from './traces/trace_tables_exist.ts';
 export interface RevisionRecord {
@@ -15,11 +16,15 @@ export interface RevisionRecord {
 	traceIds?: number[];
 }
 export function initRevisionTables(db: SoulsDb): void {
-	db.exec(
-		`CREATE TABLE IF NOT EXISTS soul_revisions (id INTEGER PRIMARY KEY AUTOINCREMENT, entity TEXT NOT NULL CHECK(entity IN ('trait','essence')), entity_id INTEGER NOT NULL, soul_id INTEGER NOT NULL REFERENCES souls(id), old_text TEXT, new_text TEXT NOT NULL, reason TEXT, operator TEXT, created_at INTEGER NOT NULL) STRICT`,
+	createTable(
+		db,
+		'soul_revisions',
+		`id INTEGER PRIMARY KEY AUTOINCREMENT, entity TEXT NOT NULL CHECK(entity IN ('trait','essence')), entity_id INTEGER NOT NULL, soul_id INTEGER NOT NULL REFERENCES souls(id), old_text TEXT, new_text TEXT NOT NULL, reason TEXT, operator TEXT, created_at INTEGER NOT NULL`,
 	);
-	db.exec(
-		`CREATE TABLE IF NOT EXISTS soul_revision_shards (revision_id INTEGER NOT NULL REFERENCES soul_revisions(id), shard_id INTEGER NOT NULL REFERENCES soul_shards(id), PRIMARY KEY(revision_id,shard_id)) STRICT`,
+	createTable(
+		db,
+		'soul_revision_shards',
+		`revision_id INTEGER NOT NULL REFERENCES soul_revisions(id), shard_id INTEGER NOT NULL REFERENCES soul_shards(id), PRIMARY KEY(revision_id,shard_id)`,
 	);
 	db.exec('CREATE INDEX IF NOT EXISTS idx_revisions_soul ON soul_revisions(soul_id, id)');
 }

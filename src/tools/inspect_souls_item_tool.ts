@@ -2,19 +2,20 @@ import type { SoulsDb } from '../database.ts';
 import * as read from '../read.ts';
 import type { EvidenceReport } from '../shards/types.ts';
 import type { SoulProfile } from '../souls/get_soul_profile.ts';
+import { readinessSchema } from './readiness_schema.ts';
 import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
 import {
 	booleanSchema,
 	defineSoulsTool,
 	integerSchema,
-	numberSchema,
 	objectSchema,
 	soulReferenceSchema,
 } from './tool_metadata.ts';
 import { inspectSoulsItemToolName } from './tool_names.ts';
 import { refineSoulNext, searchSoulsNext } from './tool_next.ts';
 import { toSoulRef } from './tool_ref.ts';
+import type { ToolSurfaceDefinition } from './tool_surface_definition.ts';
 import type { ToolResult } from './tool_types.ts';
 import { toolSuccess, toolWarning } from './tool_types.ts';
 import { validateToolInput } from './validate_tool_input.ts';
@@ -45,7 +46,7 @@ export function inspectSoulsItemToolHandler(
 		order?: 'citations' | 'density' | undefined;
 	},
 ): InspectSoulsItemToolResult {
-	const invalid = validateToolInput(inspectSoulsItemTool, rawInput);
+	const invalid = validateToolInput(inspectSoulsItemToolSurface, rawInput);
 	if (invalid) return invalid;
 	try {
 		const input = resolveToolSoulReferences(db, rawInput);
@@ -99,10 +100,7 @@ export function inspectSoulsItemToolHandler(
 	}
 }
 
-export const inspectSoulsItemTool = defineSoulsTool<
-	Parameters<typeof inspectSoulsItemToolHandler>[1],
-	InspectSoulsItemToolData
->({
+export const inspectSoulsItemToolSurface = {
 	name: inspectSoulsItemToolName,
 	description:
 		'Get the full profile, rendered identity block, and optionally the evidence report for a single soul.',
@@ -112,6 +110,37 @@ export const inspectSoulsItemTool = defineSoulsTool<
 		'Do not use this to search across shards — use search_souls. Do not use this to make changes — use refine_soul, level_up_soul, or manage_soul.',
 	sideEffects: 'none',
 	readOnly: true,
+	inputSchema: objectSchema(
+		{
+			order: {
+				type: 'string',
+				enum: ['citations', 'density'],
+				description: 'Render order (default citations).',
+			},
+			full: booleanSchema('Retain all selected cluster members in evidence payloads.'),
+			maxMembersPerCluster: integerSchema('Maximum cluster members rendered (default 5).'),
+			history: booleanSchema('Include wording revision history.'),
+			...readinessSchema(),
+			soulId: soulReferenceSchema('The soul ID to inspect.'),
+			includeEvidence: booleanSchema(
+				'Include evidence report with clusters and signals. Default false.',
+			),
+			includeProvenance: booleanSchema('Include provenance in rendered identity. Default false.'),
+		},
+		['soulId'],
+		'Inspect a soul in full detail.',
+	),
+	handler: inspectSoulsItemToolHandler,
+} satisfies ToolSurfaceDefinition<
+	Parameters<typeof inspectSoulsItemToolHandler>[1],
+	InspectSoulsItemToolData
+>;
+
+export const inspectSoulsItemTool = /* @__PURE__ */ defineSoulsTool<
+	Parameters<typeof inspectSoulsItemToolHandler>[1],
+	InspectSoulsItemToolData
+>({
+	...inspectSoulsItemToolSurface,
 	supportsClarification: false,
 	targetKinds: ['soul'],
 	inputDescriptions: {
@@ -123,31 +152,4 @@ export const inspectSoulsItemTool = defineSoulsTool<
 	},
 	outputDescription:
 		'Soul profile with traits and health, rendered identity block markdown, and optionally the evidence report.',
-	inputSchema: objectSchema(
-		{
-			order: {
-				type: 'string',
-				enum: ['citations', 'density'],
-				description: 'Render order (default citations).',
-			},
-			full: booleanSchema('Retain all selected cluster members in evidence payloads.'),
-			maxMembersPerCluster: integerSchema('Maximum cluster members rendered (default 5).'),
-			history: booleanSchema('Include wording revision history.'),
-			minSourceDiversity: integerSchema('Minimum source diversity (default 2).'),
-			minSpreadDays: numberSchema('Minimum occurrence spread in days (default 1).'),
-			readiness: { type: 'string', enum: ['converged', 'legacy'] },
-			minClusterSize: {
-				type: 'integer',
-				description: 'Minimum converged cluster size, default 3.',
-			},
-			soulId: soulReferenceSchema('The soul ID to inspect.'),
-			includeEvidence: booleanSchema(
-				'Include evidence report with clusters and signals. Default false.',
-			),
-			includeProvenance: booleanSchema('Include provenance in rendered identity. Default false.'),
-		},
-		['soulId'],
-		'Inspect a soul in full detail.',
-	),
-	handler: inspectSoulsItemToolHandler,
 });

@@ -80,13 +80,13 @@ export function oneOfSchema(schemas: readonly JsonSchema[], description: string)
 	return { oneOf: schemas, description };
 }
 export function nullableStringSchema(description: string): JsonSchema {
-	return { type: 'string', description };
+	return stringSchema(description);
 }
 export function integerArraySchema(description: string): JsonSchema {
-	return { type: 'array', items: { type: 'integer' }, description };
+	return arraySchema({ type: 'integer' }, description);
 }
 export function stringArraySchema(description: string): JsonSchema {
-	return { type: 'array', items: { type: 'string' }, description };
+	return arraySchema({ type: 'string' }, description);
 }
 
 export function soulReferenceSchema(description: string): JsonSchema {

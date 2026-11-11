@@ -2,15 +2,14 @@ import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { listTraces } from './list_traces.ts';
 import { clock } from './trace_clock.ts';
+import { tracePageBounds } from './trace_page.ts';
 import type { ListTracesOptions, Trace } from './types.ts';
 export function dueTraces(
 	db: SoulsDb,
 	options: ListTracesOptions & { within?: string | number } = {},
 ): Trace[] {
 	const now = clock(options);
-	for (const value of [options.offset ?? 0, options.limit ?? 100])
-		if (!Number.isSafeInteger(value) || value < 0)
-			throw new SoulsValidationError('limit and offset must be non-negative integers');
+	tracePageBounds(options, 100, false);
 	const within = options.within ?? '3d';
 	if (typeof within === 'string' && !/^\d+(?:\.\d+)?[dh]$/.test(within))
 		throw new SoulsValidationError('within must be a duration such as 3d or 12h');

@@ -1,25 +1,14 @@
 import type { SoulsDb } from '../database.ts';
+import { addColumns, createIndex, createTable } from '../lib/schema_ddl.ts';
 
 export function initLevelTables(db: SoulsDb): void {
-	db.exec(`
-		CREATE TABLE IF NOT EXISTS soul_levels (
-			id                  INTEGER PRIMARY KEY,
-			soul_id             INTEGER NOT NULL REFERENCES souls(id),
-			level               INTEGER NOT NULL CHECK(level >= 2),
-			essence_before      TEXT NOT NULL,
-			essence_after       TEXT NOT NULL,
-			traits_consolidated TEXT NOT NULL DEFAULT '[]',
-			traits_promoted     TEXT NOT NULL DEFAULT '[]',
-			traits_carried      TEXT NOT NULL DEFAULT '[]',
-			traits_merged       TEXT NOT NULL DEFAULT '[]',
-			created_at          INTEGER NOT NULL
-		) STRICT
-	`);
+	createTable(
+		db,
+		'soul_levels',
+		` id INTEGER PRIMARY KEY, soul_id INTEGER NOT NULL REFERENCES souls(id), level INTEGER NOT NULL CHECK(level >= 2), essence_before TEXT NOT NULL, essence_after TEXT NOT NULL, traits_consolidated TEXT NOT NULL DEFAULT '[]', traits_promoted TEXT NOT NULL DEFAULT '[]', traits_carried TEXT NOT NULL DEFAULT '[]', traits_merged TEXT NOT NULL DEFAULT '[]', created_at INTEGER NOT NULL `,
+	);
 
-	db.exec(`CREATE INDEX IF NOT EXISTS idx_soul_levels_soul_id ON soul_levels(soul_id)`);
-	db.exec(`CREATE INDEX IF NOT EXISTS idx_soul_levels_soul_level ON soul_levels(soul_id, level)`);
-	const columns = db.prepare('PRAGMA table_info(soul_levels)').all<{ name: string }>();
-	for (const column of ['faded_shard_ids', 'state_before'])
-		if (!columns.some((c) => c.name === column))
-			db.exec(`ALTER TABLE soul_levels ADD COLUMN ${column} TEXT`);
+	createIndex(db, 'idx_soul_levels_soul_id', `soul_levels(soul_id)`);
+	createIndex(db, 'idx_soul_levels_soul_level', `soul_levels(soul_id, level)`);
+	addColumns(db, 'soul_levels', { faded_shard_ids: 'TEXT', state_before: 'TEXT' });
 }

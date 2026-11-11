@@ -1,12 +1,12 @@
+import { projectRow } from '../lib/project_row.ts';
 import type { LevelRecord, LevelRow } from './types.ts';
 
 export function mapLevelRow(row: LevelRow): LevelRecord {
 	return {
-		id: row.id,
-		soulId: row.soul_id,
-		level: row.level,
-		essenceBefore: row.essence_before,
-		essenceAfter: row.essence_after,
+		...projectRow<Pick<LevelRecord, 'id' | 'soulId' | 'level' | 'essenceBefore' | 'essenceAfter'>>(
+			row,
+			['id', 'soul_id', 'level', 'essence_before', 'essence_after'],
+		),
 		traitsConsolidated: JSON.parse(row.traits_consolidated) as number[],
 		traitsPromoted: JSON.parse(row.traits_promoted) as number[],
 		traitsCarried: JSON.parse(row.traits_carried) as number[],

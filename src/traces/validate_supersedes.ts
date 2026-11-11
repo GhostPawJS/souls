@@ -1,5 +1,6 @@
 import type { SoulsDb } from '../database.ts';
 import { SoulsConflictError, SoulsNotFoundError, SoulsValidationError } from '../errors.ts';
+import { ancestorQuery } from './ancestor_query.ts';
 import { traceEdges } from './trace_edges.ts';
 export function validateSupersedes(db: SoulsDb, id: number | null, target: number | null): void {
 	if (target === null) return;
@@ -14,9 +15,7 @@ export function validateSupersedes(db: SoulsDb, id: number | null, target: numbe
 	)
 		throw new SoulsConflictError('Trace already has a successor');
 	const chain = db
-		.prepare(
-			`WITH RECURSIVE edges AS (${edges}), chain(id,depth) AS (SELECT ?,0 UNION ALL SELECT e.parent,c.depth+1 FROM edges e JOIN chain c ON e.child=c.id WHERE c.depth<1000) SELECT id,depth FROM chain`,
-		)
+		.prepare(`${ancestorQuery(db)} SELECT id,depth FROM chain`)
 		.all<{ id: number; depth: number }>(target);
 	if (chain.some((row) => row.id === id || row.depth === 1000))
 		throw new SoulsValidationError('Supersedes cycle or chain depth exceeds 1000');
