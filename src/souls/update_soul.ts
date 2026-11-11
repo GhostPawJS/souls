@@ -1,6 +1,6 @@
-import { SoulsValidationError } from '../errors.ts';
 import { resolveStrict } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
+import { SoulsValidationError } from '../errors.ts';
 import { evidenceGate } from '../evidence_gate.ts';
 import { resolveNow } from '../resolve_now.ts';
 import { recordRevision } from '../revisions.ts';

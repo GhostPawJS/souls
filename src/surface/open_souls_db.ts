@@ -92,8 +92,7 @@ export async function openSoulsDb(path: string): Promise<SoulsDb> {
 					(pragma
 						? Reflect.apply(stmt.get, stmt, params)
 						: retry(() => Reflect.apply(stmt.get, stmt, params))) as T | undefined,
-				all: <T>(...params: unknown[]) =>
-					retry(() => Reflect.apply(stmt.all, stmt, params)) as T[],
+				all: <T>(...params: unknown[]) => retry(() => Reflect.apply(stmt.all, stmt, params)) as T[],
 			};
 		},
 		close: () => {
@@ -105,7 +104,8 @@ export async function openSoulsDb(path: string): Promise<SoulsDb> {
 	try {
 		if (!db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='souls'").get())
 			db.exec('PRAGMA journal_mode=WAL');
-		if (timings) process.stderr.write(`timings open=${(performance.now() - started).toFixed(1)}ms\n`);
+		if (timings)
+			process.stderr.write(`timings open=${(performance.now() - started).toFixed(1)}ms\n`);
 		const context = db as unknown as SoulsDb;
 		const initStart = performance.now();
 		initSoulsTables(context);

@@ -65,9 +65,13 @@ it('migrates shard metadata additively, then reads without changing schema or fi
 		const before = dump(raw as unknown as SoulsDb, tables);
 		deepStrictEqual(before, {
 			...oldRows,
-			soul_shards: oldRows.soul_shards?.map((row) => Object.assign(Object.create(null), row, {
-				withdrawn_at: null, withdrawal_reason: null, superseded_by: null,
-			})),
+			soul_shards: oldRows.soul_shards?.map((row) =>
+				Object.assign(Object.create(null), row, {
+					withdrawn_at: null,
+					withdrawal_reason: null,
+					superseded_by: null,
+				}),
+			),
 		});
 		const version = raw.prepare('PRAGMA schema_version').get()?.schema_version;
 		raw.close();

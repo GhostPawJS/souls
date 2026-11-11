@@ -31,9 +31,9 @@ export function mapShardRow(db: SoulsDb, row: ShardRow): ShardRecord {
 
 	return {
 		id: row.id,
-	...(row.withdrawn_at == null ? {} : { withdrawnAt: row.withdrawn_at }),
-	...(row.withdrawal_reason == null ? {} : { withdrawalReason: row.withdrawal_reason }),
-	...(row.superseded_by == null ? {} : { supersededBy: row.superseded_by }),
+		...(row.withdrawn_at == null ? {} : { withdrawnAt: row.withdrawn_at }),
+		...(row.withdrawal_reason == null ? {} : { withdrawalReason: row.withdrawal_reason }),
+		...(row.superseded_by == null ? {} : { supersededBy: row.superseded_by }),
 		...(row.inserted_at == null ? {} : { insertedAt: row.inserted_at }),
 		...(row.occurred_at == null ? {} : { occurredAt: row.occurred_at }),
 		...(row.idempotency_key == null ? {} : { idempotencyKey: row.idempotency_key }),

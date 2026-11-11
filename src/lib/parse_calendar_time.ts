@@ -114,7 +114,8 @@ export function parseCalendarTime(
 			const local =
 				Date.parse(
 					`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}Z`,
-				) + (target % 1000);
+				) +
+				(target % 1000);
 			const correction = target - local;
 			if (!correction) break;
 			timestamp += correction;

@@ -191,7 +191,11 @@ export function observeSoulToolHandler(
 			}
 			const result = write.dropShards(
 				db,
-				input.shards.map((shard) => ({ ...shard, tz: shard.tz ?? input.tz, traceIds: shard.traceIds ?? input.traceIds })),
+				input.shards.map((shard) => ({
+					...shard,
+					tz: shard.tz ?? input.tz,
+					traceIds: shard.traceIds ?? input.traceIds,
+				})),
 				input,
 			);
 			const duplicates = result.results?.filter((item) => item.duplicate).length ?? 0;
@@ -265,7 +269,8 @@ export const observeSoulTool = defineSoulsTool<
 	supportsClarification: true,
 	targetKinds: ['shard', 'soul'],
 	inputDescriptions: {
-		action: 'drop: single shard, drop_batch: multiple shards at once, reveal: unseal shards; retract: withdraw with reason; supersede: replace by another shard; show/history: retained shard metadata.',
+		action:
+			'drop: single shard, drop_batch: multiple shards at once, reveal: unseal shards; retract: withdraw with reason; supersede: replace by another shard; show/history: retained shard metadata.',
 		content: 'The behavioral observation text (for drop).',
 		source: 'The evidence channel origin label, e.g. "delegation", "manual_review" (for drop).',
 		soulIds: 'IDs of the souls this observation is attributed to (for drop).',

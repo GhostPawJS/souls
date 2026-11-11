@@ -103,7 +103,14 @@ const mapping: Record<string, NonNullable<SurfaceTool<SoulsDb>['cli']>> = {
 		action: {
 			property: 'action',
 			verbs: { drop_batch: 'drop-batch' },
-			positionals: { drop: ['content'], reveal: ['shardIds'], retract: ['id'], supersede: ['id'], show: ['id'], history: ['id'] },
+			positionals: {
+				drop: ['content'],
+				reveal: ['shardIds'],
+				retract: ['id'],
+				supersede: ['id'],
+				show: ['id'],
+				history: ['id'],
+			},
 		},
 	},
 	refine_soul: {

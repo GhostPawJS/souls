@@ -13,8 +13,7 @@ export function withdrawShard(
 		if (shard.withdrawnAt !== undefined)
 			throw new SoulsValidationError('Shard is already retracted or superseded.');
 		if (options.by !== undefined) {
-			if (options.by === id)
-				throw new SoulsValidationError('A shard cannot supersede itself.');
+			if (options.by === id) throw new SoulsValidationError('A shard cannot supersede itself.');
 			const replacement = getShardOrThrow(db, options.by);
 			if (replacement.withdrawnAt !== undefined)
 				throw new SoulsValidationError('Replacement shard is withdrawn.');

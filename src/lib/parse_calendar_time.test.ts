@@ -21,7 +21,10 @@ it('parses epoch, explicit zones, European dates, relative hours and zoned calen
 it('rejects seconds and invalid calendar dates; resolves unzoned ISO locally', () => {
 	for (const value of [1234567890, '2026-02-30', '2026-11-12T12:00:00', 'nonsense']) {
 		if (value === '2026-11-12T12:00:00') {
-			strictEqual(parseCalendarTime(value, 'dueAt', NOW, 'UTC').timestamp, Date.UTC(2026, 10, 12, 12));
+			strictEqual(
+				parseCalendarTime(value, 'dueAt', NOW, 'UTC').timestamp,
+				Date.UTC(2026, 10, 12, 12),
+			);
 			continue;
 		}
 		throws(
