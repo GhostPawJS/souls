@@ -12,7 +12,7 @@ export function shardCountsBySource(db: SoulsDb, soulId?: number): SourceCountRe
 				`SELECT ss.source, COUNT(*) AS count
 				 FROM soul_shards ss
 				 JOIN shard_souls sr ON sr.shard_id = ss.id
-				 WHERE sr.soul_id = ? AND ss.status = 'pending'
+				 WHERE sr.soul_id = ? AND ss.withdrawn_at IS NULL AND ss.status = 'pending'
 				 GROUP BY ss.source
 				 ORDER BY count DESC`,
 			)
@@ -23,7 +23,7 @@ export function shardCountsBySource(db: SoulsDb, soulId?: number): SourceCountRe
 		.prepare(
 			`SELECT source, COUNT(*) AS count
 			 FROM soul_shards
-			 WHERE status = 'pending'
+			 WHERE withdrawn_at IS NULL AND status = 'pending'
 			 GROUP BY source
 			 ORDER BY count DESC`,
 		)

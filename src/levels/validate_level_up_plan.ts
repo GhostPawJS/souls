@@ -113,7 +113,7 @@ export function validateLevelUpPlan(
 						count:
 							db
 								.prepare(
-									`SELECT count(DISTINCT c.shard_id) AS n FROM shard_citations c JOIN shard_traces st ON st.shard_id=c.shard_id JOIN soul_traces t ON t.id=st.trace_id WHERE c.trait_id=? AND t.state IN (0,1) AND NOT EXISTS (SELECT 1 FROM (${traceEdges(db)}) n WHERE n.parent=t.id)`,
+									`SELECT count(DISTINCT c.shard_id) AS n FROM shard_citations c JOIN shard_traces st ON st.shard_id=c.shard_id JOIN soul_traces t ON t.id=st.trace_id WHERE c.shard_id IN (SELECT id FROM soul_shards WHERE withdrawn_at IS NULL) AND c.trait_id=? AND t.state IN (0,1) AND NOT EXISTS (SELECT 1 FROM (${traceEdges(db)}) n WHERE n.parent=t.id)`,
 								)
 								.get<{ n: number }>(traitId)?.n ?? 0,
 					})),

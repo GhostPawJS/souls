@@ -29,7 +29,7 @@ export function computeTraitAlignment(
 
 	const citations = db
 		.prepare(
-			`SELECT sc.shard_id, sc.trait_id FROM shard_citations sc JOIN soul_traits t ON t.id = sc.trait_id WHERE t.soul_id = ? AND t.status = 'active' ORDER BY sc.trait_id`,
+			`SELECT sc.shard_id, sc.trait_id FROM shard_citations sc JOIN soul_traits t ON t.id = sc.trait_id WHERE sc.shard_id IN (SELECT id FROM soul_shards WHERE withdrawn_at IS NULL) AND t.soul_id = ? AND t.status = 'active' ORDER BY sc.trait_id`,
 		)
 		.all<{ shard_id: number; trait_id: number }>(soulId);
 	return clusters.map((cluster) => {

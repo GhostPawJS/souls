@@ -2,7 +2,7 @@ import { SoulsValidationError } from '../errors.ts';
 
 // Ported from Affinity's calendar parser; kept local so the packages remain independent.
 const timeInputForms =
-	'epoch milliseconds integer (>= 1e12), ISO datetime with Z/offset, YYYY-MM-DD, DD.MM.YYYY, today, tomorrow, yesterday, +Nd/-Nd or +Nh/-Nh';
+	'epoch milliseconds integer (>= 1e12), ISO datetime with Z/offset or local ISO datetime (tz, TZ, then host zone), YYYY-MM-DD, DD.MM.YYYY, today, tomorrow, yesterday, +Nd/-Nd or +Nh/-Nh';
 export function localCalendarDate(now: number, tz?: string): string {
 	const zone = tz ?? process.env.TZ;
 	if (zone !== undefined) new Intl.DateTimeFormat('en', { timeZone: zone }).format(now);
@@ -36,7 +36,7 @@ export function parseCalendarTime(
 			'occurredAt is required (ISO, YYYY-MM-DD, epoch ms, today, +3d …)',
 		);
 	const fail = (): never => {
-		throw new SoulsValidationError(`${field}: expected ${timeInputForms}`);
+		throw new SoulsValidationError(`${field}: expected timestamp: ${timeInputForms}`);
 	};
 	if (typeof value === 'number' || (typeof value === 'string' && /^-?\d+$/.test(value.trim()))) {
 		const timestamp = Number(value);
@@ -86,6 +86,41 @@ export function parseCalendarTime(
 	}
 	const european = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(text);
 	if (european) text = `${european[3]}-${european[2]}-${european[1]}`;
+	if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(text)) {
+		const target = Date.parse(`${text}Z`);
+		if (
+			!Number.isFinite(target) ||
+			new Date(target).toISOString().slice(0, 10) !== text.slice(0, 10) ||
+			Number(text.slice(11, 13)) > 23 ||
+			Number(text.slice(14, 16)) > 59 ||
+			Number(text.slice(17, 19) || 0) > 59
+		)
+			return fail();
+		const formatter = new Intl.DateTimeFormat('en-CA', {
+			timeZone: zone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hourCycle: 'h23',
+		});
+		let timestamp = target;
+		for (let i = 0; i < 4; i++) {
+			const parts = Object.fromEntries(
+				formatter.formatToParts(timestamp).map((p) => [p.type, p.value]),
+			);
+			const local =
+				Date.parse(
+					`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}Z`,
+				) + (target % 1000);
+			const correction = target - local;
+			if (!correction) break;
+			timestamp += correction;
+		}
+		return { timestamp, day: localCalendarDate(timestamp, zone) };
+	}
 	const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(text);
 	if (
 		!dateOnly &&

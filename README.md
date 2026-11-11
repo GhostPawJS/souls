@@ -710,3 +710,20 @@ batch recording (`trace record --batch file.jsonl`), historical `--import`,
 merge parents, and explicit revision compaction. Filter commitments with
 `--exclude-tag belief`; use `--all` or page with `--limit` and `--offset`.
 See [Traces](docs/TRACES.md) for dates, output envelopes, and statistics.
+
+Soul listing: `ghostpaw-souls soul list` aliases `review list`.
+ISO datetimes may include Z/an offset or omit it (for example `2026-11-11T02:02:00`);
+local datetimes resolve using `--tz`, then `TZ`, then the host zone. Bare UUID soul
+references fall back to external IDs; `ext:<uuid>` selects that binding explicitly.
+
+Database connections accept `--db file:///absolute/path/souls.db`.
+`--busy-timeout <ms>` or `GHOSTPAW_SOULS_BUSY_TIMEOUT` sets the lock wait budget
+(default 5000); a lock wait prints one stderr notice. `--timings` or
+`GHOSTPAW_SOULS_TIMINGS=1` prints open, initialization and total timings to stderr.
+These environment settings also apply to MCP connections.
+
+Use `shard retract <id> --reason <text>` or `shard supersede <id> --by <id>`
+to withdraw evidence from readiness and citation scoring while retaining it.
+`shard show <id>` and `shard history <id>` expose the retained record and withdrawal
+metadata. MCP/tool callers use the corresponding `observe_soul` actions with `id`,
+`reason` or `by`; searches with status `all` retain withdrawn evidence.

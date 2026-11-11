@@ -19,7 +19,7 @@ export function renderSoul(db: SoulsDb, id: number, options?: RenderSoulOptions)
 			`SELECT t.principle, t.provenance,
 				COUNT(DISTINCT sc.shard_id) AS citation_count
 			 FROM soul_traits t
-			 LEFT JOIN shard_citations sc ON sc.trait_id = t.id
+			 LEFT JOIN shard_citations sc ON sc.trait_id = t.id AND sc.shard_id IN (SELECT id FROM soul_shards WHERE withdrawn_at IS NULL)
 			 WHERE t.soul_id = ? AND t.status = 'active'
 			 GROUP BY t.id
 			 ORDER BY ${options?.order === 'density' ? 'citation_count * 1.0 / MAX(1, (? - t.created_at) / 86400000.0)' : 'citation_count'} DESC, t.created_at ASC`,

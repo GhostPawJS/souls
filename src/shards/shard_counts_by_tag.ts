@@ -9,7 +9,7 @@ export function shardCountsByTag(db: SoulsDb, soulId?: number): TagCountRecord[]
 				 FROM shard_tags st
 				 JOIN shard_souls sr ON sr.shard_id = st.shard_id
 				 JOIN soul_shards ss ON ss.id = st.shard_id
-				 WHERE sr.soul_id = ? AND ss.status = 'pending'
+				 WHERE sr.soul_id = ? AND ss.withdrawn_at IS NULL AND ss.status = 'pending'
 				 GROUP BY st.tag
 				 ORDER BY count DESC`,
 			)
@@ -21,7 +21,7 @@ export function shardCountsByTag(db: SoulsDb, soulId?: number): TagCountRecord[]
 			`SELECT st.tag, COUNT(DISTINCT st.shard_id) AS count
 			 FROM shard_tags st
 			 JOIN soul_shards ss ON ss.id = st.shard_id
-			 WHERE ss.status = 'pending'
+			 WHERE ss.withdrawn_at IS NULL AND ss.status = 'pending'
 			 GROUP BY st.tag
 			 ORDER BY count DESC`,
 		)

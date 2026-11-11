@@ -84,7 +84,7 @@ test('host flags work in every position and review help preserves generated help
 				actual.out,
 				`Usage: ghostpaw-souls review <view> [flags]
 List all active souls, run the maintenance cycle, or check crystallization readiness.
-Global flags: --json, -q, --quiet. Array flags can be repeated or accept a JSON array; commas are literal.
+Global flags: --busy-timeout <ms> (GHOSTPAW_SOULS_BUSY_TIMEOUT; default 5000), --timings (GHOSTPAW_SOULS_TIMINGS=1), --json, -q, --quiet. Array flags can be repeated or accept a JSON array; commas are literal.
 
 Positionals:
   view  string (list|maintenance|readiness)  list: all active souls, maintenance: run fade + readiness cycle, readiness: crystallization status only.

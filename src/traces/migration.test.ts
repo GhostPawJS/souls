@@ -7,6 +7,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { it } from 'node:test';
 import type { SoulsDb } from '../database.ts';
 import * as read from '../read.ts';
+import { initShardTables } from '../shards/init_shard_tables.ts';
 import { openSoulsDb } from '../surface/open_souls_db.ts';
 import * as write from '../write.ts';
 
@@ -19,7 +20,7 @@ function dump(db: SoulsDb, tables: string[]) {
 		tables.map((name) => [name, db.prepare(`SELECT * FROM "${name}"`).all()]),
 	);
 }
-it('opens and reads the committed 0.5.1 schema without changing schema or file bytes; first write preserves every old row', async () => {
+it('migrates shard metadata additively, then reads without changing schema or file bytes; first trace write preserves every old row', async () => {
 	const dir = mkdtempSync(join(tmpdir(), 'souls-trace-migration-'));
 	const path = join(dir, 'old.db');
 	try {
@@ -59,7 +60,15 @@ it('opens and reads the committed 0.5.1 schema without changing schema or file b
 			.all()
 			.map((r) => String(r.name))
 			.filter((n) => n !== 'sqlite_sequence');
+		const oldRows = dump(raw as unknown as SoulsDb, tables);
+		initShardTables(raw as unknown as SoulsDb);
 		const before = dump(raw as unknown as SoulsDb, tables);
+		deepStrictEqual(before, {
+			...oldRows,
+			soul_shards: oldRows.soul_shards?.map((row) => Object.assign(Object.create(null), row, {
+				withdrawn_at: null, withdrawal_reason: null, superseded_by: null,
+			})),
+		});
 		const version = raw.prepare('PRAGMA schema_version').get()?.schema_version;
 		raw.close();
 		const hash = digest(path);

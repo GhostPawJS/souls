@@ -56,6 +56,9 @@ export function initShardTables(db: SoulsDb): void {
 	)
 		db.exec('ALTER TABLE shard_citations ADD COLUMN created_at INTEGER');
 	for (const [name, type] of [
+		['withdrawn_at', 'INTEGER'],
+		['withdrawal_reason', 'TEXT'],
+		['superseded_by', 'INTEGER REFERENCES soul_shards(id)'],
 		['occurred_at', 'INTEGER'],
 		['inserted_at', 'INTEGER'],
 		['idempotency_key', 'TEXT'],

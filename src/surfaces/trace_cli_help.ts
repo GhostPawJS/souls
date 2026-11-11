@@ -1,4 +1,4 @@
-const dates = 'ISO, YYYY-MM-DD, DD.MM.YYYY, today, tomorrow, yesterday, +Nd, +Nh, epoch ms';
+const dates = 'ISO (Z/offset or local datetime: --tz, TZ, host zone), YYYY-MM-DD, DD.MM.YYYY, today, tomorrow, yesterday, +Nd, +Nh, epoch ms';
 const verbs: Record<string, [string, string, string]> = {
 	record: [
 		'Record a fact or commitment.',
@@ -84,7 +84,7 @@ const flags: Record<string, [string, string]> = {
 	as: ['done|dropped', 'Closing state.'],
 	reason: ['string', 'Honest outcome or explanation for the change.'],
 	text: ['string', 'Replacement fact or commitment.'],
-	tz: ['string', 'IANA time zone for calendar dates.'],
+	tz: ['string', 'IANA time zone for calendar dates and offset-less ISO datetimes (then TZ, then host zone).'],
 	role: ['owner|counterpart|subject|0|1|2', 'Filter linked role.'],
 	state: ['open|done|dropped', 'Filter state; omitted includes every state.'],
 	query: ['string', 'Case insensitive text substring.'],

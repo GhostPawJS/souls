@@ -1,3 +1,4 @@
+import { SoulsValidationError } from '../errors.ts';
 import type { SoulsDb } from '../database.ts';
 import { getShardOrThrow } from './get_shard_or_throw.ts';
 import type { ShardRecord } from './types.ts';
@@ -8,7 +9,7 @@ export function citeShard(
 	traitId: number,
 	options?: { now?: number | undefined },
 ): ShardRecord {
-	getShardOrThrow(db, shardId);
+	if (getShardOrThrow(db, shardId).withdrawnAt !== undefined) throw new SoulsValidationError('Cannot cite a retracted or superseded shard.');
 	db.prepare(
 		`INSERT OR IGNORE INTO shard_citations (shard_id, trait_id, created_at) VALUES (?, ?, ?)`,
 	).run(shardId, traitId, options?.now ?? Date.now());

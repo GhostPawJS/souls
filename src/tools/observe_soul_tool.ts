@@ -1,6 +1,9 @@
 import type { SoulsDb } from '../database.ts';
+import { SoulsValidationError } from '../errors.ts';
 import { detectCredential } from '../lib/detect_credential.ts';
+import { getShardOrThrow } from '../shards/get_shard_or_throw.ts';
 import type { DropShardInput, DropShardsResult, ShardRecord } from '../shards/types.ts';
+import { withdrawShard } from '../shards/withdraw_shard.ts';
 import * as write from '../write.ts';
 import { resolveToolSoulReferences } from './resolve_tool_soul_references.ts';
 import { translateToolError } from './tool_errors.ts';
@@ -46,18 +49,23 @@ export interface ObserveSoulRevealData {
 export type ObserveSoulToolData =
 	| ObserveSoulDropData
 	| ObserveSoulBatchData
-	| ObserveSoulRevealData;
+	| ObserveSoulRevealData
+	| { shard: ShardRecord };
 
 export type ObserveSoulToolResult = ToolResult<ObserveSoulToolData>;
 
 export function observeSoulToolHandler(
 	db: SoulsDb,
 	rawInput: {
+		tz?: string | undefined;
 		minSourceDiversity?: number | undefined;
 		readiness?: 'converged' | 'legacy' | undefined;
 		minClusterSize?: number | undefined;
 		minSpreadDays?: number | undefined;
-		action: 'drop' | 'drop_batch' | 'reveal';
+		action: 'drop' | 'drop_batch' | 'reveal' | 'retract' | 'supersede' | 'show' | 'history';
+		id?: number;
+		by?: number;
+		reason?: string;
 		content?: string | undefined;
 		occurredAt?: number | string | undefined;
 		idempotencyKey?: string | undefined;
@@ -76,6 +84,22 @@ export function observeSoulToolHandler(
 	if (invalid) return invalid;
 	try {
 		const input = resolveToolSoulReferences(db, rawInput);
+		if (['retract', 'supersede', 'show', 'history'].includes(input.action)) {
+			if (input.id === undefined) throw new SoulsValidationError('id is required.');
+			if (input.action === 'supersede' && input.by === undefined)
+				throw new SoulsValidationError('by is required.');
+			const shard = ['show', 'history'].includes(input.action)
+				? getShardOrThrow(db, input.id)
+				: withdrawShard(db, input.id, {
+						...(input.reason === undefined ? {} : { reason: input.reason }),
+						...(input.action === 'supersede' && input.by !== undefined ? { by: input.by } : {}),
+					});
+			return toolSuccess(
+				`Shard ${input.id}: ${input.action}.`,
+				{ shard },
+				{ entities: [toShardRef(shard)] },
+			);
+		}
 		if (input.action === 'drop') {
 			if (!input.content || !input.source || !input.soulIds) {
 				return {
@@ -95,6 +119,7 @@ export function observeSoulToolHandler(
 			const result = write.dropShard(
 				db,
 				{
+					tz: input.tz,
 					content: input.content,
 					traceIds: input.traceIds,
 					source: input.source,
@@ -166,7 +191,7 @@ export function observeSoulToolHandler(
 			}
 			const result = write.dropShards(
 				db,
-				input.shards.map((shard) => ({ ...shard, traceIds: shard.traceIds ?? input.traceIds })),
+				input.shards.map((shard) => ({ ...shard, tz: shard.tz ?? input.tz, traceIds: shard.traceIds ?? input.traceIds })),
 				input,
 			);
 			const duplicates = result.results?.filter((item) => item.duplicate).length ?? 0;
@@ -240,7 +265,7 @@ export const observeSoulTool = defineSoulsTool<
 	supportsClarification: true,
 	targetKinds: ['shard', 'soul'],
 	inputDescriptions: {
-		action: 'drop: single shard, drop_batch: multiple shards at once, reveal: unseal shards.',
+		action: 'drop: single shard, drop_batch: multiple shards at once, reveal: unseal shards; retract: withdraw with reason; supersede: replace by another shard; show/history: retained shard metadata.',
 		content: 'The behavioral observation text (for drop).',
 		source: 'The evidence channel origin label, e.g. "delegation", "manual_review" (for drop).',
 		soulIds: 'IDs of the souls this observation is attributed to (for drop).',
@@ -252,11 +277,18 @@ export const observeSoulTool = defineSoulsTool<
 	outputDescription: 'The deposited shard(s) with crystallization trigger notifications.',
 	inputSchema: objectSchema(
 		{
-			action: { type: 'string', enum: ['drop', 'drop_batch', 'reveal'] },
+			id: integerSchema('Shard ID for show, history, retract or supersede.'),
+			by: integerSchema('Replacement shard ID for supersede.'),
+			reason: stringSchema('Reason for retraction.'),
+			action: {
+				type: 'string',
+				enum: ['drop', 'drop_batch', 'reveal', 'retract', 'supersede', 'show', 'history'],
+			},
 			occurredAt: {
 				oneOf: [{ type: 'integer' }, { type: 'string' }],
 				description: 'Observation timestamp, ISO or epoch milliseconds.',
 			},
+			tz: stringSchema('IANA zone for local ISO datetimes; defaults to TZ, then host zone.'),
 			idempotencyKey: stringSchema('Unique ingestion key.'),
 			ref: stringSchema('External evidence reference.'),
 			now: integerSchema('Timestamp in epoch milliseconds; occurredAt takes precedence.'),
@@ -282,6 +314,7 @@ export const observeSoulTool = defineSoulsTool<
 						tags: stringArraySchema('Topic tags.'),
 						traceIds: integerArraySchema('Trace citations.'),
 						sealed: booleanSchema('Defer until revealed.'),
+						tz: stringSchema('IANA time zone for local ISO datetimes.'),
 						occurredAt: { oneOf: [{ type: 'integer' }, { type: 'string' }] },
 						idempotencyKey: stringSchema('Unique ingestion key.'),
 						ref: stringSchema('External evidence reference.'),

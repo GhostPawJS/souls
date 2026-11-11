@@ -1,3 +1,4 @@
+import { parseCalendarTime } from '../lib/parse_calendar_time.ts';
 import type { SoulsDb } from '../database.ts';
 import { SoulsValidationError } from '../errors.ts';
 import { resolveNow } from '../resolve_now.ts';
@@ -33,7 +34,7 @@ export function dropShard(
 				};
 		}
 		const occurredAt =
-			typeof input.occurredAt === 'string' ? Date.parse(input.occurredAt) : input.occurredAt;
+			typeof input.occurredAt === 'string' ? parseCalendarTime(input.occurredAt, 'occurredAt', input.now ?? Date.now(), input.tz).timestamp : input.occurredAt;
 		if (occurredAt !== undefined && !Number.isSafeInteger(occurredAt))
 			throw new SoulsValidationError('Invalid occurredAt timestamp.');
 		assertShardContent(input.content);

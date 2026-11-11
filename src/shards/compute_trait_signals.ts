@@ -26,7 +26,7 @@ export function computeTraitSignals(
 			`SELECT t.id AS traitId, t.principle, t.generation, t.created_at, t.updated_at,
 			        MAX(sc.created_at) AS last_cited_at, COUNT(DISTINCT sc.shard_id) AS citationCount
 			 FROM soul_traits t
-			 LEFT JOIN shard_citations sc ON sc.trait_id = t.id
+			 LEFT JOIN shard_citations sc ON sc.trait_id = t.id AND sc.shard_id IN (SELECT id FROM soul_shards WHERE withdrawn_at IS NULL)
 			 WHERE t.soul_id = ? AND t.status = 'active'
 			 GROUP BY t.id`,
 		)

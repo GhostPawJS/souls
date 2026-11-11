@@ -32,6 +32,42 @@ export async function runToolCli<TCtx>(
 	argv: string[],
 	options: ToolCliOptions<TCtx>,
 ): Promise<number> {
+	const previousTimeout = process.env.GHOSTPAW_SOULS_BUSY_TIMEOUT;
+	const previousTimings = process.env.GHOSTPAW_SOULS_TIMINGS;
+	try {
+		return await runToolCliWithOptions(argv, options);
+	} finally {
+		if (previousTimeout === undefined) delete process.env.GHOSTPAW_SOULS_BUSY_TIMEOUT;
+		else process.env.GHOSTPAW_SOULS_BUSY_TIMEOUT = previousTimeout;
+		if (previousTimings === undefined) delete process.env.GHOSTPAW_SOULS_TIMINGS;
+		else process.env.GHOSTPAW_SOULS_TIMINGS = previousTimings;
+	}
+}
+
+async function runToolCliWithOptions<TCtx>(
+	argv: string[],
+	options: ToolCliOptions<TCtx>,
+): Promise<number> {
+	argv = [...argv];
+	for (let i = 0; i < argv.length; i++) {
+		if (argv[i] === '--') break;
+		if (argv[i] === '--timings') {
+			process.env.GHOSTPAW_SOULS_TIMINGS = '1';
+			argv.splice(i--, 1);
+		} else if (argv[i] === '--busy-timeout' || argv[i]?.startsWith('--busy-timeout=')) {
+			const inline = argv[i]?.includes('=');
+			const value = inline ? argv[i]?.split('=')[1] : argv[i + 1];
+			if (!value || !/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) {
+				(options.stderr ?? process.stderr).write(
+					'busy-timeout must be a non-negative integer in milliseconds\n',
+				);
+				return 2;
+			}
+			process.env.GHOSTPAW_SOULS_BUSY_TIMEOUT = value;
+			argv.splice(i, inline ? 1 : 2);
+			i--;
+		}
+	}
 	try {
 		argv = (await traceBatchArgs(argv, options)) ?? argv;
 	} catch (error) {

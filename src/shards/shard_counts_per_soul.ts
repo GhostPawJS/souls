@@ -8,7 +8,7 @@ export function shardCountsPerSoul(db: SoulsDb): ShardCountRecord[] {
 			        COUNT(*) AS pendingCount
 			 FROM soul_shards ss
 			 JOIN shard_souls sr ON sr.shard_id = ss.id
-			 WHERE ss.status = 'pending' AND ss.sealed = 0
+			 WHERE ss.withdrawn_at IS NULL AND ss.status = 'pending' AND ss.sealed = 0
 			 GROUP BY sr.soul_id`,
 		)
 		.all<ShardCountRecord>();

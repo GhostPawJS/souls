@@ -2,6 +2,9 @@ export const SHARD_STATUSES = ['pending', 'faded'] as const;
 export type ShardStatus = (typeof SHARD_STATUSES)[number];
 
 export interface ShardRow {
+	withdrawn_at?: number | null;
+	withdrawal_reason?: string | null;
+	superseded_by?: number | null;
 	inserted_at?: number | null;
 	occurred_at?: number | null;
 	idempotency_key?: string | null;
@@ -16,6 +19,9 @@ export interface ShardRow {
 }
 
 export interface ShardRecord {
+	withdrawnAt?: number;
+	withdrawalReason?: string;
+	supersededBy?: number;
 	traces?: { id: number; state: import('../traces/types.ts').TraceState }[];
 	insertedAt?: number | null;
 	occurredAt?: number | null;
@@ -34,6 +40,7 @@ export interface ShardRecord {
 }
 
 export interface DropShardInput {
+	tz?: string | undefined;
 	traceIds?: number[] | undefined;
 	occurredAt?: number | string | undefined;
 	idempotencyKey?: string | undefined;

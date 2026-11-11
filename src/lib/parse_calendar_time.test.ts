@@ -18,10 +18,15 @@ it('parses epoch, explicit zones, European dates, relative hours and zoned calen
 	strictEqual(parseCalendarTime('+2h', 'at', NOW).timestamp, NOW + 7200000);
 	strictEqual(parseCalendarTime('-2d', 'at', NOW, 'UTC').timestamp, Date.UTC(2026, 10, 8));
 });
-it('rejects seconds, invalid calendar dates and unzoned ISO with field-specific validation', () => {
-	for (const value of [1234567890, '2026-02-30', '2026-11-12T12:00:00', 'nonsense'])
+it('rejects seconds and invalid calendar dates; resolves unzoned ISO locally', () => {
+	for (const value of [1234567890, '2026-02-30', '2026-11-12T12:00:00', 'nonsense']) {
+		if (value === '2026-11-12T12:00:00') {
+			strictEqual(parseCalendarTime(value, 'dueAt', NOW, 'UTC').timestamp, Date.UTC(2026, 10, 12, 12));
+			continue;
+		}
 		throws(
 			() => parseCalendarTime(value, 'dueAt'),
 			(e) => e instanceof SoulsValidationError && e.message.includes('dueAt'),
 		);
+	}
 });

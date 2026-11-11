@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+- Add `soul list` as an alias for `review list`.
+- Accept local ISO datetimes using `--tz`, `TZ`, then the host zone.
+- Resolve bare UUID soul references through external IDs and suggest explicit `ext:` references on failure.
+- Report SQLite lock waits; add busy timeout and phase timing options; handle `file:` database URIs.
+- Add shard retraction and supersession with retained history and exclusion from readiness and citations.
+
 ## [0.6.1] - 2026-11-10
 
 ### Added

@@ -16,6 +16,7 @@ function searchShardsQuery(
 	const conditions: string[] = [];
 
 	const status = options?.status ?? 'all';
+	if (status !== 'all') conditions.push('ss.withdrawn_at IS NULL');
 	if (status === 'sealed') conditions.push('ss.sealed = 1');
 	else if (status !== 'all') {
 		conditions.push('ss.status = ?');

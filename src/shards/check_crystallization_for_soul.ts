@@ -98,7 +98,7 @@ export function checkCrystallizationForSoul(
 			 FROM soul_shards ss
 			 JOIN shard_souls sr ON sr.shard_id = ss.id
 			 WHERE sr.soul_id = ?
-			   AND ss.status = 'pending'
+			   AND ss.withdrawn_at IS NULL AND ss.status = 'pending'
 			   AND ss.sealed = 0
 			   AND COALESCE(ss.occurred_at,ss.created_at) > ?`,
 		)

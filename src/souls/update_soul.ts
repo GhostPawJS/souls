@@ -1,3 +1,4 @@
+import { SoulsValidationError } from '../errors.ts';
 import { resolveStrict } from '../config.ts';
 import type { SoulsDb } from '../database.ts';
 import { evidenceGate } from '../evidence_gate.ts';
@@ -33,7 +34,10 @@ export function updateSoul(db: SoulsDb, id: number, input: UpdateSoulInput): Sou
 				? evidenceGate(db, id, input)
 				: [];
 		if (changed) {
-			for (const shardId of input.shardIds ?? []) getShardOrThrow(db, shardId);
+			for (const shardId of input.shardIds ?? []) {
+				if (getShardOrThrow(db, shardId).withdrawnAt !== undefined)
+					throw new SoulsValidationError('Cannot cite a retracted or superseded shard.');
+			}
 			const revisionId = recordRevision(
 				db,
 				'essence',

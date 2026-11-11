@@ -43,6 +43,8 @@ export async function runCliCommand<T>(
 	const stdin = options.stdin ?? process.stdin;
 	const args = [...argv];
 	const tree = cliCommands(options.tools);
+	const review = tree.find((entry) => entry.tool.name === 'review_souls');
+	if (review) tree.push({ ...review, path: 'soul list', fixed: { view: 'list' }, positionals: [] });
 	const drop = tree.find((entry) => entry.path === 'shard drop');
 	if (drop) {
 		tree.push({ ...drop, path: 'shard add' });
@@ -156,7 +158,7 @@ export async function runCliCommand<T>(
 					(command.path === 'shard add'
 						? '\nBatch import: shard add --batch @file (JSON array or JSON Lines); or shard drop-batch --shards @file.'
 						: '') +
-					'\nGlobal flags: --json, -q, --quiet. Array flags can be repeated or accept a JSON array; commas are literal.',
+					'\nGlobal flags: --busy-timeout <ms> (GHOSTPAW_SOULS_BUSY_TIMEOUT; default 5000), --timings (GHOSTPAW_SOULS_TIMINGS=1), --json, -q, --quiet. Array flags can be repeated or accept a JSON array; commas are literal.',
 				positionals: command.positionals.map((name) => ({
 					...argument(name, properties[name] ?? {}),
 					...(properties[name]?.type === 'array'
@@ -191,7 +193,7 @@ export async function runCliCommand<T>(
 				stdout.write(
 					entry
 						? renderCliHelp(specFor(entry))
-						: `${options.bin} ${options.version}\n${options.description}\n\nCommands:\n${matches.map((command) => `  ${command.path}`).join('\n')}\n  mcp, skill, tools [--json], describe <tool>, call <tool> [JSON|-], completions <bash|zsh|fish>, version\n${options.customCommand && !args.length ? 'Host commands: render, diff, config, report; review <soul> --no-change (see command --help)\n' : ''}Global flags: --db <path>, --json, -q, --quiet, --compact, --help/-h, --version/-V/-v, --no-color\nVersion formats: --version --short, --version --json\n`,
+						: `${options.bin} ${options.version}\n${options.description}\n\nCommands:\n${matches.map((command) => `  ${command.path}`).join('\n')}\n  mcp, skill, tools [--json], describe <tool>, call <tool> [JSON|-], completions <bash|zsh|fish>, version\n${options.customCommand && !args.length ? 'Host commands: render, diff, config, report; review <soul> --no-change (see command --help)\n' : ''}Global flags: --busy-timeout <ms> (GHOSTPAW_SOULS_BUSY_TIMEOUT; default 5000), --timings (GHOSTPAW_SOULS_TIMINGS=1), --db <path>, --json, -q, --quiet, --compact, --help/-h, --version/-V/-v, --no-color\nVersion formats: --version --short, --version --json\n`,
 				);
 			return 0;
 		}
