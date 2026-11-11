@@ -5,14 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-- Refresh additive public API and size baselines (64-byte rounding); deduplicate SQLite timeout SQL and shorten timestamp guidance.
-- Resolve the consumer smoke test’s `npx` through PATH for symlinked Node installations.
+### Added
 
-- Add `soul list` as an alias for `review list`.
-- Accept local ISO datetimes using `--tz`, `TZ`, then the host zone.
-- Resolve bare UUID soul references through external IDs and suggest explicit `ext:` references on failure.
-- Report SQLite lock waits; add busy timeout and phase timing options; handle `file:` database URIs.
-- Add shard retraction and supersession with retained history and exclusion from readiness and citations.
+- `soul list` as an alias for `review list`.
+- ISO datetimes without `Z` or an offset (for example `2026-11-11T02:02:00`) resolve in the `--tz`, `TZ` or host zone.
+- Bare UUID soul references fall back to external IDs; failed lookups of a UUID suggest `ext:<uuid>`.
+- `--busy-timeout <ms>` and `GHOSTPAW_SOULS_BUSY_TIMEOUT` set the SQLite lock wait (default 5000 ms); a lock wait prints one notice on stderr. `--timings` and `GHOSTPAW_SOULS_TIMINGS=1` print open, init and total timings to stderr. Both environment settings also apply to MCP connections.
+- `--db` accepts `file:` URIs such as `file:///absolute/path/souls.db`.
+- `shard retract <id> --reason <text>` and `shard supersede <id> --by <id>` withdraw evidence from readiness and citation scoring while keeping it; `shard show` and `shard history` return the withdrawal metadata. Tool callers use the `observe_soul` actions `retract`, `supersede`, `show` and `history`. Searches with status `all` still return withdrawn shards.
+
+### Fixed
+
+- The consumer smoke test resolves `npx` through `PATH`, so it runs on symlinked Node installations.
 
 ## [0.6.1] - 2026-11-10
 
