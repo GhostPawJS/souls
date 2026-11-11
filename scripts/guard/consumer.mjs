@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import ts from 'typescript';
 import {
 	assertMcpReplies,
@@ -177,7 +177,8 @@ try {
 		binNames.length === 1 || binNames.includes(packageName.replace(/^@[^/]+\//, '')),
 		`npx ${packageName} cannot pick an executable from bins: ${binNames.join(', ')}`,
 	);
-	const npx = join(dirname(process.execPath), 'npx');
+	// Node may resolve through a symlink into a directory without npm's executables.
+	const npx = 'npx';
 	assert.equal(
 		run(npx, ['--no-install', packageName, '--version'], { cwd: temp }).trim(),
 		`souls ${pkg.version} (npm)`,

@@ -5,6 +5,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+- Refresh additive public API and size baselines (64-byte rounding); deduplicate SQLite timeout SQL and shorten timestamp guidance.
+- Resolve the consumer smoke test’s `npx` through PATH for symlinked Node installations.
+
 - Add `soul list` as an alias for `review list`.
 - Accept local ISO datetimes using `--tz`, `TZ`, then the host zone.
 - Resolve bare UUID soul references through external IDs and suggest explicit `ext:` references on failure.

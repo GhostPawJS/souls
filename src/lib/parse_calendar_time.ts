@@ -2,7 +2,7 @@ import { SoulsValidationError } from '../errors.ts';
 
 // Ported from Affinity's calendar parser; kept local so the packages remain independent.
 const timeInputForms =
-	'epoch milliseconds integer (>= 1e12), ISO datetime with Z/offset or local ISO datetime (tz, TZ, then host zone), YYYY-MM-DD, DD.MM.YYYY, today, tomorrow, yesterday, +Nd/-Nd or +Nh/-Nh';
+	'epoch milliseconds integer (>= 1e12), ISO datetime (Z/offset or tz, TZ, host zone), YYYY-MM-DD, DD.MM.YYYY, today, tomorrow, yesterday, +Nd/-Nd or +Nh/-Nh';
 export function localCalendarDate(now: number, tz?: string): string {
 	const zone = tz ?? process.env.TZ;
 	if (zone !== undefined) new Intl.DateTimeFormat('en', { timeZone: zone }).format(now);

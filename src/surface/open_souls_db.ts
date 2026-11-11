@@ -52,7 +52,8 @@ export async function openSoulsDb(path: string): Promise<SoulsDb> {
 		}
 	}
 	const raw = new sqlite.DatabaseSync(path);
-	raw.exec(`PRAGMA busy_timeout=${timeout}`);
+	const busyTimeout = `PRAGMA busy_timeout=${timeout}`;
+	raw.exec(busyTimeout);
 	const retry = <T>(operation: () => T): T => {
 		const start = performance.now();
 		let noticed = false;
@@ -77,7 +78,7 @@ export async function openSoulsDb(path: string): Promise<SoulsDb> {
 					Math.min(25, Math.max(1, timeout - (performance.now() - start))),
 				);
 			} finally {
-				raw.exec(`PRAGMA busy_timeout=${timeout}`);
+				raw.exec(busyTimeout);
 			}
 		}
 	};
@@ -106,12 +107,11 @@ export async function openSoulsDb(path: string): Promise<SoulsDb> {
 			db.exec('PRAGMA journal_mode=WAL');
 		if (timings)
 			process.stderr.write(`timings open=${(performance.now() - started).toFixed(1)}ms\n`);
-		const context = db as unknown as SoulsDb;
 		const initStart = performance.now();
-		initSoulsTables(context);
+		initSoulsTables(db);
 		if (timings)
 			process.stderr.write(`timings init=${(performance.now() - initStart).toFixed(1)}ms\n`);
-		return context;
+		return db;
 	} catch (error) {
 		db.close();
 		throw error;

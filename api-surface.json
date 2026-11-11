@@ -1687,9 +1687,13 @@
 			"traceIds": {
 				"type": "number[] | undefined",
 				"optional": true
+			},
+			"tz": {
+				"type": "string | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface DropShardInput { traceIds?: number[] | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; content: string; source: string; soulIds: number[]; tags?: string[] | undefined; sealed?: boolean | undefined; now?: number | undefined; }"
+		"definition": "interface DropShardInput { tz?: string | undefined; traceIds?: number[] | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; content: string; source: string; soulIds: number[]; tags?: string[] | undefined; sealed?: boolean | undefined; now?: number | undefined; }"
 	},
 	".:public.DropShardResult": {
 		"kind": "type",
@@ -2543,7 +2547,7 @@
 		"kind": "type",
 		"type": "EtherSourceKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -2810,7 +2814,7 @@
 		"kind": "type",
 		"type": "EtherSourceKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -3842,7 +3846,7 @@
 		"kind": "type",
 		"type": "JsonSchemaType",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -4410,7 +4414,7 @@
 	},
 	".:public.listSoulsToolDefinitions": {
 		"kind": "value",
-		"type": "() => (SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; soulId: number | string; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; order?: \"citations\" | \"density\" | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"execute\" | \"revert\" | \"validate\"; soulId: number | string; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | string | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | string | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<ReviewTracesInput, unknown> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | string | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData> | SoulsToolDefinition<TraceSoulInput, Trace | Trace[] | { bytesBefore: number; bytesAfter: number; revisions: number; dryRun: boolean; }>)[]",
+		"type": "() => (SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; soulId: number | string; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; order?: \"citations\" | \"density\" | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"execute\" | \"revert\" | \"validate\"; soulId: number | string; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<{ tz?: string | undefined; minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\" | \"retract\" | \"supersede\" | \"show\" | \"history\"; id?: number; by?: number; reason?: string; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | string | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | string | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<ReviewTracesInput, unknown> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | string | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData> | SoulsToolDefinition<TraceSoulInput, Trace | Trace[] | { bytesBefore: number; bytesAfter: number; revisions: number; dryRun: boolean; }>)[]",
 		"references": {
 			"DropShardInput": ".:public.DropShardInput",
 			"InspectSoulsItemToolData": ".:public.InspectSoulsItemToolData",
@@ -4822,7 +4826,7 @@
 	},
 	".:public.observeSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData>",
+		"type": "SoulsToolDefinition<{ tz?: string | undefined; minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\" | \"retract\" | \"supersede\" | \"show\" | \"history\"; id?: number; by?: number; reason?: string; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData>",
 		"references": {
 			"DropShardInput": ".:public.DropShardInput",
 			"ObserveSoulToolData": ".:public.ObserveSoulToolData",
@@ -4833,11 +4837,12 @@
 		"kind": "type",
 		"type": "ObserveSoulToolData",
 		"members": {},
-		"definition": "type ObserveSoulToolData = ObserveSoulDropData | ObserveSoulBatchData | ObserveSoulRevealData;",
+		"definition": "type ObserveSoulToolData = ObserveSoulDropData | ObserveSoulBatchData | ObserveSoulRevealData | { shard: ShardRecord; };",
 		"references": {
 			"ObserveSoulBatchData": ".:public.ObserveSoulToolData.types.ObserveSoulBatchData",
 			"ObserveSoulDropData": ".:public.ObserveSoulToolData.types.ObserveSoulDropData",
-			"ObserveSoulRevealData": ".:public.ObserveSoulToolData.types.ObserveSoulRevealData"
+			"ObserveSoulRevealData": ".:public.ObserveSoulToolData.types.ObserveSoulRevealData",
+			"ShardRecord": ".:public.ShardRecord"
 		}
 	},
 	".:public.ObserveSoulToolData.types.ObserveSoulBatchData": {
@@ -4905,7 +4910,7 @@
 	},
 	".:public.observeSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, rawInput: { minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }) => ObserveSoulToolResult",
+		"type": "(db: SoulsDb, rawInput: { tz?: string | undefined; minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\" | \"retract\" | \"supersede\" | \"show\" | \"history\"; id?: number; by?: number; reason?: string; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }) => ObserveSoulToolResult",
 		"references": {
 			"DropShardInput": ".:public.DropShardInput",
 			"ObserveSoulToolResult": ".:public.ObserveSoulToolResult",
@@ -6015,7 +6020,7 @@
 		"kind": "type",
 		"type": "ShardFilterStatus",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -6338,6 +6343,10 @@
 				"type": "\"pending\" | \"faded\"",
 				"optional": false
 			},
+			"supersededBy": {
+				"type": "number | undefined",
+				"optional": true
+			},
 			"tags": {
 				"type": "string[]",
 				"optional": false
@@ -6353,9 +6362,17 @@
 			"updatedAt": {
 				"type": "number",
 				"optional": false
+			},
+			"withdrawalReason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"withdrawnAt": {
+				"type": "number | undefined",
+				"optional": true
 			}
 		},
-		"definition": "interface ShardRecord { traces?: { id: number; state: TraceState; }[]; insertedAt?: number | null; occurredAt?: number | null; idempotencyKey?: string | null; ref?: string | null; id: number; content: string; source: string; status: ShardStatus; sealed: boolean; soulIds: number[]; traitIds: number[]; tags: string[]; createdAt: number; updatedAt: number; }",
+		"definition": "interface ShardRecord { withdrawnAt?: number; withdrawalReason?: string; supersededBy?: number; traces?: { id: number; state: TraceState; }[]; insertedAt?: number | null; occurredAt?: number | null; idempotencyKey?: string | null; ref?: string | null; id: number; content: string; source: string; status: ShardStatus; sealed: boolean; soulIds: number[]; traitIds: number[]; tags: string[]; createdAt: number; updatedAt: number; }",
 		"references": {
 			"ShardStatus": ".:public.ShardStatus",
 			"TraceState": ".:public.TraceState"
@@ -6365,7 +6382,7 @@
 		"kind": "type",
 		"type": "\"pending\" | \"faded\"",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -6653,11 +6670,11 @@
 		"kind": "type",
 		"type": "SoulsSkillRegistry",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => ArrayIterator<SoulsSkill>",
 				"optional": false
 			},
-			"__@unscopables@1011": {
+			"__@unscopables@1012": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -7164,11 +7181,11 @@
 		"kind": "type",
 		"type": "SoulsSkillRegistry",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => ArrayIterator<SoulsSkill>",
 				"optional": false
 			},
-			"__@unscopables@1011": {
+			"__@unscopables@1012": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -7490,7 +7507,7 @@
 	},
 	".:public.soulsTools": {
 		"kind": "value",
-		"type": "(SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<ReviewTracesInput, unknown> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; soulId: number | string; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; order?: \"citations\" | \"density\" | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"execute\" | \"revert\" | \"validate\"; soulId: number | string; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | string | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | string | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | string | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData> | SoulsToolDefinition<TraceSoulInput, Trace | Trace[] | { bytesBefore: number; bytesAfter: number; revisions: number; dryRun: boolean; }>)[]",
+		"type": "(SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<ReviewTracesInput, unknown> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; soulId: number | string; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; order?: \"citations\" | \"density\" | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"execute\" | \"revert\" | \"validate\"; soulId: number | string; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ tz?: string | undefined; minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\" | \"retract\" | \"supersede\" | \"show\" | \"history\"; id?: number; by?: number; reason?: string; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | string | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | string | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | string | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData> | SoulsToolDefinition<TraceSoulInput, Trace | Trace[] | { bytesBefore: number; bytesAfter: number; revisions: number; dryRun: boolean; }>)[]",
 		"references": {
 			"DropShardInput": ".:public.DropShardInput",
 			"InspectSoulsItemToolData": ".:public.InspectSoulsItemToolData",
@@ -7629,7 +7646,7 @@
 		"kind": "type",
 		"type": "ToolClarificationCode",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -7844,11 +7861,11 @@
 		"kind": "type",
 		"type": "ToolDefinitionRegistry",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => ArrayIterator<SoulsToolDefinition<any, any>>",
 				"optional": false
 			},
-			"__@unscopables@1011": {
+			"__@unscopables@1012": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -7982,7 +7999,7 @@
 		"kind": "type",
 		"type": "ToolEntityKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -8197,11 +8214,11 @@
 		"kind": "type",
 		"type": "ToolEntityKindSet",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => ArrayIterator<\"shard\" | \"trait\" | \"soul\" | \"level\" | \"trace\">",
 				"optional": false
 			},
-			"__@unscopables@1011": {
+			"__@unscopables@1012": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -8354,7 +8371,7 @@
 		"kind": "type",
 		"type": "ToolErrorCode",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -8569,7 +8586,7 @@
 		"kind": "type",
 		"type": "ToolErrorKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -8938,7 +8955,7 @@
 		"kind": "type",
 		"type": "ToolNextStepHintKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9166,7 +9183,7 @@
 		"kind": "type",
 		"type": "ToolOutcomeKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9381,7 +9398,7 @@
 		"kind": "type",
 		"type": "string",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -9786,7 +9803,7 @@
 		"kind": "type",
 		"type": "JsonSchemaType",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -10062,7 +10079,7 @@
 	},
 	".:public.tools.listSoulsToolDefinitions": {
 		"kind": "value",
-		"type": "() => (SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; soulId: number | string; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; order?: \"citations\" | \"density\" | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"execute\" | \"revert\" | \"validate\"; soulId: number | string; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | string | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | string | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<ReviewTracesInput, unknown> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | string | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData> | SoulsToolDefinition<TraceSoulInput, Trace | Trace[] | { bytesBefore: number; bytesAfter: number; revisions: number; dryRun: boolean; }>)[]"
+		"type": "() => (SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; soulId: number | string; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; order?: \"citations\" | \"density\" | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"execute\" | \"revert\" | \"validate\"; soulId: number | string; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<{ tz?: string | undefined; minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\" | \"retract\" | \"supersede\" | \"show\" | \"history\"; id?: number; by?: number; reason?: string; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | string | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | string | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<ReviewTracesInput, unknown> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | string | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData> | SoulsToolDefinition<TraceSoulInput, Trace | Trace[] | { bytesBefore: number; bytesAfter: number; revisions: number; dryRun: boolean; }>)[]"
 	},
 	".:public.tools.manageSoulTool": {
 		"kind": "value",
@@ -10146,7 +10163,7 @@
 	},
 	".:public.tools.observeSoulTool": {
 		"kind": "value",
-		"type": "SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData>"
+		"type": "SoulsToolDefinition<{ tz?: string | undefined; minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\" | \"retract\" | \"supersede\" | \"show\" | \"history\"; id?: number; by?: number; reason?: string; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData>"
 	},
 	".:public.tools.ObserveSoulToolData": {
 		"kind": "type",
@@ -10159,7 +10176,7 @@
 	},
 	".:public.tools.observeSoulToolHandler": {
 		"kind": "value",
-		"type": "(db: SoulsDb, rawInput: { minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }) => ObserveSoulToolResult"
+		"type": "(db: SoulsDb, rawInput: { tz?: string | undefined; minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\" | \"retract\" | \"supersede\" | \"show\" | \"history\"; id?: number; by?: number; reason?: string; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }) => ObserveSoulToolResult"
 	},
 	".:public.tools.observeSoulToolName": {
 		"kind": "value",
@@ -10682,7 +10699,7 @@
 	},
 	".:public.tools.soulsTools": {
 		"kind": "value",
-		"type": "(SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<ReviewTracesInput, unknown> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; soulId: number | string; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; order?: \"citations\" | \"density\" | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"execute\" | \"revert\" | \"validate\"; soulId: number | string; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\"; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | string | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | string | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | string | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData> | SoulsToolDefinition<TraceSoulInput, Trace | Trace[] | { bytesBefore: number; bytesAfter: number; revisions: number; dryRun: boolean; }>)[]"
+		"type": "(SoulsToolDefinition<ManageSoulInput, ManageSoulToolData | ManageConfigData> | SoulsToolDefinition<ReviewTracesInput, unknown> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; soulId: number | string; history?: boolean | undefined; full?: boolean | undefined; maxMembersPerCluster?: number | undefined; includeEvidence?: boolean | undefined; includeProvenance?: boolean | undefined; order?: \"citations\" | \"density\" | undefined; }, InspectSoulsItemToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"execute\" | \"revert\" | \"validate\"; soulId: number | string; strict?: boolean | undefined; traitLimit?: number | undefined; plan?: LevelUpPlan | undefined; }, LevelUpSoulToolData> | SoulsToolDefinition<{ tz?: string | undefined; minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"drop\" | \"drop_batch\" | \"reveal\" | \"retract\" | \"supersede\" | \"show\" | \"history\"; id?: number; by?: number; reason?: string; content?: string | undefined; occurredAt?: number | string | undefined; idempotencyKey?: string | undefined; ref?: string | undefined; now?: number | undefined; source?: string | undefined; soulIds?: (number | string)[] | undefined; tags?: string[] | undefined; traceIds?: number[] | undefined; sealed?: boolean | undefined; shards?: (Omit<DropShardInput, \"soulIds\"> & { soulIds: (number | string)[]; })[] | undefined; shardIds?: number[] | undefined; }, ObserveSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; action: \"refine_with_evidence\" | \"add_trait\" | \"revise_trait\" | \"revert_trait\" | \"reactivate_trait\" | \"cite_shard\" | \"stamp_attuned\"; soulId?: number | string | undefined; traitId?: number | undefined; principle?: string | undefined; provenance?: string | undefined; strict?: boolean | undefined; operator?: string | undefined; reason?: string | undefined; shardIds?: number[] | undefined; traitLimit?: number | undefined; expectedRevision?: number | undefined; refineAction?: \"add\" | \"revise\" | undefined; shardId?: number | undefined; }, RefineSoulToolData> | SoulsToolDefinition<{ minSourceDiversity?: number | undefined; readiness?: \"converged\" | \"legacy\" | undefined; minClusterSize?: number | undefined; minSpreadDays?: number | undefined; view: \"list\" | \"maintenance\" | \"readiness\" | \"history\"; soulId?: number | string | undefined; noChange?: boolean | undefined; reason?: string | undefined; }, ReviewSoulsToolData> | SoulsToolDefinition<{ query?: string | undefined; status?: ShardFilterStatus | undefined; offset?: number | undefined; soulId?: number | string | undefined; tags?: string[] | undefined; limit?: number | undefined; }, SearchSoulsToolData> | SoulsToolDefinition<TraceSoulInput, Trace | Trace[] | { bytesBefore: number; bytesAfter: number; revisions: number; dryRun: boolean; }>)[]"
 	},
 	".:public.tools.stringArraySchema": {
 		"kind": "value",
@@ -10738,7 +10755,7 @@
 		"kind": "type",
 		"type": "ToolClarificationCode",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -10956,11 +10973,11 @@
 		"kind": "type",
 		"type": "ToolDefinitionRegistry",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => ArrayIterator<SoulsToolDefinition<any, any>>",
 				"optional": false
 			},
-			"__@unscopables@1011": {
+			"__@unscopables@1012": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -11094,7 +11111,7 @@
 		"kind": "type",
 		"type": "ToolEntityKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -11312,11 +11329,11 @@
 		"kind": "type",
 		"type": "ToolEntityKindSet",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => ArrayIterator<\"shard\" | \"trait\" | \"soul\" | \"level\" | \"trace\">",
 				"optional": false
 			},
-			"__@unscopables@1011": {
+			"__@unscopables@1012": {
 				"type": "{ readonly [x: number]: boolean | undefined; readonly length?: boolean | undefined; toString?: boolean | undefined; toLocaleString?: boolean | undefined; concat?: boolean | undefined; join?: boolean | undefined; slice?: boolean | undefined; indexOf?: boolean | undefined; lastIndexOf?: boolean | undefined; every?: boolean | undefined; some?: boolean | undefined; forEach?: boolean | undefined; map?: boolean | undefined; filter?: boolean | undefined; reduce?: boolean | undefined; reduceRight?: boolean | undefined; find?: boolean | undefined; findIndex?: boolean | undefined; entries?: boolean | undefined; keys?: boolean | undefined; values?: boolean | undefined; includes?: boolean | undefined; flatMap?: boolean | undefined; flat?: boolean | undefined; at?: boolean | undefined; findLast?: boolean | undefined; findLastIndex?: boolean | undefined; toReversed?: boolean | undefined; toSorted?: boolean | undefined; toSpliced?: boolean | undefined; with?: boolean | undefined; [Symbol.iterator]?: boolean | undefined; readonly [Symbol.unscopables]?: boolean | undefined; }",
 				"optional": false
 			},
@@ -11472,7 +11489,7 @@
 		"kind": "type",
 		"type": "ToolErrorCode",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -11690,7 +11707,7 @@
 		"kind": "type",
 		"type": "ToolErrorKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12027,7 +12044,7 @@
 		"kind": "type",
 		"type": "ToolNextStepHintKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12249,7 +12266,7 @@
 		"kind": "type",
 		"type": "ToolOutcomeKind",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12467,7 +12484,7 @@
 		"kind": "type",
 		"type": "string",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -12724,7 +12741,7 @@
 		"kind": "type",
 		"type": "ToolSideEffects",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -13011,7 +13028,7 @@
 		"kind": "type",
 		"type": "ToolWarningCode",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -13383,7 +13400,7 @@
 		"kind": "type",
 		"type": "ToolSideEffects",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -13680,7 +13697,7 @@
 		"kind": "type",
 		"type": "ToolWarningCode",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -14080,7 +14097,7 @@
 		"kind": "type",
 		"type": "TraceRole",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -14426,7 +14443,7 @@
 		"kind": "type",
 		"type": "TraceState",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -14767,7 +14784,7 @@
 		"kind": "type",
 		"type": "\"active\" | \"consolidated\" | \"promoted\" | \"reverted\"",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -15394,6 +15411,10 @@
 			},
 			"traceIds": {
 				"type": "number[] | undefined",
+				"optional": true
+			},
+			"tz": {
+				"type": "string | undefined",
 				"optional": true
 			}
 		},
@@ -16418,7 +16439,7 @@
 		"kind": "type",
 		"type": "ShardFilterStatus",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -16744,6 +16765,10 @@
 				"type": "\"pending\" | \"faded\"",
 				"optional": false
 			},
+			"supersededBy": {
+				"type": "number | undefined",
+				"optional": true
+			},
 			"tags": {
 				"type": "string[]",
 				"optional": false
@@ -16759,6 +16784,14 @@
 			"updatedAt": {
 				"type": "number",
 				"optional": false
+			},
+			"withdrawalReason": {
+				"type": "string | undefined",
+				"optional": true
+			},
+			"withdrawnAt": {
+				"type": "number | undefined",
+				"optional": true
 			}
 		},
 		"definition": "type types_ShardRecord = ShardRecord;",
@@ -16770,7 +16803,7 @@
 		"kind": "type",
 		"type": "\"pending\" | \"faded\"",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -17288,7 +17321,7 @@
 		"kind": "type",
 		"type": "TraceRole",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -17506,7 +17539,7 @@
 		"kind": "type",
 		"type": "TraceState",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -17852,7 +17885,7 @@
 		"kind": "type",
 		"type": "\"active\" | \"consolidated\" | \"promoted\" | \"reverted\"",
 		"members": {
-			"__@iterator@991": {
+			"__@iterator@992": {
 				"type": "() => StringIterator<string>",
 				"optional": false
 			},
@@ -18431,7 +18464,7 @@
 	},
 	"./mcp:exports.soulsMcpInstructions": {
 		"kind": "string",
-		"value": "Use trace_soul for persistent dated facts and commitments; use review_traces for list, search (query required; ranked text with substring fallback), due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: [\"belief\"], use tagPrefix for categories, and page reads with limit and offset or all. Calendar dates resolve to local midnight using tz, TZ, then the system zone; a bare due date means the end of that local day. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads and weights default to 20 with headsTotal/headsTruncated and weightsTotal/weightsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different)."
+		"value": "Use trace_soul for persistent dated facts and commitments; use review_traces for list, search (query required; ranked text with substring fallback), due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: [\"belief\"], use tagPrefix for categories, and page reads with limit and offset or all. Use observe_soul retract with id and reason, supersede with id and by, or show/history to inspect retained withdrawal metadata. Withdrawn shards do not contribute readiness or citations. Local ISO datetimes resolve using tz, TZ, then the host zone. Calendar dates resolve to local midnight using tz, TZ, then the system zone; a bare due date means the end of that local day. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads and weights default to 20 with headsTotal/headsTruncated and weightsTotal/weightsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name; bare UUIDs fall back to external IDs. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different)."
 	},
 	"./mcp:public.createMcpServer": {
 		"kind": "value",
@@ -18708,7 +18741,7 @@
 	},
 	"./mcp:public.soulsMcpInstructions": {
 		"kind": "value",
-		"type": "\"Use trace_soul for persistent dated facts and commitments; use review_traces for list, search (query required; ranked text with substring fallback), due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: [\\\"belief\\\"], use tagPrefix for categories, and page reads with limit and offset or all. Calendar dates resolve to local midnight using tz, TZ, then the system zone; a bare due date means the end of that local day. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads and weights default to 20 with headsTotal/headsTruncated and weightsTotal/weightsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).\""
+		"type": "\"Use trace_soul for persistent dated facts and commitments; use review_traces for list, search (query required; ranked text with substring fallback), due, show, history, chain, changed and stats. Settle as done or dropped with a reason. Roll settles and creates the next open trace atomically with nextDue. Use record_batch items for atomic imports, import to preserve historical updatedAt, and compact only for explicit revision text maintenance. Supersedes accepts a primary id or an array including merge parents; each parent has one successor. Filter commitments with excludeTags: [\\\"belief\\\"], use tagPrefix for categories, and page reads with limit and offset or all. Use observe_soul retract with id and reason, supersede with id and by, or show/history to inspect retained withdrawal metadata. Withdrawn shards do not contribute readiness or citations. Local ISO datetimes resolve using tz, TZ, then the host zone. Calendar dates resolve to local midnight using tz, TZ, then the system zone; a bare due date means the end of that local day. Stats preserve legacy all-dated promiseSettleRate and add promiseSettleRateTagged; chain heads and weights default to 20 with headsTotal/headsTruncated and weightsTotal/weightsTruncated. Shards may cite traceIds. Default readiness requires one converged cluster of at least three shards spanning two sources; readiness legacy restores the prior gate. render --traces open|due opts into commitments. Souls stores cognitive identities, traits, and behavioral evidence locally. Search and inspect evidence before proposing changes. Record observations with provenance, refine traits with supporting evidence, and validate level-up plans before execution. Retirement makes a soul dormant; reversion restores earlier state. Ask for clarification when the intended action is ambiguous. Hosts can publish with render <soul> --into <file> --expect-hash <sha256|none>; --budget bounds the entire file and trims only the marker block. diff <soul> --against <file> exits 0 when equal and 1 when different. Soul references resolve numeric id, ext:<externalId>, slug, then name; bare UUIDs fall back to external IDs. CLI -q, --quiet suppresses stdout; array flags can be repeated or accept JSON arrays (commas stay literal). shard add --batch @file imports JSON arrays or JSON Lines. render accepts --order citations|density (default citations), --provenance and --no-provenance (stored souls omit provenance by default). Profiles expose freshness, headroom and evidenceRatio; health is their clamped product. Readiness options minSourceDiversity and minSpreadDays default to 2 and 1; CLI flags are --min-source-diversity and --min-spread-days. level validate without --plan reports readiness and blockers; with --plan it validates the plan. soul update --shard-ids may be repeated to cite essence evidence. Non-strict essence updates with both operator and reason suppress evidence warnings. Use review <soul> --no-change --reason <text> to record a review without edits. Persistent strict checks: config set strict true|false; per-call strict or --no-strict overrides GHOSTPAW_SOULS_STRICT (1/true/yes or 0/false/no), then the database setting. Shards accept occurredAt, idempotencyKey, and ref; a one-day spread must span two sources by occurrence time. Named operator corrections bypass readiness and remain in revision history. Capacity-sensitive refinement and level commands accept --trait-limit. report --expect-ids @file or @- checks external bindings (exit 0 matching, 1 different).\""
 	},
 	"./mcp:public.SurfaceTool": {
 		"kind": "type",
