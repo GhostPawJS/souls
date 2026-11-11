@@ -567,7 +567,7 @@ it('trace summaries use natural verbs and report counts', () => {
 	strictEqual(reviewTracesToolHandler(db, { view: 'due' }).summary, '0 due or overdue traces.');
 	match(
 		reviewTracesToolHandler(db, { view: 'changed', since: NOW - 1, now: NOW + DAY }).summary,
-		/changes since 2026-11-10T22:59:59.999Z\./,
+		/^\d+ changes? since 2026-11-10T22:59:59\.999Z\.$/,
 	);
 });
 it('superseded trace citations no longer merge readiness clusters', async () => {
