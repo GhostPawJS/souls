@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-11-13
+
 ### Fixed
 
 - Reject empty, whitespace-only, and literal `null` or `undefined` essence values before any write (library, tools and CLI; CLI exits 2). Read-modify-write callers can read the current essence from `soul show --json` at `data.profile.soul.essence`.
@@ -248,7 +250,8 @@ All new checks are opt-in. Without strict mode, existing calls behave as in 0.4.
 - Provide tool definitions, skills, and the built-in Mentor identity.
 - Establish package configuration and CI and release workflows.
 
-[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/GhostPawJS/souls/compare/v0.6.3...HEAD
+[0.6.3]: https://github.com/GhostPawJS/souls/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/GhostPawJS/souls/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/GhostPawJS/souls/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/GhostPawJS/souls/compare/v0.5.1...v0.6.0
