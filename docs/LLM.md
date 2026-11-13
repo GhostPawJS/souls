@@ -473,3 +473,7 @@ See [trace specification](TRACES.md) and [entity reference](entities/TRACES.md).
 `refinement revise <traitId>` changes trait wording. If `--trait-id` is also supplied,
 it must match the positional ID. `refinement revert <traitId>` deactivates the
 trait; it does not restore previous wording. Reactivation retains revised wording.
+
+`soul update --essence` rejects empty, whitespace-only and literal `null` or
+`undefined` values before any write (exit 2). Read the current essence from
+`soul show --json` at `data.profile.soul.essence` before rewriting it.

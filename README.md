@@ -657,6 +657,10 @@ insufficient.
 `soul update <soul> --essence E --shard-ids 1 --shard-ids 2 --reason text` cites
 shards for an essence change. A named `--operator` with a `--reason` suppresses
 evidence warnings when strict mode is off; strict behavior stays unchanged.
+Without `--shard-ids` it prints one `note:` that the essence was written and no
+shards were linked. Empty, whitespace-only and literal `null` or `undefined`
+essences are rejected before any write (exit 2); for a read-modify-write, read
+the current essence from `soul show --json` at `data.profile.soul.essence`.
 `level validate <soul>` reports readiness and blockers with exit 0 when the
 check runs. Supply a plan as inline JSON, for example `--plan '{"newEssence":"E","consolidations":[],"promotedTraitIds":[],"carriedTraitIds":[]}'`.
 With a plan, validation behavior is unchanged.

@@ -61,6 +61,8 @@ write.updateSoul(db, soulId, {
 This is an administrative escape hatch. Updating `essence` directly bypasses
 the evolutionary lifecycle — use it for bootstrapping or correcting errors,
 not for routine refinement.
+Empty, whitespace-only and literal `'null'` or `'undefined'` essences throw
+before any write, so a failed upstream read cannot wipe a soul.
 
 ### Render
 
