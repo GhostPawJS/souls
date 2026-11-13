@@ -7,8 +7,10 @@ export function assertSoulName(name: string): void {
 }
 
 export function assertSoulEssence(essence: string): void {
-	if (essence.trim().length === 0) {
-		throw new SoulsValidationError('Soul essence must not be empty.');
+	if (['', 'null', 'undefined'].includes(essence.trim())) {
+		throw new SoulsValidationError(
+			'Soul essence must not be empty or the literal null or undefined.',
+		);
 	}
 }
 

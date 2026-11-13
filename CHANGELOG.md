@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Reject empty, whitespace-only, and literal `null` or `undefined` essence values before any write (library, tools and CLI; CLI exits 2). Read-modify-write callers can read the current essence from `soul show --json` at `data.profile.soul.essence`.
+- Reject conflicting positional and flag trait IDs; clarify revise targets and that revert deactivates traits without restoring wording.
+- Report successful operator essence updates without `--shard-ids` as a `note:` that the essence was written and no shards were linked, keeping the bypass details.
+- Add a regression test that the CLI exits 0 without a stack trace when stdout closes after a committed write (for example piping into a failing `jq`).
+
 ### Changed
 
 - Reduce bundle sizes (CLI 207 KB to 183 KB, MCP server 140 KB to 117 KB minified) by sharing schema setup, shard and trace queries, row projection and tool helpers, and by removing local dynamic imports in the executables. Results, guides and tool descriptions are unchanged.

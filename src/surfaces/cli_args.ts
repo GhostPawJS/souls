@@ -140,7 +140,17 @@ export function parseCliArgs(argv: string[], spec: CliSpec): Record<string, unkn
 	let index = 0;
 	for (const arg of spec.positionals ?? []) {
 		if (index >= positions.length) continue;
-		values[keyOf(arg.name)] = arg.variadic
+		const key = keyOf(arg.name);
+		if (
+			arg.name === 'traitId' &&
+			!arg.variadic &&
+			values[key] !== undefined &&
+			values[key] !== convert(positions[index] as string, arg)
+		)
+			throw new CliUsageError(
+				`Positional ${arg.name} disagrees with --${arg.name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`,
+			);
+		values[key] = arg.variadic
 			? positions
 					.slice(index)
 					.map((value) => convert(value, { ...arg, type: arg.itemType ?? arg.type }))

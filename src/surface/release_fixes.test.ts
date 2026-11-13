@@ -299,7 +299,7 @@ test('wording history is camelCase through library facade and CLI; records seria
 		equal(correction.code, 0);
 		match(
 			correction.err,
-			/^warning: operator correction by maintainer bypassed: .*crystallization-ready.*cited shard.*\n$/,
+			/^note: soul essence updated; no shards were linked \(operator correction by maintainer bypassed: .*crystallization-ready.*cited shard.*\)\n$/,
 		);
 		equal(correction.err.trim().split('\n').length, 1);
 		const corrected = JSON.parse(correction.out);

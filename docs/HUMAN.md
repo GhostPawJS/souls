@@ -587,3 +587,7 @@ Dates accept epoch milliseconds, zoned ISO, calendar dates, and relative forms;
 Default rendering is unchanged. Readiness needs a converged cluster of at least
 three shards spanning two sources; `--readiness legacy` restores the earlier gate.
 See [trace specification](TRACES.md) and [entity reference](entities/TRACES.md).
+
+`refinement revise <traitId>` changes trait wording. If `--trait-id` is also supplied,
+it must match the positional ID. `refinement revert <traitId>` deactivates the
+trait; it does not restore previous wording. Reactivation retains revised wording.

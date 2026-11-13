@@ -152,6 +152,9 @@ export async function runCliCommand<T>(
 				command: `${options.bin} ${command.path}`,
 				description:
 					command.tool.description +
+					(command.path.startsWith('refinement ')
+						? '\nrevise <traitId> changes wording; revert <traitId> deactivates the trait and does not restore previous wording.'
+						: '') +
 					(command.path === 'shard add'
 						? '\nBatch import: shard add --batch @file (JSON array or JSON Lines); or shard drop-batch --shards @file.'
 						: '') +
@@ -340,17 +343,33 @@ export async function runCliCommand<T>(
 				stderr.write(
 					`Results truncated (${page.total ?? page.headsTotal} total); use --all or --limit with --offset to continue.\n`,
 				);
-			for (const warning of warningMessages)
-				stderr.write(`warning: ${warning.replace(/\s+/g, ' ')}\n`);
+			const essenceNote =
+				record.ok &&
+				entry.tool.name === 'manage_soul' &&
+				input.action === 'update' &&
+				input.essence !== undefined &&
+				input.operator &&
+				!(input.shardIds as unknown[] | undefined)?.length;
+			if (essenceNote && warningMessages.size)
+				stderr.write(
+					`note: soul essence updated; no shards were linked (${[...warningMessages].map((w) => w.replace(/\s+/g, ' ')).join(' ')})\n`,
+				);
+			else
+				for (const warning of warningMessages)
+					stderr.write(`warning: ${warning.replace(/\s+/g, ' ')}\n`);
 
 			const code =
 				record.outcome === 'needs_clarification' || record.error?.code === 'not_found'
 					? 3
 					: ['conflict', 'version_mismatch'].includes(record.error?.code ?? '')
 						? 4
-						: record.ok === false
-							? 1
-							: 0;
+						: record.error?.code === 'invalid_input' &&
+								entry.tool.name === 'manage_soul' &&
+								/Soul essence/.test(record.error.message ?? '')
+							? 2
+							: record.ok === false
+								? 1
+								: 0;
 			if (code) stderr.write(`${record.error?.message ?? record.summary ?? 'Tool failed'}\n`);
 			if (!quiet)
 				stdout.write(
